@@ -75,7 +75,8 @@ function generateReferralCode(phone) {
 // ══════════════════════════════════════════════
 // SIGN UP
 // ══════════════════════════════════════════════
-async function handleSignup() {
+async function handleSignup(e) {
+    if (e) e.preventDefault();
     haptic([20]);
     const phone = document.getElementById('signupPhone').value.trim();
     const password = document.getElementById('signupPassword').value;
@@ -132,7 +133,8 @@ async function handleSignup() {
 // ══════════════════════════════════════════════
 // LOGIN
 // ══════════════════════════════════════════════
-async function handleLogin() {
+async function handleLogin(e) {
+    if (e) e.preventDefault();
     haptic([20]);
     const phone = document.getElementById('loginPhone').value.trim();
     const password = document.getElementById('loginPassword').value;
@@ -160,7 +162,8 @@ async function handleLogin() {
 // ══════════════════════════════════════════════
 // RESET PASSWORD
 // ══════════════════════════════════════════════
-async function handleResetPassword() {
+async function handleResetPassword(e) {
+    if (e) e.preventDefault();
     haptic([20]);
     const phone = document.getElementById('resetPhone').value.trim();
     if (!phone || !validatePhone(phone)) { showMessage('Invalid phone number', false); return; }

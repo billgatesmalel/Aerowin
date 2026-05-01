@@ -24,7 +24,7 @@
             <h1>✈️ Aerowin</h1>
 
             <!-- Login Form -->
-            <div id="loginForm" class="form-section active">
+            <form id="loginForm" class="form-section active" onsubmit="handleLogin(event)">
                 <h2>Login</h2>
                 <div class="form-group">
                     <label for="loginPhone">Phone Number</label>
@@ -32,29 +32,29 @@
                 </div>
                 <div class="form-group">
                     <label for="loginPassword">Password</label>
-                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required autocomplete="current-password">
                 </div>
                 <div class="form-footer">
                     <a href="#" class="forgot-link" onclick="toggleResetForm(true)">Forgot Password?</a>
                 </div>
-                <button class="btn btn-primary" onclick="handleLogin()">Login</button>
+                <button type="submit" class="btn btn-primary">Login</button>
                 <p class="form-toggle">Don't have an account? <a href="#" onclick="toggleForms()">Sign Up</a></p>
-            </div>
+            </form>
 
             <!-- Reset Password Form -->
-            <div id="resetForm" class="form-section">
+            <form id="resetForm" class="form-section" onsubmit="handleResetPassword(event)">
                 <h2>Reset Password</h2>
                 <p class="form-desc">Enter your phone number to receive a password reset link.</p>
                 <div class="form-group">
                     <label for="resetPhone">Phone Number</label>
                     <input type="tel" id="resetPhone" placeholder="+254 or 0..." required>
                 </div>
-                <button class="btn btn-primary" onclick="handleResetPassword()">Send Reset Link</button>
+                <button type="submit" class="btn btn-primary">Send Reset Link</button>
                 <p class="form-toggle"><a href="#" onclick="toggleResetForm(false)">Back to Login</a></p>
-            </div>
+            </form>
 
             <!-- Sign Up Form -->
-            <div id="signupForm" class="form-section">
+            <form id="signupForm" class="form-section" onsubmit="handleSignup(event)">
                 <h2>Create Account</h2>
 
                 <!-- Free bet banner -->
@@ -68,11 +68,11 @@
                 </div>
                 <div class="form-group">
                     <label for="signupPassword">Password</label>
-                    <input type="password" id="signupPassword" placeholder="At least 6 characters" required>
+                    <input type="password" id="signupPassword" placeholder="At least 6 characters" required autocomplete="new-password">
                 </div>
                 <div class="form-group">
                     <label for="signupConfirm">Confirm Password</label>
-                    <input type="password" id="signupConfirm" placeholder="Confirm your password" required>
+                    <input type="password" id="signupConfirm" placeholder="Confirm your password" required autocomplete="new-password">
                 </div>
 
                 <!-- Referral Code (optional) -->
@@ -95,9 +95,9 @@
                     </label>
                 </div>
 
-                <button class="btn btn-primary" onclick="handleSignup()">Create Account</button>
+                <button type="submit" class="btn btn-primary">Create Account</button>
                 <p class="form-toggle">Already have an account? <a href="#" onclick="toggleForms()">Login</a></p>
-            </div>
+            </form>
 
             <div id="messageBox" class="message-box"></div>
         </div>
@@ -162,7 +162,7 @@
 
                 <h4>8. Privacy</h4>
                 <p>Your personal data is stored securely and used only for account management and game operation. We do
-                    not sell your data to third parties.</p>
+                not sell your data to third parties.</p>
 
                 <h4>9. Changes to Terms</h4>
                 <p>Aerowin reserves the right to update these terms at any time. Continued use of the platform
