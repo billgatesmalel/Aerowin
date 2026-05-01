@@ -106,7 +106,7 @@ async function handleSignup(e) {
 
     showMessage('Creating account...', true);
 
-    // 1. Supabase Auth Signup
+    // 1. Supabase Auth Signup (Simulated Free Mode)
     const { data: authData, error: authError } = await supabase.auth.signUp({
         email: normalizedPhone + '@aerowin.ke',
         password: password,
