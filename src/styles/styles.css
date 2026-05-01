@@ -1691,3 +1691,122 @@ input {
         display: none;
     }
 }
+
+/* ═══════════════════════════════════════════
+   PREMIUM FOOTER
+═══════════════════════════════════════════ */
+.game-footer {
+    background: var(--bg-deep);
+    border-top: 1px solid var(--border-panel);
+    padding: 40px 20px;
+    margin-top: auto;
+    width: 100%;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.footer-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.footer-logo {
+    font-size: 1.5em;
+    font-weight: 800;
+    color: var(--accent-green);
+    letter-spacing: -0.5px;
+}
+
+.footer-payments {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    filter: grayscale(1) opacity(0.6);
+    transition: filter 0.3s;
+}
+
+.footer-payments:hover {
+    filter: grayscale(0) opacity(1);
+}
+
+.pay-logo {
+    height: 20px;
+    max-width: 60px;
+}
+
+.footer-sep {
+    border: none;
+    border-top: 1px solid var(--border-row);
+    margin: 25px 0;
+}
+
+.footer-mid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+}
+
+.footer-links {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.footer-links a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.85em;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.footer-links a:hover {
+    color: var(--accent-purple);
+}
+
+.footer-disclaimer {
+    color: var(--text-dimmed);
+    font-size: 0.8em;
+    max-width: 600px;
+    line-height: 1.5;
+}
+
+.footer-bottom {
+    margin-top: 30px;
+    text-align: center;
+    color: var(--text-dimmed);
+    font-size: 0.75em;
+    font-weight: 400;
+}
+
+/* Ensure body can scroll if footer is present */
+body {
+    height: auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.layout {
+    flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+    .footer-top {
+        flex-direction: column;
+        align-items: center;
+    }
+    .footer-links {
+        gap: 12px 20px;
+    }
+}
