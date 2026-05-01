@@ -1426,359 +1426,224 @@ input {
 /* ═══════════════════════════════════════════
    GAME LOADING SCREEN
 ═══════════════════════════════════════════ */
-.game-loading-screen {
+.game-loader {
     position: fixed;
     inset: 0;
-    background: #0d0020;
+    z-index: 9998;
+    background: var(--bg-deep);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    z-index: 9999;
     gap: 14px;
-    transition: opacity 0.5s ease;
-}
-
-.game-loading-screen.hidden {
-    opacity: 0;
-    pointer-events: none;
+    transition: opacity 0.4s ease;
 }
 
 .gl-plane {
-    font-size: 3.5em;
-    animation: glPlane 1.2s ease-in-out infinite alternate;
+    font-size: 4em;
+    animation: glFly 1.4s ease-in-out infinite alternate;
+    filter: drop-shadow(0 0 16px rgba(255, 40, 80, 0.6));
 }
 
-@keyframes glPlane {
+@keyframes glFly {
     from {
-        transform: translateX(-18px) rotate(-8deg);
+        transform: translateY(0) rotate(-8deg);
     }
 
     to {
-        transform: translateX(18px) rotate(5deg);
+        transform: translateY(-22px) rotate(4deg);
     }
 }
 
 .gl-brand {
-    font-size: 2.2em;
+    font-size: 2.4em;
     font-weight: 900;
-    color: #00e676;
+    color: var(--accent-green);
     letter-spacing: 3px;
-    text-shadow: 0 0 24px rgba(0, 230, 118, 0.6);
+    text-shadow: 0 0 20px rgba(0, 230, 118, 0.5);
 }
 
 .gl-sub {
-    font-size: 0.85em;
-    color: #bf80ff;
+    font-size: 0.95em;
+    font-weight: 600;
+    color: var(--text-muted);
     letter-spacing: 4px;
     text-transform: uppercase;
-    font-weight: 600;
-}
-
-.gl-bar-wrap {
-    width: 200px;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 2px;
-    overflow: hidden;
-    margin-top: 8px;
 }
 
 .gl-bar {
-    height: 100%;
-    background: linear-gradient(90deg, #bf80ff, #00e676);
+    width: 200px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 2px;
-    animation: glBar 1.6s ease-in-out forwards;
+    overflow: hidden;
 }
 
-@keyframes glBar {
-    0% {
-        width: 0%;
-    }
-
-    60% {
-        width: 75%;
-    }
-
-    100% {
-        width: 100%;
-    }
+.gl-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-green), #00d4ff);
+    border-radius: 2px;
+    animation: glFill 1.9s ease forwards;
 }
 
-.gl-dots {
-    display: flex;
-    gap: 8px;
-    margin-top: 4px;
-}
-
-.gl-dots span {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
-    animation: glDot 1s ease-in-out infinite;
-}
-
-.gl-dots span:nth-child(2) {
-    animation-delay: 0.2s;
-}
-
-.gl-dots span:nth-child(3) {
-    animation-delay: 0.4s;
-}
-
-@keyframes glDot {
-
-    0%,
-    100% {
-        background: rgba(255, 255, 255, 0.2);
-        transform: scale(1);
-    }
-
-    50% {
-        background: #bf80ff;
-        transform: scale(1.4);
-    }
-}
-
-/* ═══════════════════════════════════════════
-   FREE BET PILL (topbar)
-═══════════════════════════════════════════ */
-.freebet-pill {
-    background: linear-gradient(135deg, #2d5a1b, #1a3d0d);
-    border: 1px solid #00e676;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 0.88em;
-    color: #00e676;
-    white-space: nowrap;
-    animation: fbGlow 2s ease-in-out infinite alternate;
-}
-
-@keyframes fbGlow {
+@keyframes glFill {
     from {
-        box-shadow: 0 0 4px rgba(0, 230, 118, 0.3);
+        width: 0%
     }
 
     to {
-        box-shadow: 0 0 10px rgba(0, 230, 118, 0.7);
+        width: 100%
+    }
+}
+
+.gl-tip {
+    font-size: 0.8em;
+    color: var(--text-muted);
+    max-width: 260px;
+    text-align: center;
+    line-height: 1.5;
+    animation: fadeInUp 0.5s ease 0.3s both;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
 /* ═══════════════════════════════════════════
-   REFERRAL SECTION (profile modal)
+   PROFILE — REFERRAL CODE & FREE BET NOTICE
 ═══════════════════════════════════════════ */
-.referral-section {
-    background: linear-gradient(135deg, rgba(45, 0, 80, 0.5), rgba(13, 0, 32, 0.7));
-    border: 1px solid rgba(191, 128, 255, 0.3);
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 18px;
-}
-
-.referral-header {
-    font-size: 0.82em;
-    font-weight: 700;
-    color: var(--accent-purple);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    margin-bottom: 10px;
-}
-
-.referral-code-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 12px;
+.profile-item {
+    position: relative;
 }
 
 .referral-code {
-    flex: 1;
-    background: var(--bg-deep);
-    border: 1.5px solid var(--accent-purple);
-    border-radius: 8px;
-    padding: 10px 14px;
-    font-size: 1.3em;
-    font-weight: 900;
-    color: var(--accent-purple);
-    letter-spacing: 4px;
-    text-align: center;
-    font-family: 'Courier New', monospace;
+    font-family: 'Courier New', monospace !important;
+    font-size: 1.1em !important;
+    letter-spacing: 2px;
+    color: var(--accent-gold) !important;
 }
 
-.copy-btn {
-    background: var(--accent-purple);
-    color: #fff;
+.copy-code-btn {
+    background: none;
     border: none;
-    border-radius: 8px;
-    padding: 10px 16px;
-    font-size: 0.85em;
-    font-weight: 700;
+    font-size: 1em;
     cursor: pointer;
-    transition: filter 0.2s, transform 0.1s;
-    white-space: nowrap;
+    padding: 2px 4px;
+    margin-left: 4px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
 }
 
-.copy-btn:hover {
-    filter: brightness(1.15);
+.copy-code-btn:hover {
+    opacity: 1;
 }
 
-.copy-btn:active {
-    transform: scale(0.96);
-}
-
-.referral-stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 10px;
-}
-
-.ref-stat {
-    background: var(--bg-deep);
+.free-bet-notice {
+    background: linear-gradient(135deg, rgba(0, 230, 118, 0.12), rgba(0, 212, 255, 0.08));
+    border: 1px solid rgba(0, 230, 118, 0.35);
     border-radius: 8px;
-    padding: 10px;
-    text-align: center;
-}
-
-.ref-stat-label {
-    display: block;
-    font-size: 0.72em;
-    color: var(--text-muted);
-    margin-bottom: 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.ref-stat-value {
-    display: block;
-    font-size: 1.1em;
-    font-weight: 800;
-    color: var(--accent-green);
-}
-
-.referral-info {
-    font-size: 0.78em;
-    color: var(--text-muted);
-    line-height: 1.5;
-}
-
-.referral-info strong {
-    color: var(--accent-green);
-}
-
-/* ═══════════════════════════════════════════
-   LOGOUT FULL-WIDTH BUTTON
-═══════════════════════════════════════════ */
-.logout-full-btn {
-    width: 100%;
-    margin-top: 10px;
-    padding: 12px;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #c0392b, #e74c3c);
-    color: #fff;
-    font-weight: 700;
-    font-size: 0.9em;
-    cursor: pointer;
-    border: none;
-    transition: filter 0.2s;
-}
-
-.logout-full-btn:hover {
-    filter: brightness(1.1);
-}
-
-/* ═══════════════════════════════════════════
-   FREE BET NOTICE (deposit modal)
-═══════════════════════════════════════════ */
-.freebet-notice {
-    background: rgba(0, 230, 118, 0.08);
-    border: 1px solid var(--accent-green);
-    border-radius: 8px;
-    padding: 10px 14px;
+    padding: 10px 12px;
+    margin: 8px 0 4px;
     font-size: 0.84em;
-    color: var(--accent-green);
-    margin-bottom: 14px;
-    line-height: 1.5;
+    color: #00e676;
+    text-align: center;
+    animation: pulseBorder 2.5s ease infinite;
 }
 
-.freebet-notice strong {
-    color: #fff;
+@keyframes pulseBorder {
+
+    0%,
+    100% {
+        border-color: rgba(0, 230, 118, 0.35);
+    }
+
+    50% {
+        border-color: rgba(0, 230, 118, 0.8);
+    }
 }
 
 /* ═══════════════════════════════════════════
-   LANDSCAPE MOBILE OPTIMISATION
+   LANDSCAPE MODE OPTIMIZATION
 ═══════════════════════════════════════════ */
 @media (max-height: 500px) and (orientation: landscape) {
 
-    /* Shrink topbar */
+    /* Compact topbar */
     .topbar {
         height: 38px;
         padding: 0 10px;
     }
 
     .topbar-brand {
-        font-size: 1.05em;
-    }
-
-    .balance-pill {
-        padding: 3px 8px;
-        font-size: 0.8em;
-    }
-
-    .btn-logout {
-        padding: 4px 10px;
-        font-size: 0.72em;
-    }
-
-    .btn-icon {
         font-size: 1em;
     }
 
-    /* Hide ticker to save vertical space */
     .history-ticker {
+        padding: 3px 10px;
+    }
+
+    .tick-pill {
+        padding: 2px 7px;
+        font-size: 0.72em;
+    }
+
+    /* Full-width layout — no sidebar on landscape mobile */
+    .layout {
+        grid-template-columns: 1fr;
+        height: calc(100vh - 60px);
+    }
+
+    .left-panel {
         display: none;
     }
 
-    /* Layout: full height minus topbar */
-    .layout {
-        height: calc(100vh - 38px);
+    /* Game canvas shrinks to give room to bet cards */
+    .game-canvas {
+        min-height: 120px;
     }
 
-    /* Side-by-side bet cards in landscape */
+    /* Bet cards side by side in landscape */
     .bet-cards-row {
         grid-template-columns: 1fr 1fr !important;
-        gap: 6px;
         padding: 6px 8px;
+        gap: 6px;
     }
 
-    /* Compact bet card internals */
+    /* Compact bet card body */
     .bc-body {
         padding: 6px 8px;
     }
 
     .bc-amount-row {
         margin-bottom: 5px;
-    }
-
-    .bc-quick {
-        gap: 3px;
-        margin-bottom: 5px;
-    }
-
-    .bc-quick button {
-        padding: 4px 0;
-        font-size: 0.68em;
+        padding: 2px 4px;
     }
 
     .bc-adj {
-        width: 26px;
-        height: 26px;
+        width: 24px;
+        height: 24px;
         font-size: 1.1em;
     }
 
     .bc-amount {
         font-size: 1em;
+    }
+
+    .bc-quick {
+        margin-bottom: 5px;
+        gap: 3px;
+    }
+
+    .bc-quick button {
+        padding: 3px 0;
+        font-size: 0.68em;
     }
 
     .bc-bet-btn,
@@ -1787,53 +1652,42 @@ input {
         font-size: 0.88em;
     }
 
-    .bc-tabs {
-        padding: 2px 2px 0;
-    }
-
-    .bc-tab {
-        padding: 4px 0;
-        font-size: 0.75em;
-    }
-
-    /* Compact canvas */
-    .game-canvas {
-        min-height: 0;
-    }
-
+    /* Multiplier smaller */
     .mult-display {
-        font-size: clamp(2em, 6vw, 3.5em);
-        top: 32%;
+        font-size: clamp(1.8em, 5vw, 3em);
+        top: 40%;
     }
 
     .status-msg {
-        top: 56%;
-        font-size: 0.85em;
+        top: 68%;
+        font-size: 0.82em;
     }
 
     /* Compact provably fair row */
     .provably-row {
         padding: 2px 10px;
-        font-size: 0.65em;
     }
 
-    /* FAB stays but smaller */
+    /* FAB lower on landscape */
     .bets-fab {
         bottom: 8px;
         right: 10px;
-        padding: 8px 12px;
-        font-size: 0.78em;
-    }
-
-    /* Room bar compact */
-    .room-bar {
-        padding: 3px 10px;
+        padding: 8px 14px;
+        font-size: 0.8em;
     }
 }
 
-/* ═══════════════════════════════════════════
-   TOAST — defined here so styles.css owns it
-═══════════════════════════════════════════ */
-#gameToast {
-    font-family: 'Segoe UI', Arial, sans-serif;
+/* Landscape on slightly taller phones (500-600px height) */
+@media (min-height: 500px) and (max-height: 600px) and (orientation: landscape) {
+    .bet-cards-row {
+        grid-template-columns: 1fr 1fr !important;
+    }
+
+    .layout {
+        grid-template-columns: 1fr;
+    }
+
+    .left-panel {
+        display: none;
+    }
 }

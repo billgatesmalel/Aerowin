@@ -4,32 +4,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>winpesa – Aviator</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Aerowin – Aviator</title>
+    <link rel="stylesheet" href="src/styles/styles.css">
 </head>
 
 <body>
 
-    <!-- ═══════ LOADING SCREEN ═══════ -->
-    <div id="loadingScreen" class="game-loading-screen">
+    <!-- LOADING SCREEN -->
+    <div id="gameLoader" class="game-loader">
         <div class="gl-plane">✈️</div>
-        <div class="gl-brand">winpesa</div>
+        <div class="gl-brand">Aerowin</div>
         <div class="gl-sub">Aviator</div>
-        <div class="gl-bar-wrap">
-            <div class="gl-bar" id="glBar"></div>
+        <div class="gl-bar">
+            <div class="gl-fill"></div>
         </div>
-        <div class="gl-dots">
-            <span></span><span></span><span></span>
-        </div>
+        <div class="gl-tip" id="glTip">Loading game...</div>
     </div>
 
     <!-- TOP NAV BAR -->
     <div class="topbar">
-        <div class="topbar-brand">✈️ <span>winpesa</span></div>
+        <div class="topbar-brand">✈️ <span>Aerowin</span></div>
         <div class="topbar-actions">
             <span class="balance-pill">KES <strong id="headerBalance">1000</strong></span>
-            <span class="freebet-pill hidden" id="freeBetPill" title="Free Bet Balance">🎁 <strong
-                    id="headerFreeBet">0</strong></span>
             <button class="btn-icon" onclick="openProfile()">👤</button>
             <button class="btn-icon" onclick="toggleMute()" id="muteBtn">🔊</button>
             <button class="btn-icon theme-toggle" onclick="toggleTheme()" id="themeBtn"
@@ -136,8 +132,8 @@
                         <div class="bc-quick">
                             <button onclick="setBet(1,100)">100</button>
                             <button onclick="setBet(1,250)">250</button>
-                            <button onclick="setBet(1,1000)">1K</button>
-                            <button onclick="setBet(1,25000)">25K</button>
+                            <button onclick="setBet(1,1000)">1,000</button>
+                            <button onclick="setBet(1,25000)">25,000</button>
                         </div>
                         <div class="bc-autocashout hidden" id="autoCashoutPanel1">
                             <label>Auto Cashout at</label>
@@ -161,6 +157,7 @@
                     <div class="bc-tabs">
                         <button class="bc-tab active" id="betTab2" onclick="switchTab(2,'bet')">Bet</button>
                         <button class="bc-tab" id="autoTab2" onclick="switchTab(2,'auto')">Auto</button>
+                        <button class="bc-tab-icon">⊡</button>
                     </div>
                     <div class="bc-body">
                         <div class="bc-amount-row">
@@ -171,8 +168,8 @@
                         <div class="bc-quick">
                             <button onclick="setBet(2,100)">100</button>
                             <button onclick="setBet(2,250)">250</button>
-                            <button onclick="setBet(2,1000)">1K</button>
-                            <button onclick="setBet(2,25000)">25K</button>
+                            <button onclick="setBet(2,1000)">1,000</button>
+                            <button onclick="setBet(2,25000)">25,000</button>
                         </div>
                         <div class="bc-autocashout hidden" id="autoCashoutPanel2">
                             <label>Auto Cashout at</label>
@@ -194,14 +191,17 @@
 
             <div class="provably-row">
                 <span class="provably-fair">🔒 Provably Fair Game</span>
-                <span class="powered-by">Powered by <strong>winpesa</strong></span>
+                <span class="powered-by">Powered by <strong>Aerowin</strong></span>
             </div>
         </div>
     </div>
 
-    <!-- ═══ MOBILE BOTTOM SHEET ═══ -->
+    <!-- ═══════════════════════════════════════
+         MOBILE BOTTOM SHEET (All Bets)
+    ═══════════════════════════════════════ -->
     <div class="sheet-backdrop" id="sheetBackdrop" onclick="closeMobileSheet()"></div>
     <div class="bottom-sheet" id="bottomSheet">
+        <!-- Drag handle -->
         <div class="sheet-drag-handle" id="sheetDragHandle">
             <div class="sheet-drag-pill"></div>
         </div>
@@ -216,6 +216,7 @@
         <div class="bets-table-body sheet-bets-body" id="sheetBetsList"></div>
     </div>
 
+    <!-- Mobile FAB to open sheet -->
     <button class="bets-fab" id="betsFab" onclick="openMobileSheet()">
         👥 <span id="fabCount">0</span> bets
     </button>
@@ -229,7 +230,6 @@
             html.setAttribute('data-theme', next);
             document.getElementById('themeBtn').textContent = next === 'dark' ? '🌙' : '☀️';
             localStorage.setItem('aviatorTheme', next);
-            if (navigator.vibrate) navigator.vibrate(10);
         }
         (function () {
             const saved = localStorage.getItem('aviatorTheme') || 'dark';
@@ -242,6 +242,7 @@
 
         // ── Mobile Bottom Sheet ───────────────────────────────────
         let _sheetDragStartY = 0, _sheetDragDelta = 0;
+
         function openMobileSheet() {
             document.getElementById('bottomSheet').classList.add('open');
             document.getElementById('sheetBackdrop').classList.add('visible');
@@ -261,11 +262,15 @@
             if (sc) sc.textContent = count;
             if (fc) fc.textContent = count;
         }
+
+        // Auto-mirror when desktop list updates
         const _obs = new MutationObserver(mirrorBetsToSheet);
         window.addEventListener('load', () => {
             const src = document.getElementById('allBetsList');
             if (src) _obs.observe(src, { childList: true, subtree: true });
         });
+
+        // Swipe-down to dismiss
         const _handle = document.getElementById('sheetDragHandle');
         _handle.addEventListener('touchstart', e => { _sheetDragStartY = e.touches[0].clientY; }, { passive: true });
         _handle.addEventListener('touchmove', e => {
@@ -298,43 +303,26 @@
                     <span class="profile-value" id="profileBalance">–</span>
                 </div>
                 <div class="profile-item">
-                    <span class="profile-label">Free Bet:</span>
-                    <span class="profile-value" id="profileFreeBet">–</span>
-                </div>
-                <div class="profile-item">
                     <span class="profile-label">Created:</span>
                     <span class="profile-value" id="profileCreated">–</span>
                 </div>
-            </div>
-
-            <!-- Referral Section -->
-            <div class="referral-section">
-                <div class="referral-header">🎟️ My Referral Code</div>
-                <div class="referral-code-row">
-                    <span class="referral-code" id="profileReferralCode">–</span>
-                    <button class="copy-btn" onclick="copyReferralCode()" id="copyRefBtn">Copy</button>
+                <div class="profile-item">
+                    <span class="profile-label">Referral Code:</span>
+                    <span class="profile-value referral-code" id="profileReferralCode">–</span>
+                    <button class="copy-code-btn" onclick="copyReferralCode()" title="Copy code">📋</button>
                 </div>
-                <div class="referral-stats">
-                    <div class="ref-stat">
-                        <span class="ref-stat-label">Referred</span>
-                        <span class="ref-stat-value" id="profileRefCount">0</span>
-                    </div>
-                    <div class="ref-stat">
-                        <span class="ref-stat-label">Earned</span>
-                        <span class="ref-stat-value" id="profileRefEarnings">KES 0</span>
-                    </div>
+                <div class="profile-item">
+                    <span class="profile-label">Referrals:</span>
+                    <span class="profile-value" id="profileReferralCount">0</span>
                 </div>
-                <div class="referral-info">
-                    Share your code. Earn <strong>KES 50</strong> when your friend makes their first deposit.
-                    Your friend gets <strong>KES 20</strong> free bet on signup.
+                <div id="freeBetBanner" class="free-bet-notice hidden">
+                    🎁 Deposit to unlock your <strong>KES 20 free bet!</strong>
                 </div>
             </div>
-
             <div class="profile-actions">
                 <button class="action-btn deposit-btn" onclick="openDepositModal()">💰 Deposit</button>
                 <button class="action-btn withdraw-btn" onclick="openWithdrawModal()">💸 Withdraw</button>
             </div>
-            <button class="action-btn logout-full-btn" onclick="logout()">🚪 Logout</button>
         </div>
     </div>
 
@@ -348,9 +336,6 @@
             <div class="form-group">
                 <label>Amount (KES):</label>
                 <input type="number" id="depositAmount" placeholder="Min 100 KES" min="100">
-            </div>
-            <div id="freeBetNotice" class="freebet-notice hidden">
-                🎁 You'll receive a <strong>KES 20 Free Bet</strong> with your first deposit!
             </div>
             <div class="modal-actions">
                 <button class="action-btn deposit-btn" onclick="processDeposit()">Confirm</button>
@@ -377,7 +362,7 @@
         </div>
     </div>
 
-    <script src="game.js"></script>
+    <script type="module" src="src/main.js"></script>
 </body>
 
 </html>

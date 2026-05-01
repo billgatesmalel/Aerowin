@@ -1,0 +1,465 @@
+/* ══════════════════════════════════════════
+   AUTH PAGE STYLES — Aerowin
+══════════════════════════════════════════ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+/* ── Loading Screen ─────────────────────── */
+.auth-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: linear-gradient(135deg, #1a0a2e, #0d0020);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    transition: opacity 0.4s ease;
+}
+
+.loader-plane {
+    font-size: 3.5em;
+    animation: loaderFly 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes loaderFly {
+    from {
+        transform: translateY(0) rotate(-5deg);
+    }
+
+    to {
+        transform: translateY(-18px) rotate(5deg);
+    }
+}
+
+.loader-brand {
+    font-size: 2em;
+    font-weight: 900;
+    color: #00d4ff;
+    text-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+    letter-spacing: 2px;
+}
+
+.loader-bar {
+    width: 180px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.loader-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00d4ff, #00ff88);
+    border-radius: 2px;
+    animation: loaderFill 1.3s ease forwards;
+}
+
+@keyframes loaderFill {
+    from {
+        width: 0%;
+    }
+
+    to {
+        width: 100%;
+    }
+}
+
+/* ── Auth Container ─────────────────────── */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 20px 0;
+}
+
+.auth-box {
+    background: #1a1a2e;
+    border-radius: 20px;
+    padding: 36px 40px;
+    width: 100%;
+    max-width: 460px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    color: #fff;
+}
+
+.auth-box h1 {
+    text-align: center;
+    margin-bottom: 32px;
+    font-size: 2.4em;
+    color: #00d4ff;
+    text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+}
+
+/* ── Form sections ──────────────────────── */
+.form-section {
+    display: none;
+    animation: fadeIn 0.3s ease-in;
+}
+
+.form-section.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.form-section h2 {
+    margin-bottom: 20px;
+    text-align: center;
+    color: #00d4ff;
+    font-size: 1.7em;
+}
+
+/* ── Free Bet Banner ────────────────────── */
+.free-bet-banner {
+    background: linear-gradient(135deg, rgba(0, 230, 118, 0.15), rgba(0, 212, 255, 0.1));
+    border: 1px solid rgba(0, 230, 118, 0.4);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 18px;
+    font-size: 0.88em;
+    color: #00ff88;
+    text-align: center;
+    animation: pulseBorder 2.5s ease infinite;
+}
+
+@keyframes pulseBorder {
+
+    0%,
+    100% {
+        border-color: rgba(0, 230, 118, 0.4);
+    }
+
+    50% {
+        border-color: rgba(0, 230, 118, 0.85);
+    }
+}
+
+/* ── Form Groups ────────────────────────── */
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 7px;
+    color: #b0b0b0;
+    font-weight: 500;
+    font-size: 0.93em;
+}
+
+.form-group label .optional {
+    color: #666;
+    font-weight: 400;
+    font-size: 0.88em;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #00d4ff;
+    background: #0f3460;
+    color: #00ff88;
+    border-radius: 8px;
+    font-size: 1em;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+    border-color: #00ff88;
+}
+
+.form-group input::placeholder {
+    color: #555;
+}
+
+/* ── Terms & Conditions Checkbox ───────── */
+.terms-group {
+    margin-bottom: 18px;
+}
+
+.terms-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.terms-label input[type="checkbox"] {
+    display: none;
+}
+
+.terms-check-box {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    border: 2px solid #00d4ff;
+    border-radius: 4px;
+    background: #0f3460;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.terms-label input[type="checkbox"]:checked+.terms-check-box {
+    background: #00d4ff;
+    border-color: #00d4ff;
+}
+
+.terms-label input[type="checkbox"]:checked+.terms-check-box::after {
+    content: '✓';
+    color: #0f3460;
+    font-size: 0.85em;
+    font-weight: 900;
+}
+
+.terms-text {
+    font-size: 0.86em;
+    color: #b0b0b0;
+    line-height: 1.5;
+}
+
+.terms-text a {
+    color: #00d4ff;
+    text-decoration: underline;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.terms-text a:hover {
+    color: #00ff88;
+}
+
+/* ── Buttons ────────────────────────────── */
+.btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.05em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: white;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    margin-top: 8px;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+/* ── Form Toggle ────────────────────────── */
+.form-toggle {
+    text-align: center;
+    margin-top: 18px;
+    color: #b0b0b0;
+    font-size: 0.93em;
+}
+
+.form-toggle a {
+    color: #00d4ff;
+    text-decoration: none;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.form-toggle a:hover {
+    color: #00ff88;
+}
+
+/* ── Message Box ────────────────────────── */
+.message-box {
+    margin-top: 18px;
+    padding: 14px;
+    border-radius: 8px;
+    text-align: center;
+    display: none;
+    font-weight: bold;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.message-box.success {
+    background: rgba(0, 255, 136, 0.1);
+    border: 2px solid #00ff88;
+    color: #00ff88;
+    display: block;
+}
+
+.message-box.error {
+    background: rgba(255, 107, 107, 0.1);
+    border: 2px solid #ff6b6b;
+    color: #ff6b6b;
+    display: block;
+}
+
+/* ══════════════════════════════════════════
+   TERMS & CONDITIONS MODAL
+══════════════════════════════════════════ */
+.terms-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(6px);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.terms-modal.open {
+    display: flex;
+}
+
+.terms-modal-content {
+    background: #1a1a2e;
+    border: 1px solid rgba(0, 212, 255, 0.25);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 500px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    animation: fadeIn 0.25s ease;
+}
+
+.terms-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.terms-modal-header h3 {
+    color: #00d4ff;
+    font-size: 1.1em;
+}
+
+.terms-close {
+    background: none;
+    color: #888;
+    font-size: 1.3em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: color 0.2s;
+}
+
+.terms-close:hover {
+    color: #fff;
+}
+
+.terms-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px 20px;
+    scrollbar-width: thin;
+    scrollbar-color: #4a2080 transparent;
+}
+
+.terms-body::-webkit-scrollbar {
+    width: 4px;
+}
+
+.terms-body::-webkit-scrollbar-thumb {
+    background: #4a2080;
+    border-radius: 4px;
+}
+
+.terms-body h4 {
+    color: #00d4ff;
+    font-size: 0.92em;
+    margin: 16px 0 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.terms-body h4:first-child {
+    margin-top: 0;
+}
+
+.terms-body p {
+    color: #b0b0b0;
+    font-size: 0.87em;
+    line-height: 1.6;
+}
+
+.terms-modal-footer {
+    padding: 14px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.terms-modal-footer .btn {
+    margin-top: 0;
+}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════ */
+@media (max-width: 480px) {
+    .auth-box {
+        padding: 28px 20px;
+    }
+
+    .auth-box h1 {
+        font-size: 2em;
+        margin-bottom: 24px;
+    }
+
+    .form-section h2 {
+        font-size: 1.4em;
+    }
+}

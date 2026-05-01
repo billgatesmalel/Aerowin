@@ -1,116 +1,179 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Aerowin - Login</title>
-
-    <link rel="stylesheet" href="auth.css">
-
+    <link rel="stylesheet" href="src/styles/auth.css">
 </head>
 
 <body>
 
-    <div class="auth-container">
+    <!-- LOADING SCREEN -->
+    <div id="authLoader" class="auth-loader">
+        <div class="loader-plane">✈️</div>
+        <div class="loader-brand">Aerowin</div>
+        <div class="loader-bar">
+            <div class="loader-fill"></div>
+        </div>
+    </div>
 
+    <div class="auth-container" id="authContainer" style="display:none">
         <div class="auth-box">
-
             <h1>✈️ Aerowin</h1>
 
-
-
             <!-- Login Form -->
-
             <div id="loginForm" class="form-section active">
-
                 <h2>Login</h2>
-
                 <div class="form-group">
-
                     <label for="loginPhone">Phone Number</label>
-
                     <input type="tel" id="loginPhone" placeholder="+254 or 0..." required>
-
                 </div>
-
                 <div class="form-group">
-
                     <label for="loginPassword">Password</label>
-
                     <input type="password" id="loginPassword" placeholder="Enter your password" required>
-
                 </div>
-
                 <button class="btn btn-primary" onclick="handleLogin()">Login</button>
-
                 <p class="form-toggle">Don't have an account? <a href="#" onclick="toggleForms()">Sign Up</a></p>
-
             </div>
 
-
-
             <!-- Sign Up Form -->
-
             <div id="signupForm" class="form-section">
-
                 <h2>Create Account</h2>
 
-                <div class="form-group">
+                <!-- Free bet banner -->
+                <div class="free-bet-banner">
+                    🎁 Deposit any amount and get a <strong>KES 20 free bet!</strong>
+                </div>
 
+                <div class="form-group">
                     <label for="signupPhone">Phone Number</label>
-
                     <input type="tel" id="signupPhone" placeholder="+254 or 0..." required>
-
                 </div>
-
                 <div class="form-group">
-
                     <label for="signupPassword">Password</label>
-
                     <input type="password" id="signupPassword" placeholder="At least 6 characters" required>
-
                 </div>
-
                 <div class="form-group">
-
                     <label for="signupConfirm">Confirm Password</label>
-
                     <input type="password" id="signupConfirm" placeholder="Confirm your password" required>
-
                 </div>
 
+                <!-- Referral Code (optional) -->
                 <div class="form-group">
+                    <label for="signupReferral">Referral Code <span class="optional">(optional)</span></label>
+                    <input type="text" id="signupReferral" placeholder="Enter referral code" maxlength="8"
+                        style="text-transform:uppercase">
+                </div>
 
-                    <label for="signupReferral">Referral Code <span style="color:#888;font-size:0.82em;">(optional –
-                            earn KES 20 bonus)</span></label>
-
-                    <input type="tel" id="signupReferral" placeholder="Enter referrer's phone number">
-
+                <!-- Terms & Conditions -->
+                <div class="terms-group">
+                    <label class="terms-label">
+                        <input type="checkbox" id="termsCheckbox">
+                        <span class="terms-check-box"></span>
+                        <span class="terms-text">
+                            I have read and agree to the
+                            <a href="#" onclick="openTerms(event)">Terms &amp; Conditions</a>
+                            and confirm I am 18 years or older.
+                        </span>
+                    </label>
                 </div>
 
                 <button class="btn btn-primary" onclick="handleSignup()">Create Account</button>
-
                 <p class="form-toggle">Already have an account? <a href="#" onclick="toggleForms()">Login</a></p>
-
             </div>
 
-
-
             <div id="messageBox" class="message-box"></div>
-
         </div>
-
     </div>
 
+    <!-- TERMS & CONDITIONS MODAL -->
+    <div id="termsModal" class="terms-modal">
+        <div class="terms-modal-content">
+            <div class="terms-modal-header">
+                <h3>📋 Terms &amp; Conditions</h3>
+                <button class="terms-close" onclick="closeTerms()">✕</button>
+            </div>
+            <div class="terms-body">
+                <h4>1. Eligibility</h4>
+                <p>You must be at least 18 years of age to use Aerowin. By registering, you confirm that you meet this
+                    requirement and that online betting is legal in your jurisdiction.</p>
 
+                <h4>2. Account Responsibility</h4>
+                <p>You are solely responsible for maintaining the confidentiality of your account credentials. Aerowin
+                    is not liable for any losses resulting from unauthorized access due to your failure to secure your
+                    login details.</p>
 
-    <script src="auth.js"></script>
+                <h4>3. Fair Play</h4>
+                <p>Any attempt to manipulate, exploit, or cheat the game system will result in immediate account
+                    suspension and forfeiture of all balances. Aerowin reserves the right to void bets placed in bad
+                    faith.</p>
 
+                <h4>4. Deposits &amp; Withdrawals</h4>
+                <p>All deposits and withdrawals are processed in Kenya Shillings (KES). Minimum deposit and withdrawal
+                    amounts apply. Aerowin reserves the right to request identity verification before processing
+                    withdrawals.</p>
+
+                <h4>5. Free Bet Bonus</h4>
+                <p>The KES 20 free bet is awarded once upon your first deposit. It cannot be withdrawn directly —
+                    winnings from the free bet are credited to your main balance and are fully withdrawable.</p>
+
+                <h4>6. Referral Program</h4>
+                <p>Referral codes are issued to existing users. Both the referrer and the new user may receive a bonus
+                    as defined at the time of referral. Aerowin reserves the right to modify or cancel the referral
+                    program at any time.</p>
+
+                <h4>7. Responsible Gambling</h4>
+                <p>Gambling should be for entertainment only. Never bet more than you can afford to lose. If you feel
+                    you may have a gambling problem, please seek help from a professional organization.</p>
+
+                <h4>8. Privacy</h4>
+                <p>Your personal data is stored securely and used only for account management and game operation. We do
+                    not sell your data to third parties.</p>
+
+                <h4>9. Changes to Terms</h4>
+                <p>Aerowin reserves the right to update these terms at any time. Continued use of the platform
+                    constitutes acceptance of the latest terms.</p>
+
+                <h4>10. Governing Law</h4>
+                <p>These terms are governed by the laws of the Republic of Kenya. Any disputes shall be subject to the
+                    jurisdiction of Kenyan courts.</p>
+            </div>
+            <div class="terms-modal-footer">
+                <button class="btn btn-primary" onclick="acceptTerms()">✅ I Agree</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="src/auth.js"></script>
+    <script>
+        // Show auth container after loader
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const loader = document.getElementById('authLoader');
+                const container = document.getElementById('authContainer');
+                if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 400); }
+                if (container) container.style.display = 'flex';
+            }, 1400);
+        });
+
+        function openTerms(e) {
+            e.preventDefault();
+            document.getElementById('termsModal').classList.add('open');
+        }
+        function closeTerms() {
+            document.getElementById('termsModal').classList.remove('open');
+        }
+        function acceptTerms() {
+            document.getElementById('termsCheckbox').checked = true;
+            closeTerms();
+        }
+        // Close modal on backdrop click
+        document.getElementById('termsModal').addEventListener('click', function (e) {
+            if (e.target === this) closeTerms();
+        });
+    </script>
 </body>
 
 </html>

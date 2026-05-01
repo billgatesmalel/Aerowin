@@ -1,21 +1,24 @@
 // ══════════════════════════════════════════════
-// GAME.JS — Enhanced
+// IMPORTS
 // ══════════════════════════════════════════════
+import { supabase } from './lib/supabase.js';
 
-// ── STATE ─────────────────────────────────────
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
 let balance = 1000;
-let freeBetBalance = 0;
-let bet1 = { amount: 100, active: false, cashed: false, auto: false, winnings: 0, usingFreeBet: false };
-let bet2 = { amount: 100, active: false, cashed: false, auto: false, winnings: 0, usingFreeBet: false };
+let bet1 = { amount: 100, active: false, cashed: false, auto: false, winnings: 0 };
+let bet2 = { amount: 100, active: false, cashed: false, auto: false, winnings: 0 };
 let currentMultiplier = 1.0;
 let crashPoint = 0;
 let gameInterval = null;
 let currentUser = null;
 let crashHistory = [];
-let gameState = 'waiting';
+let gameState = 'waiting'; // 'waiting' | 'playing' | 'crashed'
 let countdown = 5;
 let allBets = [];
 let muted = false;
+let audioCtx = null;
 
 let tickSpeed = 50;
 let tickIncrement = 0.02;
@@ -29,103 +32,88 @@ let graphCtx2d = null;
 // Particle trail state
 let particles = [];
 
-// Simulated counts
+// Simulated total count
 let simulatedTotalCount = 0;
 let totalCountInterval = null;
+
+// Live player count
 let livePlayerCount = 0;
 let livePlayerInterval = null;
 
-// ── AUDIO — single AudioContext, all nodes tracked ─────────
-let audioCtx = null;
-let risingOscillator = null;
-let risingGain = null;
-let engineRumbleSource = null;
-let engineRumbleGain = null;
-// Master gain — muting goes through this so NOTHING leaks
-let masterGain = null;
-
-// ── LOADING SCREEN ─────────────────────────────
-function hideLoadingScreen() {
-    const ls = document.getElementById('loadingScreen');
-    if (!ls) return;
-    ls.style.transition = 'opacity 0.5s ease';
-    ls.style.opacity = '0';
-    setTimeout(() => { ls.style.display = 'none'; }, 500);
-}
-
-// ══════════════════════════════════════════════
-// BOOT
-// ══════════════════════════════════════════════
-window.addEventListener('load', () => {
-    const stored = localStorage.getItem('currentUser');
-    if (!stored) { window.location.href = 'auth.html'; return; }
-    try { currentUser = JSON.parse(stored); } catch (e) { window.location.href = 'auth.html'; return; }
-    if (currentUser.expiresAt && new Date(currentUser.expiresAt) < new Date()) {
-        localStorage.removeItem('currentUser');
-        window.location.href = 'auth.html';
-        return;
-    }
-
-    balance = currentUser.balance;
-    freeBetBalance = currentUser.freeBetBalance || 0;
-
-    const hist = localStorage.getItem('crashHistory_' + currentUser.phone);
-    if (hist) { try { crashHistory = JSON.parse(hist); } catch (e) { } }
-
-    // Show loading screen for a beat, then start
-    setTimeout(() => {
-        hideLoadingScreen();
-        initAudio();
-        initCanvas();
-        updateUI();
-        renderTicker();
-        startLivePlayerCount();
-        startNewRound();
-    }, 1800);
-});
 
 // ══════════════════════════════════════════════
 // HAPTIC FEEDBACK
 // ══════════════════════════════════════════════
-function haptic(type = 'light') {
-    if (!navigator.vibrate) return;
-    const patterns = {
-        light: [10],
-        medium: [20],
-        heavy: [30, 10, 30],
-        success: [10, 50, 10],
-        error: [50, 20, 50],
-        cashout: [15, 30, 15, 30, 15],
-        crash: [100, 50, 100],
-        tick: [5],
-    };
-    navigator.vibrate(patterns[type] || [10]);
+function haptic(pattern = [30]) {
+    try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) { }
 }
+// ══════════════════════════════════════════════
+// AUDIO NODES
+// ══════════════════════════════════════════════
+let risingOscillator = null;
+let risingGain = null;
+let engineRumbleSource = null;
+let engineRumbleGain = null;
 
 // ══════════════════════════════════════════════
-// AUDIO ENGINE — all routed through masterGain
+// BOOT
+// ══════════════════════════════════════════════
+window.addEventListener('load', async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) { 
+        window.location.href = 'auth.html'; 
+        return; 
+    }
+
+    // Fetch profile from Supabase
+    const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+
+    if (error || !profile) {
+        console.error('Profile not found', error);
+        window.location.href = 'auth.html';
+        return;
+    }
+
+    currentUser = { ...session.user, ...profile };
+    balance = profile.balance;
+
+    // Fetch crash history (could be local or from DB, let's stick to local for simplicity or DB if table exists)
+    const { data: history } = await supabase
+        .from('game_history')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+    if (history) {
+        crashHistory = history.map(h => h.multiplier);
+        renderTicker();
+    }
+
+    initAudio();
+    initCanvas();
+    updateUI();
+    showGameLoader(() => startNewRound());
+});
+
+// ══════════════════════════════════════════════
+// AUDIO ENGINE
 // ══════════════════════════════════════════════
 function initAudio() {
-    try {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        // Master gain node — muting sets this to 0, not individual nodes
-        masterGain = audioCtx.createGain();
-        masterGain.gain.setValueAtTime(1, audioCtx.currentTime);
-        masterGain.connect(audioCtx.destination);
-    } catch (e) { }
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { }
 }
 
 function resumeAudio() {
     if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 }
 
-function setMasterMute(mute) {
-    if (!masterGain || !audioCtx) return;
-    masterGain.gain.setValueAtTime(mute ? 0 : 1, audioCtx.currentTime);
-}
-
+// ── Utility: play a one-shot tone ─────────────
 function playTone(freq, dur, type = 'sine', vol = 0.08) {
-    if (!audioCtx || !masterGain) return;
+    if (muted || !audioCtx) return;
     resumeAudio();
     try {
         const o = audioCtx.createOscillator();
@@ -134,40 +122,45 @@ function playTone(freq, dur, type = 'sine', vol = 0.08) {
         o.frequency.setValueAtTime(freq, audioCtx.currentTime);
         g.gain.setValueAtTime(vol, audioCtx.currentTime);
         g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
-        o.connect(g);
-        g.connect(masterGain); // ← route through master
+        o.connect(g); g.connect(audioCtx.destination);
         o.start(); o.stop(audioCtx.currentTime + dur);
     } catch (e) { }
 }
 
-// ── Bet placed ─────────────────────────────────
+// ── 1. BET PLACED — crisp click + confirmation chime ──────────
 function playSoundBetPlaced() {
-    if (!audioCtx) return;
+    if (muted || !audioCtx) return;
     resumeAudio();
+    // Click
     playTone(900, 0.06, 'square', 0.05);
+    // Confirmation ding after 60ms
     setTimeout(() => playTone(1200, 0.12, 'sine', 0.06), 60);
 }
 
-// ── Engine rumble ─────────────────────────────
+// ── 2. ENGINE RUMBLE — low drone that plays while flying ───────
 function startEngineRumble() {
-    if (!audioCtx || !masterGain) return;
+    if (muted || !audioCtx) return;
     resumeAudio();
     stopEngineRumble();
     try {
+        // Layered: low rumble oscillator + noise buffer
         engineRumbleGain = audioCtx.createGain();
         engineRumbleGain.gain.setValueAtTime(0.0, audioCtx.currentTime);
         engineRumbleGain.gain.linearRampToValueAtTime(0.05, audioCtx.currentTime + 0.6);
-        engineRumbleGain.connect(masterGain); // ← master
+        engineRumbleGain.connect(audioCtx.destination);
 
+        // Low sub rumble
         const sub = audioCtx.createOscillator();
         sub.type = 'sawtooth';
         sub.frequency.setValueAtTime(55, audioCtx.currentTime);
         sub.frequency.linearRampToValueAtTime(80, audioCtx.currentTime + 0.5);
 
+        // Mid growl
         const mid = audioCtx.createOscillator();
         mid.type = 'square';
         mid.frequency.setValueAtTime(110, audioCtx.currentTime);
 
+        // Noise layer (white noise via buffer)
         const bufSize = audioCtx.sampleRate * 2;
         const noiseBuffer = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
         const data = noiseBuffer.getChannelData(0);
@@ -176,6 +169,7 @@ function startEngineRumble() {
         noiseSource.buffer = noiseBuffer;
         noiseSource.loop = true;
 
+        // Low-pass filter on noise to get a whoosh feel
         const lpf = audioCtx.createBiquadFilter();
         lpf.type = 'lowpass';
         lpf.frequency.setValueAtTime(400, audioCtx.currentTime);
@@ -186,13 +180,15 @@ function startEngineRumble() {
         lpf.connect(engineRumbleGain);
 
         sub.start(); mid.start(); noiseSource.start();
+
         engineRumbleSource = { sub, mid, noise: noiseSource };
     } catch (e) { }
 }
 
 function updateEngineRumble(mult) {
-    if (!engineRumbleSource || !engineRumbleGain || !audioCtx) return;
+    if (!engineRumbleSource || !engineRumbleGain || muted) return;
     try {
+        // Volume and pitch increase as multiplier climbs
         const vol = Math.min(0.12, 0.04 + (mult - 1) * 0.004);
         engineRumbleGain.gain.setValueAtTime(vol, audioCtx.currentTime);
         const freq = 55 + Math.min(120, (mult - 1) * 8);
@@ -204,24 +200,23 @@ function updateEngineRumble(mult) {
 function stopEngineRumble() {
     if (!engineRumbleSource) return;
     try {
-        if (engineRumbleGain && audioCtx) {
+        if (engineRumbleGain) {
             engineRumbleGain.gain.setValueAtTime(engineRumbleGain.gain.value, audioCtx.currentTime);
             engineRumbleGain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
         }
-        const src = engineRumbleSource;
         setTimeout(() => {
-            try { src.sub.stop(); } catch (e) { }
-            try { src.mid.stop(); } catch (e) { }
-            try { src.noise.stop(); } catch (e) { }
+            try { engineRumbleSource.sub.stop(); } catch (e) { }
+            try { engineRumbleSource.mid.stop(); } catch (e) { }
+            try { engineRumbleSource.noise.stop(); } catch (e) { }
         }, 350);
     } catch (e) { }
     engineRumbleSource = null;
     engineRumbleGain = null;
 }
 
-// ── Rising tone ────────────────────────────────
+// ── 3. RISING PITCH (existing) — kept & improved ──────────────
 function startRisingTone() {
-    if (!audioCtx || !masterGain) return;
+    if (muted || !audioCtx) return;
     resumeAudio();
     stopRisingTone();
     try {
@@ -231,13 +226,13 @@ function startRisingTone() {
         risingOscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
         risingGain.gain.setValueAtTime(0.03, audioCtx.currentTime);
         risingOscillator.connect(risingGain);
-        risingGain.connect(masterGain); // ← master
+        risingGain.connect(audioCtx.destination);
         risingOscillator.start();
     } catch (e) { }
 }
 
 function updateRisingTone(mult) {
-    if (!risingOscillator || !audioCtx) return;
+    if (!risingOscillator || muted) return;
     try {
         const freq = 200 + Math.min(700, (mult - 1) * 40);
         risingOscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
@@ -245,7 +240,7 @@ function updateRisingTone(mult) {
 }
 
 function stopRisingTone() {
-    if (!risingOscillator || !audioCtx) return;
+    if (!risingOscillator) return;
     try {
         risingGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
         risingOscillator.stop(audioCtx.currentTime + 0.25);
@@ -254,17 +249,18 @@ function stopRisingTone() {
     risingGain = null;
 }
 
-// ── Cash out ──────────────────────────────────
+// ── 4. CASH REGISTER — win cashout sound ──────────────────────
 function playSoundCashOut() {
-    if (!audioCtx || !masterGain) return;
+    if (muted || !audioCtx) return;
     resumeAudio();
     try {
+        // Classic cash register: ascending ding-ding
         const now = audioCtx.currentTime;
         const notes = [
-            { freq: 1047, t: 0, dur: 0.12 },
-            { freq: 1319, t: 0.10, dur: 0.12 },
-            { freq: 1568, t: 0.20, dur: 0.16 },
-            { freq: 2093, t: 0.30, dur: 0.25 },
+            { freq: 1047, t: 0, dur: 0.12 },  // C6
+            { freq: 1319, t: 0.10, dur: 0.12 },  // E6
+            { freq: 1568, t: 0.20, dur: 0.16 },  // G6
+            { freq: 2093, t: 0.30, dur: 0.25 },  // C7 — high ding
         ];
         notes.forEach(n => {
             const o = audioCtx.createOscillator();
@@ -273,9 +269,10 @@ function playSoundCashOut() {
             o.frequency.setValueAtTime(n.freq, now + n.t);
             g.gain.setValueAtTime(0.10, now + n.t);
             g.gain.exponentialRampToValueAtTime(0.001, now + n.t + n.dur);
-            o.connect(g); g.connect(masterGain);
+            o.connect(g); g.connect(audioCtx.destination);
             o.start(now + n.t); o.stop(now + n.t + n.dur + 0.05);
         });
+        // Coin jingle noise burst
         setTimeout(() => {
             for (let i = 0; i < 4; i++) {
                 setTimeout(() => playTone(1800 + Math.random() * 800, 0.06, 'sine', 0.04), i * 35);
@@ -284,12 +281,14 @@ function playSoundCashOut() {
     } catch (e) { }
 }
 
-// ── Explosion ──────────────────────────────────
+// ── 5. EXPLOSION — crash sound ────────────────────────────────
 function playSoundExplosion() {
-    if (!audioCtx || !masterGain) return;
+    if (muted || !audioCtx) return;
     resumeAudio();
     try {
         const now = audioCtx.currentTime;
+
+        // Boom: low thud
         const boom = audioCtx.createOscillator();
         const boomGain = audioCtx.createGain();
         boom.type = 'sine';
@@ -297,9 +296,10 @@ function playSoundExplosion() {
         boom.frequency.exponentialRampToValueAtTime(20, now + 0.5);
         boomGain.gain.setValueAtTime(0.35, now);
         boomGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
-        boom.connect(boomGain); boomGain.connect(masterGain);
+        boom.connect(boomGain); boomGain.connect(audioCtx.destination);
         boom.start(now); boom.stop(now + 0.65);
 
+        // Crack: distorted burst
         const crack = audioCtx.createOscillator();
         const crackGain = audioCtx.createGain();
         crack.type = 'sawtooth';
@@ -307,9 +307,10 @@ function playSoundExplosion() {
         crack.frequency.exponentialRampToValueAtTime(40, now + 0.3);
         crackGain.gain.setValueAtTime(0.18, now);
         crackGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-        crack.connect(crackGain); crackGain.connect(masterGain);
+        crack.connect(crackGain); crackGain.connect(audioCtx.destination);
         crack.start(now); crack.stop(now + 0.4);
 
+        // Debris noise burst
         const bufSize = audioCtx.sampleRate * 0.6;
         const noiseBuf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
         const nd = noiseBuf.getChannelData(0);
@@ -322,9 +323,10 @@ function playSoundExplosion() {
         const hpf = audioCtx.createBiquadFilter();
         hpf.type = 'highpass';
         hpf.frequency.setValueAtTime(600, now);
-        ns.connect(hpf); hpf.connect(nsGain); nsGain.connect(masterGain);
+        ns.connect(hpf); hpf.connect(nsGain); nsGain.connect(audioCtx.destination);
         ns.start(now); ns.stop(now + 0.6);
 
+        // Descending whine
         setTimeout(() => {
             playTone(800, 0.4, 'sawtooth', 0.06);
             playTone(400, 0.5, 'sawtooth', 0.04);
@@ -332,14 +334,15 @@ function playSoundExplosion() {
     } catch (e) { }
 }
 
-// ── Milestone ─────────────────────────────────
+// ── 6. MILESTONE PINGS ────────────────────────────────────────
 function playMilestoneSound(mult) {
-    if (!audioCtx || !masterGain) return;
+    if (muted || !audioCtx) return;
     resumeAudio();
     try {
         const freqs = { 2: 880, 5: 1100, 10: 1400, 20: 1800 };
         const freq = freqs[mult] || 880;
         const now = audioCtx.currentTime;
+        // Double-ping
         [0, 0.12].forEach((delay, i) => {
             const o = audioCtx.createOscillator();
             const g = audioCtx.createGain();
@@ -347,32 +350,69 @@ function playMilestoneSound(mult) {
             o.frequency.setValueAtTime(freq * (i === 1 ? 1.25 : 1), now + delay);
             g.gain.setValueAtTime(0.12, now + delay);
             g.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.25);
-            o.connect(g); g.connect(masterGain);
+            o.connect(g); g.connect(audioCtx.destination);
             o.start(now + delay); o.stop(now + delay + 0.3);
         });
     } catch (e) { }
 }
 
-// ── Tick ──────────────────────────────────────
+// ── 7. COUNTDOWN TICK ─────────────────────────────────────────
 function playSoundTick() {
     playTone(440, 0.05, 'square', 0.03);
 }
 
-// ── Mute — now truly global via masterGain ─────
+// ── 8. MUTE TOGGLE ────────────────────────────────────────────
 let _muteState = false;
 function toggleMute() {
     _muteState = !_muteState;
     muted = _muteState;
-    setMasterMute(muted); // ← single point of control
     const btn = document.getElementById('muteBtn');
     if (btn) btn.textContent = muted ? '🔇' : '🔊';
-    haptic('light');
+    if (muted) {
+        stopEngineRumble();
+        stopRisingTone();
+    } else if (gameState === 'playing') {
+        startEngineRumble();
+        startRisingTone();
+    }
 }
 
-function playSound(freq, dur, type = 'sine') { playTone(freq, dur, type); }
+// Keep legacy alias used elsewhere
+function playSound(freq, dur, type = 'sine') {
+    playTone(freq, dur, type);
+}
+
 
 // ══════════════════════════════════════════════
-// CANVAS GRAPH
+// GAME LOADING SCREEN
+// ══════════════════════════════════════════════
+const LOADING_TIPS = [
+    'Place your bet before the plane takes off!',
+    'Cash out early for guaranteed winnings.',
+    'The higher the multiplier, the bigger the risk!',
+    'Auto cashout locks in your profit automatically.',
+    'Use two bets — one safe, one aggressive!',
+];
+
+function showGameLoader(callback) {
+    const loader = document.getElementById('gameLoader');
+    if (!loader) { callback(); return; }
+    // Show random tip
+    const tip = document.getElementById('glTip');
+    if (tip) tip.textContent = LOADING_TIPS[Math.floor(Math.random() * LOADING_TIPS.length)];
+    loader.style.display = 'flex';
+    // Hide after 2s then run callback
+    setTimeout(() => {
+        loader.style.opacity = '0';
+        setTimeout(() => {
+            loader.style.display = 'none';
+            callback();
+        }, 400);
+    }, 2000);
+}
+
+// ══════════════════════════════════════════════
+// CANVAS GRAPH (animated line + plane on curve)
 // ══════════════════════════════════════════════
 function initCanvas() {
     const board = document.getElementById('gameBoard');
@@ -400,13 +440,15 @@ function getGraphXY(mult, canvasW, canvasH) {
 
 function drawGraph() {
     if (!graphCtx2d || !graphCanvas) return;
-    const W = graphCanvas.width, H = graphCanvas.height;
+    const W = graphCanvas.width;
+    const H = graphCanvas.height;
     graphCtx2d.clearRect(0, 0, W, H);
     if (graphPoints.length < 2) return;
 
     const pts = graphPoints;
     const crashed = gameState === 'crashed';
 
+    // Gradient fill under curve
     graphCtx2d.beginPath();
     graphCtx2d.moveTo(pts[0].x, H);
     pts.forEach(p => graphCtx2d.lineTo(p.x, p.y));
@@ -418,10 +460,12 @@ function drawGraph() {
     graphCtx2d.fillStyle = fillGrad;
     graphCtx2d.fill();
 
+    // Curve line
     graphCtx2d.beginPath();
     graphCtx2d.moveTo(pts[0].x, pts[0].y);
     for (let i = 1; i < pts.length; i++) {
-        const prev = pts[i - 1], curr = pts[i];
+        const prev = pts[i - 1];
+        const curr = pts[i];
         const cx = (prev.x + curr.x) / 2;
         graphCtx2d.bezierCurveTo(cx, prev.y, cx, curr.y, curr.x, curr.y);
     }
@@ -432,8 +476,10 @@ function drawGraph() {
     graphCtx2d.stroke();
     graphCtx2d.shadowBlur = 0;
 
+    // Particle trail
     drawParticles();
 
+    // Move SVG plane to end of curve
     const last = pts[pts.length - 1];
     const prev2 = pts.length > 1 ? pts[pts.length - 2] : pts[0];
     const angle = Math.atan2(last.y - prev2.y, last.x - prev2.x) * 180 / Math.PI;
@@ -506,7 +552,6 @@ function updateLivePlayerDisplay() {
 // ══════════════════════════════════════════════
 // TOAST NOTIFICATIONS
 // ══════════════════════════════════════════════
-let _toastTimer = null;
 function showToast(message, type = 'info') {
     let toast = document.getElementById('gameToast');
     if (!toast) {
@@ -529,8 +574,8 @@ function showToast(message, type = 'info') {
     toast.textContent = message;
     toast.style.transform = 'translateX(-50%) translateY(0)';
     toast.style.opacity = '1';
-    clearTimeout(_toastTimer);
-    _toastTimer = setTimeout(() => {
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => {
         toast.style.transform = 'translateX(-50%) translateY(80px)';
         toast.style.opacity = '0';
     }, 2800);
@@ -541,24 +586,8 @@ function showToast(message, type = 'info') {
 // ══════════════════════════════════════════════
 function updateUI() {
     document.getElementById('headerBalance').textContent = formatNum(balance);
-
-    // Free bet pill
-    const fbPill = document.getElementById('freeBetPill');
-    const fbHeader = document.getElementById('headerFreeBet');
-    if (fbPill && fbHeader) {
-        if (freeBetBalance > 0) {
-            fbPill.classList.remove('hidden');
-            fbHeader.textContent = formatNum(freeBetBalance);
-        } else {
-            fbPill.classList.add('hidden');
-        }
-    }
-
     const pb = document.getElementById('profileBalance');
     if (pb) pb.textContent = 'KES ' + formatNum(balance);
-    const pfb = document.getElementById('profileFreeBet');
-    if (pfb) pfb.textContent = freeBetBalance > 0 ? 'KES ' + formatNum(freeBetBalance) : 'None';
-
     syncBetCard(1);
     syncBetCard(2);
 }
@@ -604,7 +633,6 @@ function adjustBet(num, delta) {
     const bet = num === 1 ? bet1 : bet2;
     if (bet.active && gameState === 'playing') return;
     bet.amount = Math.max(50, (bet.amount || 0) + delta);
-    haptic('light');
     syncBetCard(num);
 }
 
@@ -612,10 +640,12 @@ function setBet(num, val) {
     const bet = num === 1 ? bet1 : bet2;
     if (bet.active && gameState === 'playing') return;
     bet.amount = val;
-    haptic('light');
     syncBetCard(num);
 }
 
+// ══════════════════════════════════════════════
+// TAB SWITCHING
+// ══════════════════════════════════════════════
 function switchTab(num, mode) {
     document.getElementById('betTab' + num).classList.toggle('active', mode === 'bet');
     document.getElementById('autoTab' + num).classList.toggle('active', mode === 'auto');
@@ -623,57 +653,40 @@ function switchTab(num, mode) {
     const autoRow = document.getElementById('autoBetRow' + num);
     if (autoPanel) autoPanel.classList.toggle('hidden', mode !== 'auto');
     if (autoRow) autoRow.classList.toggle('hidden', mode !== 'auto');
-    haptic('light');
 }
 
 // ══════════════════════════════════════════════
-// PLACE BET / CANCEL
+// PLACE BET / CANCEL BET
 // ══════════════════════════════════════════════
-function placeBet(num) {
-    resumeAudio();
+async function placeBet(num) {
+    resumeAudio(); // Unlock audio context on first user gesture
     const bet = num === 1 ? bet1 : bet2;
     const input = document.getElementById('betAmount' + num);
     const amount = parseFloat(input.value);
 
-    // Cancel pending bet
     if (bet.active && gameState === 'waiting') {
-        if (bet.usingFreeBet) freeBetBalance += bet.amount;
-        else balance += bet.amount;
+        balance += bet.amount;
         bet.active = false;
         bet.cashed = false;
-        bet.usingFreeBet = false;
         saveBalance();
         updateUI();
-        haptic('medium');
         showToast('Bet cancelled', 'warn');
         return;
     }
 
-    if (isNaN(amount) || amount < 50) { haptic('error'); showToast('Minimum bet is KES 50', 'error'); return; }
+    if (isNaN(amount) || amount < 50) { showToast('Minimum bet is KES 50', 'error'); return; }
+    if (amount > balance) { showToast('Insufficient balance!', 'error'); return; }
     if (bet.active) return;
 
-    // Try free bet balance first if main balance is short
-    let usingFree = false;
-    if (amount <= freeBetBalance) {
-        usingFree = true;
-        freeBetBalance -= amount;
-    } else if (amount > balance) {
-        haptic('error');
-        showToast('Insufficient balance!', 'error');
-        return;
-    } else {
-        balance -= amount;
-    }
-
+    balance -= amount;
     bet.amount = amount;
     bet.active = true;
     bet.cashed = false;
     bet.winnings = 0;
-    bet.usingFreeBet = usingFree;
 
     saveBalance();
     updateUI();
-    haptic('medium');
+    haptic([25]);
     playSoundBetPlaced();
     addMyBetToFeed(num, amount);
 }
@@ -681,7 +694,7 @@ function placeBet(num) {
 // ══════════════════════════════════════════════
 // CASH OUT
 // ══════════════════════════════════════════════
-function cashOutBet(num) {
+async function cashOutBet(num) {
     const bet = num === 1 ? bet1 : bet2;
     if (!bet.active || bet.cashed || gameState !== 'playing') return;
 
@@ -696,11 +709,14 @@ function cashOutBet(num) {
 
     saveBalance();
     updateUI();
-    haptic('cashout');
-    playSoundCashOut();
+    haptic([30, 20, 80]);  // buzz on win
+    playSoundCashOut();   // 🎰 Cash register!
     showToast(`✅ KES ${formatNum(bet.winnings)} cashed at ${currentMultiplier.toFixed(2)}x!`, 'success');
 }
 
+// ══════════════════════════════════════════════
+// AUTO BET
+// ══════════════════════════════════════════════
 function toggleAutoBet(num) {
     const bet = num === 1 ? bet1 : bet2;
     bet.auto = document.getElementById('autoBet' + num).checked;
@@ -713,7 +729,6 @@ function resetBetState(bet) {
     bet.active = false;
     bet.cashed = false;
     bet.winnings = 0;
-    bet.usingFreeBet = false;
 }
 
 function startNewRound() {
@@ -764,10 +779,10 @@ function startNewRound() {
         updateCountdownRing(Math.max(0, countdown));
         if (statusEl) statusEl.textContent = `Starting in ${Math.max(0, countdown).toFixed(1)}s`;
 
+        // Tick sound on each whole second
         const thisSec = Math.ceil(countdown);
         if (thisSec < lastTickSec && thisSec > 0) {
             playSoundTick();
-            haptic('tick');
             lastTickSec = thisSec;
         }
 
@@ -775,7 +790,9 @@ function startNewRound() {
     }, 100);
 }
 
-// ── COUNTDOWN RING ─────────────────────────────
+// ══════════════════════════════════════════════
+// COUNTDOWN RING
+// ══════════════════════════════════════════════
 function showCountdownRing(total) {
     let ring = document.getElementById('countdownRing');
     if (!ring) {
@@ -813,16 +830,17 @@ function hideCountdownRing() {
     if (ring) ring.style.opacity = '0';
 }
 
-// ── LAUNCH ─────────────────────────────────────
+// ══════════════════════════════════════════════
+// LAUNCH & TICK
+// ══════════════════════════════════════════════
 function launchRound() {
     gameState = 'playing';
 
-    // Improved crash distribution — slightly more player-friendly
-    const r = Math.random();
-    if (r < 0.45) crashPoint = 1.0 + Math.random() * 1.0;   // 45% below 2x
-    else if (r < 0.75) crashPoint = 2.0 + Math.random() * 3.0;   // 30% 2–5x
-    else if (r < 0.93) crashPoint = 5.0 + Math.random() * 15.0;  // 18% 5–20x
-    else crashPoint = 20 + Math.random() * 30.0;  // 7% 20–50x
+    let r = Math.random();
+    if (r < 0.50) crashPoint = 1.0 + Math.random() * 1.0;
+    else if (r < 0.80) crashPoint = 2.0 + Math.random() * 3.0;
+    else if (r < 0.96) crashPoint = 5.0 + Math.random() * 15.0;
+    else crashPoint = 20 + Math.random() * 30.0;
 
     const statusEl = document.getElementById('status');
     const plane = document.getElementById('plane');
@@ -834,12 +852,12 @@ function launchRound() {
         graphPoints.push({ x, y });
     }
 
-    startEngineRumble();
+    startEngineRumble(); // 🔊 Engine starts
     startRisingTone();
+
     gameInterval = setInterval(gameTick, tickSpeed);
 }
 
-// ── GAME TICK ──────────────────────────────────
 function gameTick() {
     elapsedTicks++;
     if (elapsedTicks % 50 === 0) {
@@ -847,6 +865,7 @@ function gameTick() {
     }
     currentMultiplier = parseFloat((currentMultiplier + tickIncrement).toFixed(2));
 
+    // Add graph point and draw
     if (graphCanvas) {
         const { x, y } = getGraphXY(currentMultiplier, graphCanvas.width, graphCanvas.height);
         graphPoints.push({ x, y });
@@ -863,18 +882,19 @@ function gameTick() {
         else if (currentMultiplier < 10) multEl.className = 'mult-display mult-high';
         else multEl.className = 'mult-display mult-ultra';
 
+        // Milestone bounce
         [2, 5, 10, 20].forEach(m => {
             if (currentMultiplier >= m && currentMultiplier < m + tickIncrement * 2) {
                 triggerMultiplierBounce(multEl);
                 playMilestoneSound(m);
-                haptic('medium');
             }
         });
     }
 
     updateRisingTone(currentMultiplier);
-    updateEngineRumble(currentMultiplier);
+    updateEngineRumble(currentMultiplier); // 🔊 Engine pitch rises
 
+    // Auto cashout
     [1, 2].forEach(num => {
         const bet = num === 1 ? bet1 : bet2;
         const toggle = document.getElementById('autoCashoutToggle' + num);
@@ -891,16 +911,21 @@ function gameTick() {
     if (currentMultiplier >= crashPoint) crash();
 }
 
+// ══════════════════════════════════════════════
+// MULTIPLIER MILESTONE BOUNCE
+// ══════════════════════════════════════════════
 function triggerMultiplierBounce(el) {
     el.style.animation = 'none';
-    el.offsetHeight;
+    el.offsetHeight; // reflow
     el.style.animation = 'multBounce 0.4s ease';
 }
 
-// ── CRASH ──────────────────────────────────────
+// ══════════════════════════════════════════════
+// CRASH
+// ══════════════════════════════════════════════
 function crash() {
     clearInterval(gameInterval);
-    stopEngineRumble();
+    stopEngineRumble(); // 🔊 Engine dies
     stopRisingTone();
     gameState = 'crashed';
 
@@ -922,8 +947,8 @@ function crash() {
         setTimeout(() => board.classList.remove('screen-shake'), 600);
     }
 
-    playSoundExplosion();
-    haptic('crash');
+    haptic([80, 40, 80, 40, 120]);  // strong buzz on crash
+    playSoundExplosion(); // 💥 Explosion!
     triggerExplosion();
     drawGraph();
 
@@ -937,11 +962,21 @@ function crash() {
     });
 
     saveBalance();
+    saveCrashToHistory(currentMultiplier); // Persist to Supabase
     updateUI();
     setTimeout(startNewRound, 3500);
 }
 
-// ── EXPLOSION FX ───────────────────────────────
+async function saveCrashToHistory(mult) {
+    const { error } = await supabase
+        .from('game_history')
+        .insert([{ multiplier: mult }]);
+    if (error) console.error('Error saving crash history:', error);
+}
+
+// ══════════════════════════════════════════════
+// EXPLOSION EFFECT (visual)
+// ══════════════════════════════════════════════
 function triggerExplosion() {
     const board = document.getElementById('gameBoard');
     if (!board) return;
@@ -1017,7 +1052,9 @@ function spawnSimulatedBets() {
             avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)],
             betAmt: (Math.floor(Math.random() * 400) + 200) * 10,
             cashAt: parseFloat((1.0 + Math.random() * 8).toFixed(2)),
-            status: 'playing', winAmt: 0, mult: null,
+            status: 'playing',
+            winAmt: 0,
+            mult: null,
         });
     }
     startTotalCountAnimation();
@@ -1031,8 +1068,12 @@ function addMyBetToFeed(num, amount) {
         id: 'me' + num,
         name: phone.slice(-4).padStart(4, '*'),
         avatar: '🌟',
-        betAmt: amount, cashAt: Infinity,
-        status: 'playing', winAmt: 0, mult: null, isMe: true,
+        betAmt: amount,
+        cashAt: Infinity,
+        status: 'playing',
+        winAmt: 0,
+        mult: null,
+        isMe: true,
     });
     renderAllBets();
 }
@@ -1046,7 +1087,9 @@ function updateMyBetInFeed(num, mult, winAmt, status) {
 function updateSimulatedBetsFeed() {
     allBets.forEach(b => {
         if (b.status === 'playing' && currentMultiplier >= b.cashAt) {
-            b.status = 'cashed'; b.mult = b.cashAt; b.winAmt = Math.floor(b.betAmt * b.cashAt);
+            b.status = 'cashed';
+            b.mult = b.cashAt;
+            b.winAmt = Math.floor(b.betAmt * b.cashAt);
         }
     });
     renderAllBets();
@@ -1078,66 +1121,22 @@ function renderAllBets() {
 }
 
 // ══════════════════════════════════════════════
-// FREE BET & REFERRAL REWARDS
-// ══════════════════════════════════════════════
-function grantFreeBetOnFirstDeposit() {
-    if (!currentUser) return;
-    const users = JSON.parse(localStorage.getItem('aviatorUsers')) || {};
-    const user = users[currentUser.phone];
-    if (!user || user.freeBetGiven) return;
-
-    // Grant KES 20 free bet
-    freeBetBalance += 20;
-    user.freeBetBalance = (user.freeBetBalance || 0) + 20;
-    user.freeBetGiven = true;
-    currentUser.freeBetBalance = freeBetBalance;
-    currentUser.freeBetGiven = true;
-    localStorage.setItem('aviatorUsers', JSON.stringify(users));
-    showToast('🎁 KES 20 Free Bet credited!', 'success');
-
-    // Reward referrer if any
-    if (user.referredBy && !user.referralRewarded) {
-        const referrer = users[user.referredBy];
-        if (referrer) {
-            referrer.balance = (referrer.balance || 0) + 50;
-            referrer.referralCount = (referrer.referralCount || 0) + 1;
-            referrer.referralEarnings = (referrer.referralEarnings || 0) + 50;
-            users[user.referredBy] = referrer;
-            user.referralRewarded = true;
-            localStorage.setItem('aviatorUsers', JSON.stringify(users));
-            // If referrer is currently logged in, update their session too
-            const refSession = JSON.parse(localStorage.getItem('currentUser') || '{}');
-            if (refSession.phone === user.referredBy) {
-                refSession.balance = referrer.balance;
-                refSession.referralCount = referrer.referralCount;
-                refSession.referralEarnings = referrer.referralEarnings;
-                localStorage.setItem('currentUser', JSON.stringify(refSession));
-            }
-        }
-    }
-}
-
-// ══════════════════════════════════════════════
 // SAVE / MISC
 // ══════════════════════════════════════════════
-function saveBalance() {
+async function saveBalance() {
     if (!currentUser) return;
+    
+    // Update local currentUser object
     currentUser.balance = balance;
-    currentUser.freeBetBalance = freeBetBalance;
-    const stored = localStorage.getItem('currentUser');
-    if (stored) {
-        try {
-            const prev = JSON.parse(stored);
-            currentUser.expiresAt = prev.expiresAt;
-            currentUser.createdAt = prev.createdAt || currentUser.createdAt;
-        } catch (e) { }
-    }
-    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-    const users = JSON.parse(localStorage.getItem('aviatorUsers')) || {};
-    if (users[currentUser.phone]) {
-        users[currentUser.phone].balance = balance;
-        users[currentUser.phone].freeBetBalance = freeBetBalance;
-        localStorage.setItem('aviatorUsers', JSON.stringify(users));
+
+    // Update Supabase
+    const { error } = await supabase
+        .from('profiles')
+        .update({ balance: balance })
+        .eq('id', currentUser.id);
+
+    if (error) {
+        console.error('Error saving balance to Supabase:', error);
     }
 }
 
@@ -1154,89 +1153,81 @@ function openProfile() {
     const formatted = '+' + phone.slice(0, 3) + ' ' + phone.slice(3, 6) + ' ' + phone.slice(6);
     document.getElementById('profilePhone').textContent = formatted;
     document.getElementById('profileBalance').textContent = 'KES ' + formatNum(balance);
-    document.getElementById('profileFreeBet').textContent = freeBetBalance > 0 ? 'KES ' + formatNum(freeBetBalance) : 'None';
     if (currentUser.createdAt) {
         document.getElementById('profileCreated').textContent = new Date(currentUser.createdAt).toLocaleDateString();
     }
-    // Referral
-    const refCode = currentUser.referralCode || '';
-    document.getElementById('profileReferralCode').textContent = refCode;
-    document.getElementById('profileRefCount').textContent = currentUser.referralCount || 0;
-    document.getElementById('profileRefEarnings').textContent = 'KES ' + formatNum(currentUser.referralEarnings || 0);
+    // Referral code
+    const refEl = document.getElementById('profileReferralCode');
+    if (refEl) refEl.textContent = currentUser.referralCode || '—';
+    // Referral count
+    const refCount = document.getElementById('profileReferralCount');
+    if (refCount) refCount.textContent = currentUser.referralCount || 0;
+    // Free bet notice
+    const freeBetBanner = document.getElementById('freeBetBanner');
+    if (freeBetBanner) {
+        if (!currentUser.freeBetGiven) freeBetBanner.classList.remove('hidden');
+        else freeBetBanner.classList.add('hidden');
+    }
     document.getElementById('profileModal').classList.add('show');
-    haptic('light');
 }
 
 function copyReferralCode() {
-    const code = document.getElementById('profileReferralCode').textContent;
-    if (!code || code === '–') return;
+    const code = currentUser?.referralCode;
+    if (!code) return;
     navigator.clipboard.writeText(code).then(() => {
-        const btn = document.getElementById('copyRefBtn');
-        if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 2000); }
-        showToast('Referral code copied!', 'success');
-        haptic('success');
+        showToast('Referral code copied! Share with friends 🎉', 'success');
+        haptic([30, 20, 30]);
     }).catch(() => {
-        showToast('Code: ' + code, 'info');
+        showToast('Your code: ' + code, 'info');
     });
 }
-
 function closeProfile() { document.getElementById('profileModal').classList.remove('show'); }
+function openDepositModal() { closeProfile(); document.getElementById('depositModal').classList.add('show'); }
+function closeDepositModal() { document.getElementById('depositModal').classList.remove('show'); document.getElementById('depositAmount').value = ''; }
+function openWithdrawModal() { closeProfile(); document.getElementById('withdrawModal').classList.add('show'); }
+function closeWithdrawModal() { document.getElementById('withdrawModal').classList.remove('show'); document.getElementById('withdrawAmount').value = ''; }
 
-function openDepositModal() {
-    closeProfile();
-    const users = JSON.parse(localStorage.getItem('aviatorUsers')) || {};
-    const user = currentUser ? users[currentUser.phone] : null;
-    const notice = document.getElementById('freeBetNotice');
-    if (notice) {
-        notice.classList.toggle('hidden', !!(user && user.freeBetGiven));
-    }
-    document.getElementById('depositModal').classList.add('show');
-}
-
-function closeDepositModal() {
-    document.getElementById('depositModal').classList.remove('show');
-    document.getElementById('depositAmount').value = '';
-}
-
-function openWithdrawModal() {
-    closeProfile();
-    document.getElementById('withdrawModal').classList.add('show');
-}
-
-function closeWithdrawModal() {
-    document.getElementById('withdrawModal').classList.remove('show');
-    document.getElementById('withdrawAmount').value = '';
-}
-
-function processDeposit() {
+async function processDeposit() {
     const amount = parseFloat(document.getElementById('depositAmount').value);
-    if (!amount || amount < 100) { haptic('error'); showToast('Minimum deposit is KES 100', 'error'); return; }
+    if (!amount || amount < 100) { showToast('Minimum deposit is KES 100', 'error'); return; }
 
-    const isFirst = !currentUser.freeBetGiven;
     balance += amount;
-    saveBalance();
-    updateUI();
-    closeDepositModal();
-    haptic('success');
-    showToast(`✅ KES ${formatNum(amount)} deposited!`, 'success');
 
-    if (isFirst) grantFreeBetOnFirstDeposit();
+    // ── KES 20 Free Bet on first deposit ──────────────────────
+    let freeBetMsg = '';
+    if (currentUser && !currentUser.freeBetGiven) {
+        const FREE_BET = 20;
+        balance += FREE_BET;
+        currentUser.freeBetGiven = true;
+        
+        // Persist freeBetGiven in Supabase
+        const { error } = await supabase
+            .from('profiles')
+            .update({ free_bet_given: true })
+            .eq('id', currentUser.id);
+
+        if (error) console.error('Error updating free bet status:', error);
+
+        freeBetMsg = ' + KES 20 free bet bonus! 🎁';
+        haptic([30, 20, 30, 20, 60]);
+    }
+
+    saveBalance(); updateUI();
+    closeDepositModal();
+    showToast(`✅ KES ${formatNum(amount)} deposited!${freeBetMsg}`, 'success');
 }
 
-function processWithdraw() {
+async function processWithdraw() {
     const amount = parseFloat(document.getElementById('withdrawAmount').value);
-    if (!amount || amount < 100) { haptic('error'); showToast('Minimum withdrawal is KES 100', 'error'); return; }
-    if (amount > balance) { haptic('error'); showToast('Insufficient balance', 'error'); return; }
-    balance -= amount;
-    saveBalance();
-    updateUI();
+    if (!amount || amount < 100) { showToast('Minimum withdrawal is KES 100', 'error'); return; }
+    if (amount > balance) { showToast('Insufficient balance', 'error'); return; }
+    balance -= amount; saveBalance(); updateUI();
     closeWithdrawModal();
-    haptic('success');
     showToast(`✅ Withdrawal of KES ${formatNum(amount)} submitted!`, 'success');
 }
 
-function logout() {
-    localStorage.removeItem('currentUser');
+async function logout() {
+    await supabase.auth.signOut();
     window.location.href = 'auth.html';
 }
 
@@ -1246,3 +1237,29 @@ window.addEventListener('click', e => {
         if (el && e.target === el) el.classList.remove('show');
     });
 });
+
+// ══════════════════════════════════════════════
+// EXPOSE TO WINDOW
+// ══════════════════════════════════════════════
+window.openProfile = openProfile;
+window.closeProfile = closeProfile;
+window.openDepositModal = openDepositModal;
+window.closeDepositModal = closeDepositModal;
+window.openWithdrawModal = openWithdrawModal;
+window.closeWithdrawModal = closeWithdrawModal;
+window.processDeposit = processDeposit;
+window.processWithdraw = processWithdraw;
+window.logout = logout;
+window.toggleTheme = () => {
+    // Note: toggleTheme was in the inline script in index.html, 
+    // but we can move it here if we want to modernize further.
+    // For now, index.html handles it, but let's keep it consistent.
+};
+window.toggleMute = toggleMute;
+window.adjustBet = adjustBet;
+window.setBet = setBet;
+window.placeBet = placeBet;
+window.cashOutBet = cashOutBet;
+window.toggleAutoBet = toggleAutoBet;
+window.switchTab = switchTab;
+window.copyReferralCode = copyReferralCode;
