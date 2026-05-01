@@ -127,94 +127,75 @@ function playTone(freq, dur, type = 'sine', vol = 0.08) {
     } catch (e) { }
 }
 
-// ── 1. BET PLACED — crisp click + confirmation chime ──────────
+// ── 1. BET PLACED — crisp click ─────────────
 function playSoundBetPlaced() {
     if (muted || !audioCtx) return;
     resumeAudio();
-    // Click
-    playTone(900, 0.06, 'square', 0.05);
-    // Confirmation ding after 60ms
-    setTimeout(() => playTone(1200, 0.12, 'sine', 0.06), 60);
+    playTone(800, 0.05, 'square', 0.04);
 }
 
-// ── 2. ENGINE RUMBLE — low drone that plays while flying ───────
+// ── 2. ENGINE RUMBLE — the flying sound ───────
 function startEngineRumble() {
     if (muted || !audioCtx) return;
     resumeAudio();
     stopEngineRumble();
     try {
-        // Layered: low rumble oscillator + noise buffer
         engineRumbleGain = audioCtx.createGain();
         engineRumbleGain.gain.setValueAtTime(0.0, audioCtx.currentTime);
-        engineRumbleGain.gain.linearRampToValueAtTime(0.05, audioCtx.currentTime + 0.6);
+        engineRumbleGain.gain.linearRampToValueAtTime(0.04, audioCtx.currentTime + 0.5);
         engineRumbleGain.connect(audioCtx.destination);
 
-        // Low sub rumble
-        const sub = audioCtx.createOscillator();
-        sub.type = 'sawtooth';
-        sub.frequency.setValueAtTime(55, audioCtx.currentTime);
-        sub.frequency.linearRampToValueAtTime(80, audioCtx.currentTime + 0.5);
+        // Low hum
+        const hum = audioCtx.createOscillator();
+        hum.type = 'triangle';
+        hum.frequency.setValueAtTime(45, audioCtx.currentTime);
 
-        // Mid growl
-        const mid = audioCtx.createOscillator();
-        mid.type = 'square';
-        mid.frequency.setValueAtTime(110, audioCtx.currentTime);
-
-        // Noise layer (white noise via buffer)
+        // Noise for air friction
         const bufSize = audioCtx.sampleRate * 2;
-        const noiseBuffer = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
-        const data = noiseBuffer.getChannelData(0);
-        for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * 0.15;
-        const noiseSource = audioCtx.createBufferSource();
-        noiseSource.buffer = noiseBuffer;
-        noiseSource.loop = true;
+        const noiseBuf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+        const data = noiseBuf.getChannelData(0);
+        for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * 0.1;
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = noiseBuf;
+        noise.loop = true;
 
-        // Low-pass filter on noise to get a whoosh feel
         const lpf = audioCtx.createBiquadFilter();
         lpf.type = 'lowpass';
-        lpf.frequency.setValueAtTime(400, audioCtx.currentTime);
+        lpf.frequency.setValueAtTime(300, audioCtx.currentTime);
 
-        sub.connect(engineRumbleGain);
-        mid.connect(engineRumbleGain);
-        noiseSource.connect(lpf);
+        hum.connect(engineRumbleGain);
+        noise.connect(lpf);
         lpf.connect(engineRumbleGain);
 
-        sub.start(); mid.start(); noiseSource.start();
-
-        engineRumbleSource = { sub, mid, noise: noiseSource };
+        hum.start(); noise.start();
+        engineRumbleSource = { hum, noise };
     } catch (e) { }
 }
 
 function updateEngineRumble(mult) {
     if (!engineRumbleSource || !engineRumbleGain || muted) return;
     try {
-        // Volume and pitch increase as multiplier climbs
-        const vol = Math.min(0.12, 0.04 + (mult - 1) * 0.004);
-        engineRumbleGain.gain.setValueAtTime(vol, audioCtx.currentTime);
-        const freq = 55 + Math.min(120, (mult - 1) * 8);
-        engineRumbleSource.sub.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        engineRumbleSource.mid.frequency.setValueAtTime(freq * 2, audioCtx.currentTime);
+        const freq = 45 + Math.min(80, (mult - 1) * 6);
+        engineRumbleSource.hum.frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.1);
+        const vol = Math.min(0.08, 0.04 + (mult - 1) * 0.002);
+        engineRumbleGain.gain.setTargetAtTime(vol, audioCtx.currentTime, 0.1);
     } catch (e) { }
 }
 
 function stopEngineRumble() {
     if (!engineRumbleSource) return;
     try {
-        if (engineRumbleGain) {
-            engineRumbleGain.gain.setValueAtTime(engineRumbleGain.gain.value, audioCtx.currentTime);
-            engineRumbleGain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
-        }
+        if (engineRumbleGain) engineRumbleGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
         setTimeout(() => {
-            try { engineRumbleSource.sub.stop(); } catch (e) { }
-            try { engineRumbleSource.mid.stop(); } catch (e) { }
+            try { engineRumbleSource.hum.stop(); } catch (e) { }
             try { engineRumbleSource.noise.stop(); } catch (e) { }
-        }, 350);
+        }, 250);
     } catch (e) { }
     engineRumbleSource = null;
     engineRumbleGain = null;
 }
 
-// ── 3. RISING PITCH (existing) — kept & improved ──────────────
+// ── 3. RISING TONE — the multiplier whistle ─────
 function startRisingTone() {
     if (muted || !audioCtx) return;
     resumeAudio();
@@ -223,8 +204,8 @@ function startRisingTone() {
         risingOscillator = audioCtx.createOscillator();
         risingGain = audioCtx.createGain();
         risingOscillator.type = 'sine';
-        risingOscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
-        risingGain.gain.setValueAtTime(0.03, audioCtx.currentTime);
+        risingOscillator.frequency.setValueAtTime(150, audioCtx.currentTime);
+        risingGain.gain.setValueAtTime(0.02, audioCtx.currentTime);
         risingOscillator.connect(risingGain);
         risingGain.connect(audioCtx.destination);
         risingOscillator.start();
@@ -234,105 +215,69 @@ function startRisingTone() {
 function updateRisingTone(mult) {
     if (!risingOscillator || muted) return;
     try {
-        const freq = 200 + Math.min(700, (mult - 1) * 40);
-        risingOscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        const freq = 150 + Math.min(600, (mult - 1) * 45);
+        risingOscillator.frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.1);
     } catch (e) { }
 }
 
 function stopRisingTone() {
     if (!risingOscillator) return;
     try {
-        risingGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
-        risingOscillator.stop(audioCtx.currentTime + 0.25);
+        risingGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+        risingOscillator.stop(audioCtx.currentTime + 0.2);
     } catch (e) { }
     risingOscillator = null;
     risingGain = null;
 }
 
-// ── 4. CASH REGISTER — win cashout sound ──────────────────────
+// ── 4. BETIKA CASH OUT — The distinctive high ping ─────
 function playSoundCashOut() {
     if (muted || !audioCtx) return;
     resumeAudio();
+    const now = audioCtx.currentTime;
     try {
-        // Classic cash register: ascending ding-ding
-        const now = audioCtx.currentTime;
-        const notes = [
-            { freq: 1047, t: 0, dur: 0.12 },  // C6
-            { freq: 1319, t: 0.10, dur: 0.12 },  // E6
-            { freq: 1568, t: 0.20, dur: 0.16 },  // G6
-            { freq: 2093, t: 0.30, dur: 0.25 },  // C7 — high ding
-        ];
-        notes.forEach(n => {
+        // Double triangle ping (very clean)
+        [1800, 2400].forEach((f, i) => {
             const o = audioCtx.createOscillator();
             const g = audioCtx.createGain();
             o.type = 'triangle';
-            o.frequency.setValueAtTime(n.freq, now + n.t);
-            g.gain.setValueAtTime(0.10, now + n.t);
-            g.gain.exponentialRampToValueAtTime(0.001, now + n.t + n.dur);
+            o.frequency.setValueAtTime(f, now + (i * 0.05));
+            g.gain.setValueAtTime(0.12, now + (i * 0.05));
+            g.gain.exponentialRampToValueAtTime(0.001, now + (i * 0.05) + 0.3);
             o.connect(g); g.connect(audioCtx.destination);
-            o.start(now + n.t); o.stop(now + n.t + n.dur + 0.05);
+            o.start(now + (i * 0.05)); o.stop(now + (i * 0.05) + 0.35);
         });
-        // Coin jingle noise burst
-        setTimeout(() => {
-            for (let i = 0; i < 4; i++) {
-                setTimeout(() => playTone(1800 + Math.random() * 800, 0.06, 'sine', 0.04), i * 35);
-            }
-        }, 120);
     } catch (e) { }
 }
 
-// ── 5. EXPLOSION — crash sound ────────────────────────────────
+// ── 5. BETIKA CRASH — Drier thud ───────
 function playSoundExplosion() {
     if (muted || !audioCtx) return;
     resumeAudio();
+    const now = audioCtx.currentTime;
     try {
-        const now = audioCtx.currentTime;
-
-        // Boom: low thud
-        const boom = audioCtx.createOscillator();
-        const boomGain = audioCtx.createGain();
-        boom.type = 'sine';
-        boom.frequency.setValueAtTime(80, now);
-        boom.frequency.exponentialRampToValueAtTime(20, now + 0.5);
-        boomGain.gain.setValueAtTime(0.35, now);
-        boomGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
-        boom.connect(boomGain); boomGain.connect(audioCtx.destination);
-        boom.start(now); boom.stop(now + 0.65);
-
-        // Crack: distorted burst
-        const crack = audioCtx.createOscillator();
-        const crackGain = audioCtx.createGain();
-        crack.type = 'sawtooth';
-        crack.frequency.setValueAtTime(200, now);
-        crack.frequency.exponentialRampToValueAtTime(40, now + 0.3);
-        crackGain.gain.setValueAtTime(0.18, now);
-        crackGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-        crack.connect(crackGain); crackGain.connect(audioCtx.destination);
-        crack.start(now); crack.stop(now + 0.4);
-
-        // Debris noise burst
-        const bufSize = audioCtx.sampleRate * 0.6;
-        const noiseBuf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
-        const nd = noiseBuf.getChannelData(0);
-        for (let i = 0; i < bufSize; i++) nd[i] = (Math.random() * 2 - 1);
-        const ns = audioCtx.createBufferSource();
-        ns.buffer = noiseBuf;
-        const nsGain = audioCtx.createGain();
-        nsGain.gain.setValueAtTime(0.15, now);
-        nsGain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
-        const hpf = audioCtx.createBiquadFilter();
-        hpf.type = 'highpass';
-        hpf.frequency.setValueAtTime(600, now);
-        ns.connect(hpf); hpf.connect(nsGain); nsGain.connect(audioCtx.destination);
-        ns.start(now); ns.stop(now + 0.6);
-
-        // Descending whine
-        setTimeout(() => {
-            playTone(800, 0.4, 'sawtooth', 0.06);
-            playTone(400, 0.5, 'sawtooth', 0.04);
-        }, 80);
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'sawtooth';
+        o.frequency.setValueAtTime(100, now);
+        o.frequency.exponentialRampToValueAtTime(30, now + 0.4);
+        g.gain.setValueAtTime(0.2, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(); o.stop(now + 0.45);
+        
+        // Low boom
+        const o2 = audioCtx.createOscillator();
+        const g2 = audioCtx.createGain();
+        o2.type = 'sine';
+        o2.frequency.setValueAtTime(60, now);
+        g2.gain.setValueAtTime(0.3, now);
+        g2.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+        o2.connect(g2); g2.connect(audioCtx.destination);
+        o2.start(); o2.stop(now + 0.55);
     } catch (e) { }
 }
+
 
 // ── 6. MILESTONE PINGS ────────────────────────────────────────
 function playMilestoneSound(mult) {

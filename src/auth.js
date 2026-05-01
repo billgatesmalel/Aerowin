@@ -7,9 +7,33 @@ import { supabase } from './lib/supabase.js';
 function toggleForms() {
     const loginForm = document.getElementById('loginForm');
     const signupForm = document.getElementById('signupForm');
+    const resetForm = document.getElementById('resetForm');
     const messageBox = document.getElementById('messageBox');
-    loginForm.classList.toggle('active');
-    signupForm.classList.toggle('active');
+    
+    loginForm.classList.remove('active');
+    signupForm.classList.add('active');
+    resetForm.classList.remove('active');
+    
+    messageBox.className = 'message-box';
+    messageBox.textContent = '';
+}
+
+function toggleResetForm(show) {
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+    const resetForm = document.getElementById('resetForm');
+    const messageBox = document.getElementById('messageBox');
+
+    if (show) {
+        loginForm.classList.remove('active');
+        signupForm.classList.remove('active');
+        resetForm.classList.add('active');
+    } else {
+        loginForm.classList.add('active');
+        signupForm.classList.remove('active');
+        resetForm.classList.remove('active');
+    }
+    
     messageBox.className = 'message-box';
     messageBox.textContent = '';
 }
@@ -134,11 +158,37 @@ async function handleLogin() {
 }
 
 // ══════════════════════════════════════════════
+// RESET PASSWORD
+// ══════════════════════════════════════════════
+async function handleResetPassword() {
+    haptic([20]);
+    const phone = document.getElementById('resetPhone').value.trim();
+    if (!phone || !validatePhone(phone)) { showMessage('Invalid phone number', false); return; }
+
+    const normalizedPhone = normalizePhone(phone);
+    showMessage('Sending reset link...', true);
+
+    const { error } = await supabase.auth.resetPasswordForEmail(normalizedPhone + '@aerowin.ke', {
+        redirectTo: window.location.origin + '/auth.html#reset',
+    });
+
+    if (error) {
+        showMessage(error.message, false);
+        return;
+    }
+
+    showMessage('Reset link sent to your registered channel!', true);
+    setTimeout(() => toggleResetForm(false), 3000);
+}
+
+// ══════════════════════════════════════════════
 // EXPOSE TO WINDOW
 // ══════════════════════════════════════════════
 window.handleSignup = handleSignup;
 window.handleLogin = handleLogin;
+window.handleResetPassword = handleResetPassword;
 window.toggleForms = toggleForms;
+window.toggleResetForm = toggleResetForm;
 window.normalizePhone = normalizePhone;
 window.validatePhone = validatePhone;
 window.haptic = haptic;

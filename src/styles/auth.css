@@ -288,6 +288,31 @@ body {
 }
 
 /* ── Form Toggle ────────────────────────── */
+.form-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}
+
+.forgot-link {
+    color: #00d4ff;
+    font-size: 0.85em;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.forgot-link:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+.form-desc {
+    color: #b0b0b0;
+    font-size: 0.9em;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
 .form-toggle {
     text-align: center;
     margin-top: 18px;

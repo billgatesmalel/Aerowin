@@ -34,8 +34,23 @@
                     <label for="loginPassword">Password</label>
                     <input type="password" id="loginPassword" placeholder="Enter your password" required>
                 </div>
+                <div class="form-footer">
+                    <a href="#" class="forgot-link" onclick="toggleResetForm(true)">Forgot Password?</a>
+                </div>
                 <button class="btn btn-primary" onclick="handleLogin()">Login</button>
                 <p class="form-toggle">Don't have an account? <a href="#" onclick="toggleForms()">Sign Up</a></p>
+            </div>
+
+            <!-- Reset Password Form -->
+            <div id="resetForm" class="form-section">
+                <h2>Reset Password</h2>
+                <p class="form-desc">Enter your phone number to receive a password reset link.</p>
+                <div class="form-group">
+                    <label for="resetPhone">Phone Number</label>
+                    <input type="tel" id="resetPhone" placeholder="+254 or 0..." required>
+                </div>
+                <button class="btn btn-primary" onclick="handleResetPassword()">Send Reset Link</button>
+                <p class="form-toggle"><a href="#" onclick="toggleResetForm(false)">Back to Login</a></p>
             </div>
 
             <!-- Sign Up Form -->
