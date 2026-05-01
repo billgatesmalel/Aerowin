@@ -165,6 +165,37 @@ body {
     margin-bottom: 18px;
 }
 
+.pass-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.pass-wrapper input {
+    padding-right: 45px;
+}
+
+.pass-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    font-size: 1.2em;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+    user-select: none;
+}
+
+.pass-toggle:hover {
+    color: #00d4ff;
+}
+
 .form-group label {
     display: block;
     margin-bottom: 7px;

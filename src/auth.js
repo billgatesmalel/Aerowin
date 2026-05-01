@@ -65,6 +65,18 @@ function haptic(pattern = [30]) {
     try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) { }
 }
 
+function togglePass(id) {
+    const input = document.getElementById(id);
+    const btn = input.nextElementSibling;
+    if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+    } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+    }
+}
+
 // ── Referral code generator ───────────────────
 function generateReferralCode(phone) {
     const tail = phone.slice(-4);
@@ -192,6 +204,7 @@ window.handleLogin = handleLogin;
 window.handleResetPassword = handleResetPassword;
 window.toggleForms = toggleForms;
 window.toggleResetForm = toggleResetForm;
+window.togglePass = togglePass;
 window.normalizePhone = normalizePhone;
 window.validatePhone = validatePhone;
 window.haptic = haptic;
