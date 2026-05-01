@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Aerowin - Login</title>
+
+    <link rel="stylesheet" href="auth.css">
+
+</head>
+
+<body>
+
+    <div class="auth-container">
+
+        <div class="auth-box">
+
+            <h1>✈️ Aerowin</h1>
+
+
+
+            <!-- Login Form -->
+
+            <div id="loginForm" class="form-section active">
+
+                <h2>Login</h2>
+
+                <div class="form-group">
+
+                    <label for="loginPhone">Phone Number</label>
+
+                    <input type="tel" id="loginPhone" placeholder="+254 or 0..." required>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="loginPassword">Password</label>
+
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
+
+                </div>
+
+                <button class="btn btn-primary" onclick="handleLogin()">Login</button>
+
+                <p class="form-toggle">Don't have an account? <a href="#" onclick="toggleForms()">Sign Up</a></p>
+
+            </div>
+
+
+
+            <!-- Sign Up Form -->
+
+            <div id="signupForm" class="form-section">
+
+                <h2>Create Account</h2>
+
+                <div class="form-group">
+
+                    <label for="signupPhone">Phone Number</label>
+
+                    <input type="tel" id="signupPhone" placeholder="+254 or 0..." required>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="signupPassword">Password</label>
+
+                    <input type="password" id="signupPassword" placeholder="At least 6 characters" required>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="signupConfirm">Confirm Password</label>
+
+                    <input type="password" id="signupConfirm" placeholder="Confirm your password" required>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="signupReferral">Referral Code <span style="color:#888;font-size:0.82em;">(optional –
+                            earn KES 20 bonus)</span></label>
+
+                    <input type="tel" id="signupReferral" placeholder="Enter referrer's phone number">
+
+                </div>
+
+                <button class="btn btn-primary" onclick="handleSignup()">Create Account</button>
+
+                <p class="form-toggle">Already have an account? <a href="#" onclick="toggleForms()">Login</a></p>
+
+            </div>
+
+
+
+            <div id="messageBox" class="message-box"></div>
+
+        </div>
+
+    </div>
+
+
+
+    <script src="auth.js"></script>
+
+</body>
+
+</html>
