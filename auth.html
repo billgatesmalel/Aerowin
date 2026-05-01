@@ -29,7 +29,7 @@
                 <h2>Login</h2>
                 <div class="form-group">
                     <label for="loginPhone">Phone Number</label>
-                    <input type="tel" id="loginPhone" placeholder="+254 or 0..." required>
+                    <input type="tel" id="loginPhone" placeholder="+254 or 0..." required autocomplete="username tel">
                 </div>
                 <div class="form-group">
                     <label for="loginPassword">Password</label>
@@ -51,7 +51,7 @@
                 <p class="form-desc">Enter your phone number to receive a password reset link.</p>
                 <div class="form-group">
                     <label for="resetPhone">Phone Number</label>
-                    <input type="tel" id="resetPhone" placeholder="+254 or 0..." required>
+                    <input type="tel" id="resetPhone" placeholder="+254 or 0..." required autocomplete="tel">
                 </div>
                 <button type="submit" class="btn btn-primary">Send Reset Link</button>
                 <p class="form-toggle"><a href="#" onclick="toggleResetForm(false)">Back to Login</a></p>
@@ -68,7 +68,7 @@
 
                 <div class="form-group">
                     <label for="signupPhone">Phone Number</label>
-                    <input type="tel" id="signupPhone" placeholder="+254 or 0..." required>
+                    <input type="tel" id="signupPhone" placeholder="+254 or 0..." required autocomplete="username tel">
                 </div>
                 <div class="form-group">
                     <label for="signupPassword">Password</label>
