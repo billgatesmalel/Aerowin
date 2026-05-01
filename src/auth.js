@@ -10,10 +10,16 @@ function toggleForms() {
     const resetForm = document.getElementById('resetForm');
     const messageBox = document.getElementById('messageBox');
     
-    loginForm.classList.remove('active');
-    signupForm.classList.add('active');
-    resetForm.classList.remove('active');
+    // Toggle between login and signup
+    if (loginForm.classList.contains('active')) {
+        loginForm.classList.remove('active');
+        signupForm.classList.add('active');
+    } else {
+        loginForm.classList.add('active');
+        signupForm.classList.remove('active');
+    }
     
+    resetForm.classList.remove('active');
     messageBox.className = 'message-box';
     messageBox.textContent = '';
 }

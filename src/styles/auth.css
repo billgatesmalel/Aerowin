@@ -520,56 +520,81 @@ body {
     }
 }
 
-/* ── Footer ── */
+/* ── Premium Auth Footer ── */
 .game-footer {
     width: 100%;
-    margin-top: 40px;
-    padding: 30px 20px;
-    background: rgba(0, 0, 0, 0.2);
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    margin-top:auto;
+    padding: 2.5rem 1.5rem 1.5rem;
+    background: rgba(15, 15, 30, 0.4);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .footer-content {
-    max-width: 400px;
+    max-width: 600px;
     margin: 0 auto;
     text-align: center;
 }
 
 .footer-top {
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
     align-items: center;
-    gap: 15px;
-    margin-bottom: 15px;
+    margin-bottom: 1.5rem;
 }
 
 .footer-logo {
-    font-size: 1.2em;
-    font-weight: 800;
+    font-size: 1.4em;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -0.5px;
+}
+
+.footer-logo span {
     color: #00ff88;
 }
 
 .footer-payments {
     display: flex;
-    gap: 10px;
-    opacity: 0.5;
+    gap: 12px;
+    filter: brightness(0) invert(0.8);
+    opacity: 0.6;
+    transition: opacity 0.3s;
+}
+
+.footer-payments:hover {
+    opacity: 1;
 }
 
 .pay-logo {
-    height: 14px;
+    height: 18px;
+    object-fit: contain;
 }
 
 .footer-bottom {
-    font-size: 0.75em;
-    color: #666;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 0.2px;
+}
+
+@media (max-width: 480px) {
+    .footer-top {
+        flex-direction: column;
+        gap: 1.2rem;
+    }
 }
 
 body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow-x: hidden;
 }
 
 .auth-container {
     flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
 }
