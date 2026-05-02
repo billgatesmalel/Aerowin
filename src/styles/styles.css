@@ -658,24 +658,15 @@ input {
     position: absolute;
     width: 100px;
     height: 34px;
-    z-index: 5;
+    z-index: 100;
     filter: drop-shadow(0 0 16px rgba(255, 40, 80, 0.8));
     transition: opacity .4s;
-    will-change: transform, left, top;
+    pointer-events: none;
+    display: none; /* Hidden until round starts */
 }
 
 .plane-svg.fly {
-    animation: planeBob 1.8s ease-in-out infinite alternate;
-}
-
-@keyframes planeBob {
-    from {
-        margin-top: 0;
-    }
-
-    to {
-        margin-top: -5px;
-    }
+    display: block;
 }
 
 .mult-display {

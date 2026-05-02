@@ -807,13 +807,8 @@ function startNewRound() {
     if (overlay) overlay.classList.add('hidden');
     if (board) board.classList.remove('screen-shake');
     if (plane) {
-        plane.style.opacity = '1';
-        plane.style.left = '4%';
-        plane.style.top = '80%';
-        plane.style.right = 'auto';
-        plane.style.bottom = 'auto';
-        plane.style.position = 'absolute';
-        plane.style.transform = 'rotate(-15deg)';
+        plane.style.opacity = '0';
+        plane.style.display = 'none';
         plane.classList.remove('fly');
     }
 
@@ -901,14 +896,14 @@ function launchRound() {
     
     if (plane) {
         plane.classList.add('fly');
-        plane.style.left = '0'; // 🚀 Wipe out starting static styles
+        plane.style.left = '0'; 
         plane.style.top = '0';
+        plane.style.display = 'block';
+        plane.style.opacity = '1';
     }
 
-    if (graphCanvas) {
-        const { x, y } = getGraphXY(1.0, graphCanvas.width, graphCanvas.height);
-        graphPoints.push({ x, y });
-    }
+    // 🌍 PURE MULTIPLIERS ONLY (Fixes the stuck plane bug)
+    graphPoints.push(1.0);
 
     startEngineRumble(); // 🔊 Engine starts
     startRisingTone();
