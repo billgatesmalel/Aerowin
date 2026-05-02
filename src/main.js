@@ -1475,100 +1475,58 @@ window.rejectWithdrawal = async (wdId, userId, amount) => {
 window.setDepositAmt  = (n) => { document.getElementById('depositAmount').value = n; };
 window.setWithdrawAmt = (n) => { document.getElementById('withdrawAmount').value = n; };
 
-// ─── GravityPay STK Push ─────────────────────────────
-const GRAVITY_PUBLIC_KEY = 'gp_pub_4Wjr5rrktxTJUqmkQsivnJ8XDC5JuXi6';
-const GRAVITY_SECRET_KEY = 'gp_sec_sS0biHvKBZa3zePa5qVQ0I5r6rZqFX1A';
-const GRAVITY_BASE       = 'https://pay.gravitypay.ke/api/v1';
-
-async function gravitySTKPush(phone, amount) {
-    // Normalize phone: ensure 254XXXXXXXXX format
-    let normalized = String(phone).replace(/\D/g, '');
-    if (normalized.startsWith('0')) normalized = '254' + normalized.slice(1);
-    if (normalized.startsWith('+')) normalized = normalized.slice(1);
-
-    const credentials = btoa(GRAVITY_PUBLIC_KEY + ':' + GRAVITY_SECRET_KEY);
-    const res = await fetch(`${GRAVITY_BASE}/payments/stk-push`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Basic ${credentials}`
-        },
-        body: JSON.stringify({
-            phone_number: normalized,
-            amount: amount,
-            account_reference: `AEROWIN-${currentUser?.id?.slice(0,8) || 'user'}`,
-            transaction_desc: `Aerowin Deposit KES ${amount}`
-        })
+// ─── STK Push via secure backend ─────────────────────
+async function requestSTKPush(phone, amount) {
+    const res = await fetch('/api/deposit', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ phone, amount, userId: currentUser?.id })
     });
     return res.json();
 }
 
 async function processDeposit() {
-    const amount = parseFloat(document.getElementById('depositAmount').value);
+    const amount   = parseFloat(document.getElementById('depositAmount').value);
     const phoneRaw = document.getElementById('depositPhone').value.trim()
-                  || (currentUser?.phone ? String(currentUser.phone) : '');
+                  || (currentUser?.phone ? String(currentUser.phone).replace(/^254/, '0') : '');
 
     if (!phoneRaw) { showToast('Enter your M-Pesa phone number', 'error'); return; }
     if (!amount || amount < 100) { showToast('Minimum deposit is KES 100', 'error'); return; }
 
-    const btn = document.getElementById('confirmDepositBtn');
-    btn.disabled = true;
+    const btn  = document.getElementById('confirmDepositBtn');
+    const note = document.getElementById('depositNote');
+    btn.disabled   = true;
     btn.textContent = '⏳ Sending...';
-    document.getElementById('depositNote').textContent = 'STK push sent! Check your phone and enter M-Pesa PIN…';
+    note.textContent = 'Sending STK push to your phone…';
 
     try {
-        const result = await gravitySTKPush(phoneRaw, amount);
+        const result = await requestSTKPush(phoneRaw, amount);
 
-        if (result?.success || result?.ResponseCode === '0' || result?.status === 'success') {
-            // ── Poll for confirmation (simplified: credit optimistically after 8s) ──
-            showToast('📲 STK Push sent! Enter PIN on your phone…', 'info');
-            await new Promise(r => setTimeout(r, 8000));
-
-            // Credit balance in Supabase
-            const newBal = balance + amount;
-            const { error: balErr } = await supabase
-                .from('profiles')
-                .update({ balance: newBal })
-                .eq('id', currentUser.id);
-
-            if (balErr) throw new Error('Balance update failed');
-
-            // Log transaction
-            await supabase.from('transactions').insert({
-                user_id: currentUser.id,
-                type: 'deposit',
-                amount: amount,
-                status: 'completed',
-                phone: phoneRaw
-            });
-
-            // Free bet bonus on first deposit
-            let freeBetMsg = '';
-            if (!currentUser.freeBetGiven) {
-                const FREE_BET = 20;
-                await supabase.from('profiles').update({ balance: newBal + FREE_BET, free_bet_given: true }).eq('id', currentUser.id);
-                balance = newBal + FREE_BET;
-                currentUser.freeBetGiven = true;
-                freeBetMsg = ' + KES 20 free bet bonus! 🎁';
-                haptic([30, 20, 30, 20, 60]);
-            } else {
-                balance = newBal;
-            }
-
-            saveBalance(); updateUI();
+        if (result?.success) {
+            showToast('📲 Check your phone and enter M-Pesa PIN!', 'info');
+            note.textContent = '✅ STK Push sent! Your balance will update automatically after payment.';
+            // Balance is credited by the Safaricom callback (deposit-callback.js)
+            // We wait 15s then re-fetch balance from Supabase
+            setTimeout(async () => {
+                const { data: prof } = await supabase
+                    .from('profiles').select('balance,free_bet_given').eq('id', currentUser.id).single();
+                if (prof) {
+                    balance = prof.balance;
+                    currentUser.freeBetGiven = prof.free_bet_given;
+                    saveBalance(); updateUI();
+                }
+            }, 15000);
             closeDepositModal();
-            showToast(`✅ KES ${formatNum(amount)} deposited!${freeBetMsg}`, 'success');
         } else {
-            const msg = result?.message || result?.errorMessage || 'STK Push failed. Try again.';
-            showToast(`❌ ${msg}`, 'error');
-            document.getElementById('depositNote').textContent = 'Payment failed. Please try again.';
+            note.textContent = result?.message || 'Payment failed. Please try again.';
+            showToast(`❌ ${result?.message || 'STK Push failed'}`, 'error');
         }
     } catch (err) {
         console.error('Deposit error:', err);
-        showToast('❌ Payment service unavailable. Try again later.', 'error');
-        document.getElementById('depositNote').textContent = 'Connection error. Please try again.';
+        note.textContent = 'Network error. Please try again.';
+        showToast('❌ Could not reach payment server. Try again.', 'error');
     } finally {
-        btn.disabled = false;
+        btn.disabled    = false;
         btn.textContent = '📲 Send STK Push';
     }
 }
