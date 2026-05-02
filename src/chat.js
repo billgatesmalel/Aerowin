@@ -26,7 +26,7 @@ function sendChatMessage() {
     // 2. Simulate Bot Response or logic
     // In a real app, you would send this to a backend/Supabase
     setTimeout(() => {
-        addMessageToUI('assistant', "Thanks for your message! Our admin will get back to you shortly. You can also reach us directly at 0799289214. 😊");
+        addMessageToUI('assistant', "Thanks for your message! Our admin will get back to you shortly. You can also reach us directly at <a href='tel:0799289214' style='color:#25d366;font-weight:bold;'>0799289214</a>. 😊");
     }, 1200);
 }
 

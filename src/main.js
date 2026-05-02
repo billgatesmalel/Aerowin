@@ -230,51 +230,33 @@ function stopRisingTone() {
     risingGain = null;
 }
 
-// ── 4. BETIKA CASH OUT — The distinctive high ping ─────
+// ── 4. PROFESSIONAL CASH OUT — High Quality Sample ─────
 function playSoundCashOut() {
-    if (muted || !audioCtx) return;
-    resumeAudio();
-    const now = audioCtx.currentTime;
+    if (muted) return;
     try {
-        // Double triangle ping (very clean)
-        [1800, 2400].forEach((f, i) => {
-            const o = audioCtx.createOscillator();
-            const g = audioCtx.createGain();
-            o.type = 'triangle';
-            o.frequency.setValueAtTime(f, now + (i * 0.05));
-            g.gain.setValueAtTime(0.12, now + (i * 0.05));
-            g.gain.exponentialRampToValueAtTime(0.001, now + (i * 0.05) + 0.3);
-            o.connect(g); g.connect(audioCtx.destination);
-            o.start(now + (i * 0.05)); o.stop(now + (i * 0.05) + 0.35);
-        });
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2017/2017-preview.mp3');
+        audio.volume = 0.5;
+        audio.play().catch(() => {});
     } catch (e) { }
 }
 
-// ── 5. BETIKA CRASH — Drier thud ───────
+// ── 5. PROFESSIONAL EXPLOSION — High Quality Sample ─────
 function playSoundExplosion() {
-    if (muted || !audioCtx) return;
-    resumeAudio();
-    const now = audioCtx.currentTime;
+    if (muted) return;
     try {
-        const o = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        o.type = 'sawtooth';
-        o.frequency.setValueAtTime(100, now);
-        o.frequency.exponentialRampToValueAtTime(30, now + 0.4);
-        g.gain.setValueAtTime(0.2, now);
-        g.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-        o.connect(g); g.connect(audioCtx.destination);
-        o.start(); o.stop(now + 0.45);
-        
-        // Low boom
-        const o2 = audioCtx.createOscillator();
-        const g2 = audioCtx.createGain();
-        o2.type = 'sine';
-        o2.frequency.setValueAtTime(60, now);
-        g2.gain.setValueAtTime(0.3, now);
-        g2.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-        o2.connect(g2); g2.connect(audioCtx.destination);
-        o2.start(); o2.stop(now + 0.55);
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/149/149-preview.mp3');
+        audio.volume = 0.6;
+        audio.play().catch(() => {});
+    } catch (e) { }
+}
+
+// ── 6. TAKEOFF SOUND — Takeoff Whoosh ─────
+function playSoundTakeoff() {
+    if (muted) return;
+    try {
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
+        audio.volume = 0.4;
+        audio.play().catch(() => {});
     } catch (e) { }
 }
 
@@ -799,6 +781,7 @@ function launchRound() {
 
     startEngineRumble(); // 🔊 Engine starts
     startRisingTone();
+    playSoundTakeoff();
 
     gameInterval = setInterval(gameTick, tickSpeed);
 }
