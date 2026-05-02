@@ -469,9 +469,10 @@ function drawGraph() {
     const W = graphCanvas.width;
     const H = graphCanvas.height;
     graphCtx2d.clearRect(0, 0, W, H);
-    if (graphPoints.length < 2) return;
+    if (!graphPoints || graphPoints.length < 2) return;
 
-    const pts = graphPoints;
+    // Convert raw multipliers to current screen points
+    const pts = graphPoints.map(m => getGraphXY(m, W, H));
     const crashed = gameState === 'crashed';
 
     // Gradient fill under curve
@@ -480,6 +481,7 @@ function drawGraph() {
     pts.forEach(p => graphCtx2d.lineTo(p.x, p.y));
     graphCtx2d.lineTo(pts[pts.length - 1].x, H);
     graphCtx2d.closePath();
+    
     const fillGrad = graphCtx2d.createLinearGradient(0, 0, 0, H);
     fillGrad.addColorStop(0, crashed ? 'rgba(255,40,80,0.45)' : 'rgba(200,0,60,0.5)');
     fillGrad.addColorStop(1, crashed ? 'rgba(255,40,80,0.02)' : 'rgba(200,0,60,0.03)');
@@ -497,31 +499,21 @@ function drawGraph() {
     }
     graphCtx2d.strokeStyle = crashed ? '#ff2244' : '#ff1a50';
     graphCtx2d.lineWidth = 3;
-    graphCtx2d.shadowColor = crashed ? '#ff2244' : '#ff4466';
-    graphCtx2d.shadowBlur = 10;
     graphCtx2d.stroke();
-    graphCtx2d.shadowBlur = 0;
 
     // Particle trail
     drawParticles();
 
-    // Move SVG plane to end of curve
+    // 🚀 LIVE PLANE MOVE: Move SVG plane to end of curve
     const last = pts[pts.length - 1];
     const prev2 = pts.length > 1 ? pts[pts.length - 2] : pts[0];
     const angle = Math.atan2(last.y - prev2.y, last.x - prev2.x) * 180 / Math.PI;
     const planeSvg = document.getElementById('plane');
+    
     if (planeSvg && gameState !== 'crashed') {
-        const boardEl = document.getElementById('gameBoard');
-        const scaleX = boardEl.clientWidth / W;
-        const scaleY = boardEl.clientHeight / H;
-        
-        // 🛰️ Simplified Absolute Positioning (More reliable for mobile)
-        const posX = (last.x * scaleX) - 60;
-        const posY = (last.y * scaleY) - 30;
-        
-        planeSvg.style.transform = `rotate(${Math.max(-30, Math.min(10, angle))}deg)`;
-        planeSvg.style.left = `${posX}px`;
-        planeSvg.style.top = `${posY}px`;
+        planeSvg.style.transform = `translate(${last.x - 60}px, ${last.y - 30}px) rotate(${Math.max(-30, Math.min(10, angle))}deg)`;
+        planeSvg.style.left = '0';
+        planeSvg.style.top = '0';
         planeSvg.style.opacity = '1';
         planeSvg.style.display = 'block';
     }
@@ -923,10 +915,12 @@ function gameTick() {
         currentMultiplier = parseFloat(globalMult.toFixed(2));
     }
 
-    // Add graph point and draw
+    // 🌍 DYNAMIC FLIGHT: Store the multiplier, not the coordinate
+    graphPoints.push(currentMultiplier);
+    
     if (graphCanvas) {
+        // Calculate current position for particles
         const { x, y } = getGraphXY(currentMultiplier, graphCanvas.width, graphCanvas.height);
-        graphPoints.push({ x, y });
         if (graphPoints.length > 1) spawnParticles(x, y);
         updateParticles();
         drawGraph();
