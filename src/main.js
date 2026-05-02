@@ -518,15 +518,16 @@ function drawGraph() {
     
     const planeSvg = document.getElementById('plane');
     if (planeSvg && gameState !== 'crashed') {
-        // 🛰️ COORDINATE FIX: last.x is already 0-100 because we passed 100 to getGraphXY
         const xPercent = last.x; 
         const yPercent = last.y;
 
         planeSvg.style.left = `${xPercent}%`;
         planeSvg.style.top = `${yPercent}%`;
-        planeSvg.style.transform = `translate(-60%, -50%) rotate(${Math.max(-30, Math.min(10, angle))}deg)`;
+        planeSvg.style.transform = `translate(-50%, -50%) rotate(${Math.max(-30, Math.min(10, angle))}deg)`;
         planeSvg.style.opacity = '1';
         planeSvg.style.display = 'block';
+        planeSvg.style.zIndex = '99999';
+        planeSvg.style.width = '100px'; 
     }
 }
 
