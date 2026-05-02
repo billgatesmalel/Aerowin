@@ -1260,15 +1260,15 @@ function openProfile() {
     const formatted = '+' + phone.slice(0, 3) + ' ' + phone.slice(3, 6) + ' ' + phone.slice(6);
     document.getElementById('profilePhone').textContent = formatted;
     document.getElementById('profileBalance').textContent = 'KES ' + formatNum(balance);
-    if (currentUser.createdAt) {
-        document.getElementById('profileCreated').textContent = new Date(currentUser.createdAt).toLocaleDateString();
+    if (currentUser.created_at) {
+        document.getElementById('profileCreated').textContent = new Date(currentUser.created_at).toLocaleDateString();
     }
     // Referral code
     const refEl = document.getElementById('profileReferralCode');
-    if (refEl) refEl.textContent = currentUser.referralCode || '—';
-    // Referral count
+    if (refEl) refEl.textContent = currentUser.referral_code || '—';
+    // Referral count (mocking for now or fetching if exists)
     const refCount = document.getElementById('profileReferralCount');
-    if (refCount) refCount.textContent = currentUser.referralCount || 0;
+    if (refCount) refCount.textContent = currentUser.referrals || 0;
     // Free bet notice
     const freeBetBanner = document.getElementById('freeBetBanner');
     if (freeBetBanner) {
