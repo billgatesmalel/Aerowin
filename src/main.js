@@ -355,14 +355,14 @@ function showGameLoader(callback) {
     const tip = document.getElementById('glTip');
     if (tip) tip.textContent = LOADING_TIPS[Math.floor(Math.random() * LOADING_TIPS.length)];
     loader.style.display = 'flex';
-    // Hide after 2s then run callback
+    // Hide as soon as possible after data is ready
     setTimeout(() => {
         loader.style.opacity = '0';
         setTimeout(() => {
             loader.style.display = 'none';
             callback();
-        }, 400);
-    }, 2000);
+        }, 300);
+    }, 500); // Reduced from 2000ms to 500ms for faster mobile loading
 }
 
 // ══════════════════════════════════════════════
