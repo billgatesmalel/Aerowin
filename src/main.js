@@ -405,7 +405,14 @@ function initCanvas() {
     graphCanvas.id = 'graphCanvas';
     graphCanvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;';
     board.appendChild(graphCanvas);
+    
+    // Initial resize
     resizeCanvas();
+    
+    // 📱 Mobile fix: Force a second resize after DOM settles
+    setTimeout(resizeCanvas, 100);
+    setTimeout(resizeCanvas, 500);
+
     window.addEventListener('resize', resizeCanvas);
 }
 
