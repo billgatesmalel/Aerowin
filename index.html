@@ -8,6 +8,14 @@
     <title>Aerowin - Virtual Flight Sim & Gaming</title>
     <meta name="description" content="Experience the Aerowin virtual flight simulation. A premium gaming experience for entertainment purposes.">
     <link rel="stylesheet" href="src/styles/styles.css">
+    <script type="module">
+        import { supabase } from './src/lib/supabase.js';
+        async function checkSession() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) window.location.href = 'auth.html';
+        }
+        checkSession();
+    </script>
 </head>
 
 <body>
