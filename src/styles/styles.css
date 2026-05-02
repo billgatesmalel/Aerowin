@@ -1790,21 +1790,28 @@ input {
     letter-spacing: -0.5px;
 }
 
-.footer-payments {
+.payment-methods {
     display: flex;
-    gap: 15px;
     align-items: center;
+    gap: 20px;
     filter: grayscale(1) opacity(0.6);
-    transition: filter 0.3s;
+    transition: all 0.3s;
 }
 
-.footer-payments:hover {
+.payment-methods:hover {
     filter: grayscale(0) opacity(1);
 }
 
-.pay-logo {
+.payment-methods img {
     height: 20px;
     max-width: 60px;
+}
+
+.pay-item {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 0.5px;
 }
 
 .footer-sep {
