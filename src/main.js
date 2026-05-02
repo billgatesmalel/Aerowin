@@ -123,6 +123,16 @@ window.addEventListener('load', async () => {
     initAudio();
     initCanvas();
     updateUI();
+
+    // 🔊 Robust Mute Binding
+    const muteBtn = document.getElementById('muteBtn');
+    if (muteBtn) {
+        muteBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleMute();
+        });
+    }
+
     showGameLoader(() => startNewRound());
 });
 
@@ -316,11 +326,14 @@ function playSoundTick() {
 function toggleMute() {
     muted = !muted;
     const btn = document.getElementById('muteBtn');
-    if (btn) btn.textContent = muted ? '🔇' : '🔊';
+    if (btn) {
+        btn.textContent = muted ? '🔇' : '🔊';
+        btn.style.opacity = muted ? '0.5' : '1';
+        btn.style.filter = muted ? 'grayscale(1)' : 'none';
+    }
 
     if (muted) {
         if (audioCtx) try { audioCtx.suspend(); } catch(e){}
-        // Kill all active audio objects
         activeSounds.forEach(s => { try { s.pause(); s.currentTime = 0; } catch(e){} });
         activeSounds = [];
         stopEngineRumble();
@@ -328,7 +341,7 @@ function toggleMute() {
     } else {
         if (audioCtx) try { audioCtx.resume(); } catch(e){}
     }
-    haptic([20]);
+    haptic([40, 20]); // Stronger haptic feedback
 }
 
 // Keep legacy alias
