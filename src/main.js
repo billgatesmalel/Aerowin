@@ -24,6 +24,29 @@ let tickSpeed = 50;
 let tickIncrement = 0.02;
 let elapsedTicks = 0;
 
+// ── SYNCED RANDOM GENERATOR ──
+function getSyncedSeed() {
+    // Syncs every 15 seconds (10s flight + 5s wait)
+    return Math.floor(Date.now() / 15000);
+}
+
+function seededRandom(seed) {
+    const x = Math.sin(seed++) * 10000;
+    return x - Math.floor(x);
+}
+
+function calculateSyncedCrashPoint() {
+    const seed = getSyncedSeed();
+    const r = seededRandom(seed);
+    // Standard Aviator math: 1 / (1 - r) with 1% house edge
+    // But let's use weighted ranges for excitement
+    if (r < 0.1) return 1.0; // Instant crash
+    if (r < 0.5) return 1.0 + (r * 2); 
+    if (r < 0.8) return 2.0 + (r * 10);
+    if (r < 0.95) return 10.0 + (r * 40);
+    return 50.0 + (r * 150);
+}
+
 // Graph canvas state
 let graphPoints = [];
 let graphCanvas = null;
@@ -289,22 +312,26 @@ function playSoundTick() {
 }
 
 // ── 8. MUTE TOGGLE ────────────────────────────────────────────
-let _muteState = false;
 function toggleMute() {
-    _muteState = !_muteState;
-    muted = _muteState;
+    muted = !muted;
     const btn = document.getElementById('muteBtn');
     if (btn) btn.textContent = muted ? '🔇' : '🔊';
+
     if (muted) {
+        if (audioCtx) {
+            try { audioCtx.suspend(); } catch(e){}
+        }
         stopEngineRumble();
         stopRisingTone();
-    } else if (gameState === 'playing') {
-        startEngineRumble();
-        startRisingTone();
+    } else {
+        if (audioCtx) {
+            try { audioCtx.resume(); } catch(e){}
+        }
     }
+    haptic([20]);
 }
 
-// Keep legacy alias used elsewhere
+// Keep legacy alias
 function playSound(freq, dur, type = 'sine') {
     playTone(freq, dur, type);
 }
@@ -762,12 +789,9 @@ function hideCountdownRing() {
 // ══════════════════════════════════════════════
 function launchRound() {
     gameState = 'playing';
-
-    let r = Math.random();
-    if (r < 0.50) crashPoint = 1.0 + Math.random() * 1.0;
-    else if (r < 0.80) crashPoint = 2.0 + Math.random() * 3.0;
-    else if (r < 0.96) crashPoint = 5.0 + Math.random() * 15.0;
-    else crashPoint = 20 + Math.random() * 30.0;
+    
+    // EVERYONE calculates the SAME crash point based on the SAME time seed
+    crashPoint = calculateSyncedCrashPoint();
 
     const statusEl = document.getElementById('status');
     const plane = document.getElementById('plane');
