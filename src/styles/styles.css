@@ -154,6 +154,16 @@ input {
     transition: background 0.3s;
 }
 
+.history-ticker-wrapper {
+    background: var(--bg-deep);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-panel);
+    overflow-x: auto;
+    white-space: nowrap;
+    position: relative;
+    z-index: 100;
+}
+
 .topbar-brand {
     font-size: 1.3em;
     font-weight: 900;
@@ -623,6 +633,7 @@ input {
     background: var(--game-canvas-bg);
     min-height: 260px;
     transition: background 0.4s;
+    pointer-events: none; /* 👑 CRITICAL: Prevent canvas from blocking clicks below it */
 }
 
 @media (max-width: 480px) {
@@ -960,6 +971,31 @@ input {
 .bc-amount::-webkit-inner-spin-button,
 .bc-amount::-webkit-outer-spin-button {
     -webkit-appearance: none;
+}
+
+.tabs-row {
+    display: flex;
+    background: #000;
+    border-radius: 50px;
+    padding: 3px;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 50; /* 🟢 Ensure tabs are above potential overlaps */
+}
+
+.tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #aeaeae;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 8px 0;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .bc-quick {
