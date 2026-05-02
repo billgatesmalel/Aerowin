@@ -24,27 +24,30 @@ let tickSpeed = 50;
 let tickIncrement = 0.02;
 let elapsedTicks = 0;
 
-// ── SYNCED RANDOM GENERATOR ──
-function getSyncedSeed() {
-    // Syncs every 15 seconds (10s flight + 5s wait)
-    return Math.floor(Date.now() / 15000);
-}
+// ── PERFECT TIME SYNC ──
+const ROUND_DURATION = 15000; // 15s total
+const FLIGHT_LIMIT = 10000;   // 10s max flight
 
-function seededRandom(seed) {
-    const x = Math.sin(seed++) * 10000;
-    return x - Math.floor(x);
+function getGlobalTimeMultiplier() {
+    const now = Date.now();
+    const elapsed = now % ROUND_DURATION;
+    
+    if (elapsed > FLIGHT_LIMIT) return null; // In-between rounds
+    
+    // Growth formula: 1.05 ^ (seconds) - Identical for all users
+    const seconds = elapsed / 1000;
+    return Math.pow(1.08, seconds);
 }
 
 function calculateSyncedCrashPoint() {
-    const seed = getSyncedSeed();
-    const r = seededRandom(seed);
-    // Standard Aviator math: 1 / (1 - r) with 1% house edge
-    // But let's use weighted ranges for excitement
-    if (r < 0.1) return 1.0; // Instant crash
-    if (r < 0.5) return 1.0 + (r * 2); 
-    if (r < 0.8) return 2.0 + (r * 10);
-    if (r < 0.95) return 10.0 + (r * 40);
-    return 50.0 + (r * 150);
+    const seed = Math.floor(Date.now() / ROUND_DURATION);
+    const x = Math.sin(seed) * 10000;
+    const r = x - Math.floor(x);
+    
+    if (r < 0.1) return 1.05;
+    if (r < 0.5) return 1.2 + (r * 2);
+    if (r < 0.8) return 3.0 + (r * 8);
+    return 15.0 + (r * 50);
 }
 
 // Graph canvas state
@@ -253,34 +256,32 @@ function stopRisingTone() {
     risingGain = null;
 }
 
-// ── 4. PROFESSIONAL CASH OUT — High Quality Sample ─────
+// ── MODERN AUDIO ENGINE (Ear-Friendly) ──
+let activeSounds = [];
+
+function playSyncedSound(url, volume = 0.4) {
+    if (muted) return;
+    try {
+        const audio = new Audio(url);
+        audio.volume = volume;
+        activeSounds.push(audio);
+        audio.play().catch(() => {});
+        audio.onended = () => {
+            activeSounds = activeSounds.filter(a => a !== audio);
+        };
+    } catch (e) { }
+}
+
 function playSoundCashOut() {
-    if (muted) return;
-    try {
-        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2017/2017-preview.mp3');
-        audio.volume = 0.5;
-        audio.play().catch(() => {});
-    } catch (e) { }
+    playSyncedSound('https://www.soundjay.com/buttons/sounds/button-11.mp3', 0.3);
 }
 
-// ── 5. PROFESSIONAL EXPLOSION — High Quality Sample ─────
 function playSoundExplosion() {
-    if (muted) return;
-    try {
-        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/149/149-preview.mp3');
-        audio.volume = 0.6;
-        audio.play().catch(() => {});
-    } catch (e) { }
+    playSyncedSound('https://www.soundjay.com/buttons/sounds/button-10.mp3', 0.4);
 }
 
-// ── 6. TAKEOFF SOUND — Takeoff Whoosh ─────
 function playSoundTakeoff() {
-    if (muted) return;
-    try {
-        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
-        audio.volume = 0.4;
-        audio.play().catch(() => {});
-    } catch (e) { }
+    playSyncedSound('https://www.soundjay.com/nature/sounds/wind-01.mp3', 0.2);
 }
 
 
@@ -318,15 +319,14 @@ function toggleMute() {
     if (btn) btn.textContent = muted ? '🔇' : '🔊';
 
     if (muted) {
-        if (audioCtx) {
-            try { audioCtx.suspend(); } catch(e){}
-        }
+        if (audioCtx) try { audioCtx.suspend(); } catch(e){}
+        // Kill all active audio objects
+        activeSounds.forEach(s => { try { s.pause(); s.currentTime = 0; } catch(e){} });
+        activeSounds = [];
         stopEngineRumble();
         stopRisingTone();
     } else {
-        if (audioCtx) {
-            try { audioCtx.resume(); } catch(e){}
-        }
+        if (audioCtx) try { audioCtx.resume(); } catch(e){}
     }
     haptic([20]);
 }
@@ -811,11 +811,18 @@ function launchRound() {
 }
 
 function gameTick() {
-    elapsedTicks++;
-    if (elapsedTicks % 50 === 0) {
-        tickIncrement = Math.min(0.08, tickIncrement + 0.005);
+    // 🌍 PERFECT SYNC: Calculate multiplier based on global time
+    const globalMult = getGlobalTimeMultiplier();
+    
+    if (globalMult === null && gameState === 'playing') {
+        // We reached the end of the time window
+        if (currentMultiplier < crashPoint) crash();
+        return;
     }
-    currentMultiplier = parseFloat((currentMultiplier + tickIncrement).toFixed(2));
+
+    if (globalMult !== null) {
+        currentMultiplier = parseFloat(globalMult.toFixed(2));
+    }
 
     // Add graph point and draw
     if (graphCanvas) {
