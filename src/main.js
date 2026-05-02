@@ -466,6 +466,13 @@ function getGraphXY(mult, canvasW, canvasH) {
 
 function drawGraph() {
     if (!graphCtx2d || !graphCanvas) return;
+
+    // 🛡️ Guard: if canvas still has zero size, force a resize then bail
+    if (graphCanvas.width === 0 || graphCanvas.height === 0) {
+        resizeCanvas();
+        return;
+    }
+
     const W = graphCanvas.width;
     const H = graphCanvas.height;
     graphCtx2d.clearRect(0, 0, W, H);
@@ -504,32 +511,33 @@ function drawGraph() {
     // Particle trail
     drawParticles();
 
-    // 🚀 LIVE PLANE MOVE: Percentage-based positioning
-    const lastMult = graphPoints[graphPoints.length - 1];
-    const prevMult = graphPoints.length > 1 ? graphPoints[graphPoints.length - 2] : graphPoints[0];
-    
-    // Get relative 0-1 coordinates
-    const last = getGraphXY(lastMult, 100, 100);
-    const prev2 = getGraphXY(prevMult, 100, 100);
-    
-    const angle = graphPoints.length > 1 
-        ? Math.atan2(last.y - prev2.y, last.x - prev2.x) * 180 / Math.PI 
-        : -10; 
-    
+
+    // 🚀 LIVE PLANE: follow tip of curve using canvas pixel coords
+    const lastPt = pts[pts.length - 1];
+    const prevPt = pts.length > 1 ? pts[pts.length - 2] : pts[0];
+
+    const dx = lastPt.pxX - prevPt.pxX;
+    const dy = lastPt.pxY - prevPt.pxY;
+    const angle = pts.length > 1 ? Math.atan2(dy, dx) * 180 / Math.PI : -20;
+
+    // The canvas is 100% width/height of #gameBoard (position:relative), 
+    // so canvas px == gameBoard px. We use left:0;top:0 + translate(pxX,pxY).
     const planeSvg = document.getElementById('plane');
     if (planeSvg && gameState !== 'crashed') {
-        const xPercent = last.x; 
-        const yPercent = last.y;
-
-        planeSvg.style.left = `${xPercent}%`;
-        planeSvg.style.top = `${yPercent}%`;
-        planeSvg.style.transform = `translate(-50%, -50%) rotate(${Math.max(-30, Math.min(10, angle))}deg)`;
+        const planeW = 100;
+        const planeH = 34;
+        planeSvg.style.left = '0';
+        planeSvg.style.top  = '0';
+        planeSvg.style.transform = `translate(${lastPt.pxX - planeW}px, ${lastPt.pxY - planeH / 2}px) rotate(${Math.max(-35, Math.min(5, angle))}deg)`;
+        planeSvg.style.transformOrigin = `${planeW}px ${planeH / 2}px`;
         planeSvg.style.opacity = '1';
         planeSvg.style.display = 'block';
-        planeSvg.style.zIndex = '99999';
-        planeSvg.style.width = '100px'; 
+        planeSvg.style.width = `${planeW}px`;
+        planeSvg.style.height = `${planeH}px`;
+        planeSvg.style.zIndex = '10';
     }
 }
+
 
 // ══════════════════════════════════════════════
 // PARTICLE TRAIL
