@@ -113,7 +113,12 @@ window.addEventListener('load', async () => {
         if (profile) {
             currentUser = { ...session.user, ...profile };
             balance = profile.balance;
-            if (profile.phone === '0799289214') currentUser.isAdmin = true;
+            // 👑 FLEXIBLE ADMIN CHECK: Handles +254... or 07... formats
+            const phone = String(profile.phone || '');
+            if (phone.includes('799289214')) {
+                currentUser.isAdmin = true;
+                console.log("Admin Privileges Granted to:", phone);
+            }
             updateUI();
         }
 
