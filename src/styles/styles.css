@@ -547,6 +547,30 @@ input {
     padding: 0;
 }
 
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    background-color: var(--bg-deep);
+    border-bottom: 1px solid var(--border-panel);
+    z-index: 11000; /* 👑 Ensure it is above EVERYTHING */
+    position: relative;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+/* Button Push Effect */
+.btn-icon, .btn-logout, .action-btn {
+    transition: transform 0.1s, opacity 0.2s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-icon:active, .btn-logout:active, .action-btn:active {
+    transform: scale(0.92); /* 🟢 Instant visual feedback */
+    opacity: 0.8;
+}
+
 .room-bar {
     display: flex;
     align-items: center;

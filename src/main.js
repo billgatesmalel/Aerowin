@@ -130,10 +130,20 @@ window.addEventListener('load', async () => {
     initCanvas();
     updateUI();
 
-    // 📱 ROBUST MOBILE BINDINGS
+    // 📱 ULTIMATE MOBILE BINDINGS (Instant Touch)
     const bind = (id, fn) => {
         const el = document.getElementById(id);
-        if (el) el.addEventListener('click', (e) => { e.preventDefault(); fn(); haptic([20]); });
+        if (!el) return;
+
+        const handler = (e) => {
+            // Prevent double-triggering (touch + click)
+            if (e.type === 'touchstart') e.preventDefault(); 
+            fn(); 
+            haptic([30]); 
+        };
+
+        el.addEventListener('click', handler);
+        el.addEventListener('touchstart', handler, { passive: false });
     };
 
     bind('profileBtn', openProfile);
