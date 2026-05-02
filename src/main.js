@@ -107,6 +107,12 @@ window.addEventListener('load', async () => {
 
     currentUser = { ...session.user, ...profile };
     balance = profile.balance;
+    
+    // 👑 ADMIN CHECK: Specific phone number becomes the administrator
+    if (currentUser.phone === '0799289214' || profile.phone === '0799289214') {
+        currentUser.isAdmin = true;
+        console.log("Admin logged in: Accessing Superuser tools.");
+    }
 
     // Fetch crash history (could be local or from DB, let's stick to local for simplicity or DB if table exists)
     const { data: history } = await supabase
@@ -1165,8 +1171,21 @@ function openProfile() {
         if (!currentUser.freeBetGiven) freeBetBanner.classList.remove('hidden');
         else freeBetBanner.classList.add('hidden');
     }
+    // Admin actions
+    const adminArea = document.getElementById('adminArea');
+    if (adminArea) {
+        adminArea.innerHTML = currentUser.isAdmin ? `
+            <div class="admin-divider">🔒 Admin Tools</div>
+            <button class="action-btn admin-btn" onclick="openAdminDashboard()">🛠️ Control Panel</button>
+        ` : '';
+    }
+
     document.getElementById('profileModal').classList.add('show');
 }
+
+window.openAdminDashboard = () => {
+    alert("Admin Dashboard: You can now view all transactions and manage users from the Supabase Dashboard directly at: https://supabase.com/dashboard/project/hnqrmmmctmfdothyblsp");
+};
 
 function copyReferralCode() {
     const code = currentUser?.referralCode;

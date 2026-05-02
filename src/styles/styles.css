@@ -2078,3 +2078,26 @@ body {
         height: 80vh;
     }
 }
+
+/* Admin Tools */
+.admin-divider {
+    margin: 20px 0 10px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #ffcc00;
+    border-top: 1px solid rgba(255, 204, 0, 0.2);
+    padding-top: 15px;
+    letter-spacing: 1px;
+}
+
+.admin-btn {
+    background: linear-gradient(135deg, #ffcc00, #ff8800) !important;
+    color: #000 !important;
+    width: 100%;
+}
+
+.admin-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 136, 0, 0.4);
+}
