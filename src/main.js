@@ -505,8 +505,17 @@ function drawGraph() {
     drawParticles();
 
     // 🚀 LIVE PLANE MOVE: Move SVG plane to end of curve
-    const last = pts[pts.length - 1];
-    const prev2 = pts.length > 1 ? pts[pts.length - 2] : pts[0];
+    const lastMult = graphPoints[graphPoints.length - 1];
+    const prevMult = graphPoints.length > 1 ? graphPoints[graphPoints.length - 2] : graphPoints[0];
+    
+    // Calculate position based on PHYSICAL board size, not internal canvas size
+    const boardEl = document.getElementById('gameBoard');
+    const boardW = boardEl ? boardEl.clientWidth : W || 800;
+    const boardH = boardEl ? boardEl.clientHeight : H || 400;
+    
+    const last = getGraphXY(lastMult, boardW, boardH);
+    const prev2 = getGraphXY(prevMult, boardW, boardH);
+    
     const angle = Math.atan2(last.y - prev2.y, last.x - prev2.x) * 180 / Math.PI;
     const planeSvg = document.getElementById('plane');
     
