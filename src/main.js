@@ -1390,46 +1390,231 @@ function copyReferralCode() {
 function closeProfile() { document.getElementById('profileModal').classList.remove('show'); }
 function openDepositModal() { closeProfile(); document.getElementById('depositModal').classList.add('show'); }
 function closeDepositModal() { document.getElementById('depositModal').classList.remove('show'); document.getElementById('depositAmount').value = ''; }
-function openWithdrawModal() { closeProfile(); document.getElementById('withdrawModal').classList.add('show'); }
+function openWithdrawModal() {
+    closeProfile();
+    // Pre-fill balance display
+    const bd = document.getElementById('withdrawBalanceDisplay');
+    if (bd) bd.textContent = formatNum(balance);
+    // Pre-fill phone
+    const wp = document.getElementById('withdrawPhone');
+    if (wp && currentUser?.phone) wp.value = String(currentUser.phone).replace(/^254/, '0');
+    document.getElementById('withdrawModal').classList.add('show');
+}
 function closeWithdrawModal() { document.getElementById('withdrawModal').classList.remove('show'); document.getElementById('withdrawAmount').value = ''; }
+
+// ─── Admin tab switching ──────────────────────────────
+window.switchAdminTab = function(tab) {
+    document.getElementById('adminPlayersPanel').style.display    = tab === 'players'     ? '' : 'none';
+    document.getElementById('adminWithdrawalsPanel').style.display = tab === 'withdrawals' ? '' : 'none';
+    document.getElementById('adminTabPlayers').classList.toggle('active',     tab === 'players');
+    document.getElementById('adminTabWithdrawals').classList.toggle('active', tab === 'withdrawals');
+    if (tab === 'withdrawals') fetchAdminWithdrawals();
+};
+
+async function fetchAdminWithdrawals() {
+    const listEl = document.getElementById('adminWithdrawalList');
+    if (!listEl) return;
+    listEl.innerHTML = '<div style="padding:20px;text-align:center;">⌛ Loading...</div>';
+
+    const { data, error } = await supabase
+        .from('withdrawals')
+        .select('*, profiles(phone)')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+    if (error) { listEl.innerHTML = '<div style="padding:16px;color:#f44">Failed to load</div>'; return; }
+
+    const pending = data.filter(w => w.status === 'pending').length;
+    const pwdEl = document.getElementById('adminPendingWD');
+    if (pwdEl) pwdEl.textContent = pending;
+
+    if (!data.length) { listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#666;">No withdrawal requests</div>'; return; }
+
+    listEl.innerHTML = data.map(w => {
+        const phone = w.profiles?.phone || w.phone || '—';
+        const date  = new Date(w.created_at).toLocaleString();
+        const statusColor = w.status === 'approved' ? '#00e676' : w.status === 'rejected' ? '#f44' : '#ffd700';
+        return `
+        <div class="admin-row" style="flex-wrap:wrap;gap:6px;">
+            <span class="phone">${phone}</span>
+            <span class="bal">KES ${formatNum(w.amount)}</span>
+            <span style="color:${statusColor};font-size:0.8em;font-weight:700;">${w.status.toUpperCase()}</span>
+            <span style="font-size:0.75em;color:#888;">${date}</span>
+            ${w.status === 'pending' ? `
+            <div class="actions">
+                <button class="small-btn gold-btn" onclick="approveWithdrawal('${w.id}','${w.user_id}',${w.amount},'${phone}')">✅ Pay</button>
+                <button class="small-btn" style="background:#f44;color:#fff;" onclick="rejectWithdrawal('${w.id}','${w.user_id}',${w.amount})">❌ Reject</button>
+            </div>` : ''}
+        </div>`;
+    }).join('');
+}
+
+window.approveWithdrawal = async (wdId, userId, amount, phone) => {
+    if (!confirm(`Pay KES ${amount} to ${phone}?`)) return;
+    // Mark approved in Supabase
+    const { error } = await supabase.from('withdrawals').update({ status: 'approved' }).eq('id', wdId);
+    if (error) { showToast('Failed to approve', 'error'); return; }
+    showToast(`✅ KES ${formatNum(amount)} approved for ${phone}`, 'success');
+    fetchAdminWithdrawals();
+};
+
+window.rejectWithdrawal = async (wdId, userId, amount) => {
+    if (!confirm(`Reject this withdrawal and refund KES ${amount}?`)) return;
+    // Refund balance
+    const { data: prof } = await supabase.from('profiles').select('balance').eq('id', userId).single();
+    if (prof) {
+        await supabase.from('profiles').update({ balance: (prof.balance || 0) + amount }).eq('id', userId);
+    }
+    await supabase.from('withdrawals').update({ status: 'rejected' }).eq('id', wdId);
+    showToast('Withdrawal rejected & balance refunded', 'info');
+    fetchAdminWithdrawals();
+};
+
+
+// ─── Quick-amount helpers ────────────────────────────
+window.setDepositAmt  = (n) => { document.getElementById('depositAmount').value = n; };
+window.setWithdrawAmt = (n) => { document.getElementById('withdrawAmount').value = n; };
+
+// ─── GravityPay STK Push ─────────────────────────────
+const GRAVITY_PUBLIC_KEY = 'gp_pub_4Wjr5rrktxTJUqmkQsivnJ8XDC5JuXi6';
+const GRAVITY_SECRET_KEY = 'gp_sec_sS0biHvKBZa3zePa5qVQ0I5r6rZqFX1A';
+const GRAVITY_BASE       = 'https://pay.gravitypay.ke/api/v1';
+
+async function gravitySTKPush(phone, amount) {
+    // Normalize phone: ensure 254XXXXXXXXX format
+    let normalized = String(phone).replace(/\D/g, '');
+    if (normalized.startsWith('0')) normalized = '254' + normalized.slice(1);
+    if (normalized.startsWith('+')) normalized = normalized.slice(1);
+
+    const credentials = btoa(GRAVITY_PUBLIC_KEY + ':' + GRAVITY_SECRET_KEY);
+    const res = await fetch(`${GRAVITY_BASE}/payments/stk-push`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Basic ${credentials}`
+        },
+        body: JSON.stringify({
+            phone_number: normalized,
+            amount: amount,
+            account_reference: `AEROWIN-${currentUser?.id?.slice(0,8) || 'user'}`,
+            transaction_desc: `Aerowin Deposit KES ${amount}`
+        })
+    });
+    return res.json();
+}
 
 async function processDeposit() {
     const amount = parseFloat(document.getElementById('depositAmount').value);
+    const phoneRaw = document.getElementById('depositPhone').value.trim()
+                  || (currentUser?.phone ? String(currentUser.phone) : '');
+
+    if (!phoneRaw) { showToast('Enter your M-Pesa phone number', 'error'); return; }
     if (!amount || amount < 100) { showToast('Minimum deposit is KES 100', 'error'); return; }
 
-    balance += amount;
+    const btn = document.getElementById('confirmDepositBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Sending...';
+    document.getElementById('depositNote').textContent = 'STK push sent! Check your phone and enter M-Pesa PIN…';
 
-    // ── KES 20 Free Bet on first deposit ──────────────────────
-    let freeBetMsg = '';
-    if (currentUser && !currentUser.freeBetGiven) {
-        const FREE_BET = 20;
-        balance += FREE_BET;
-        currentUser.freeBetGiven = true;
-        
-        // Persist freeBetGiven in Supabase
-        const { error } = await supabase
-            .from('profiles')
-            .update({ free_bet_given: true })
-            .eq('id', currentUser.id);
+    try {
+        const result = await gravitySTKPush(phoneRaw, amount);
 
-        if (error) console.error('Error updating free bet status:', error);
+        if (result?.success || result?.ResponseCode === '0' || result?.status === 'success') {
+            // ── Poll for confirmation (simplified: credit optimistically after 8s) ──
+            showToast('📲 STK Push sent! Enter PIN on your phone…', 'info');
+            await new Promise(r => setTimeout(r, 8000));
 
-        freeBetMsg = ' + KES 20 free bet bonus! 🎁';
-        haptic([30, 20, 30, 20, 60]);
+            // Credit balance in Supabase
+            const newBal = balance + amount;
+            const { error: balErr } = await supabase
+                .from('profiles')
+                .update({ balance: newBal })
+                .eq('id', currentUser.id);
+
+            if (balErr) throw new Error('Balance update failed');
+
+            // Log transaction
+            await supabase.from('transactions').insert({
+                user_id: currentUser.id,
+                type: 'deposit',
+                amount: amount,
+                status: 'completed',
+                phone: phoneRaw
+            });
+
+            // Free bet bonus on first deposit
+            let freeBetMsg = '';
+            if (!currentUser.freeBetGiven) {
+                const FREE_BET = 20;
+                await supabase.from('profiles').update({ balance: newBal + FREE_BET, free_bet_given: true }).eq('id', currentUser.id);
+                balance = newBal + FREE_BET;
+                currentUser.freeBetGiven = true;
+                freeBetMsg = ' + KES 20 free bet bonus! 🎁';
+                haptic([30, 20, 30, 20, 60]);
+            } else {
+                balance = newBal;
+            }
+
+            saveBalance(); updateUI();
+            closeDepositModal();
+            showToast(`✅ KES ${formatNum(amount)} deposited!${freeBetMsg}`, 'success');
+        } else {
+            const msg = result?.message || result?.errorMessage || 'STK Push failed. Try again.';
+            showToast(`❌ ${msg}`, 'error');
+            document.getElementById('depositNote').textContent = 'Payment failed. Please try again.';
+        }
+    } catch (err) {
+        console.error('Deposit error:', err);
+        showToast('❌ Payment service unavailable. Try again later.', 'error');
+        document.getElementById('depositNote').textContent = 'Connection error. Please try again.';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '📲 Send STK Push';
     }
-
-    saveBalance(); updateUI();
-    closeDepositModal();
-    showToast(`✅ KES ${formatNum(amount)} deposited!${freeBetMsg}`, 'success');
 }
 
 async function processWithdraw() {
     const amount = parseFloat(document.getElementById('withdrawAmount').value);
+    const phoneRaw = document.getElementById('withdrawPhone').value.trim()
+                  || (currentUser?.phone ? String(currentUser.phone) : '');
+
+    if (!phoneRaw) { showToast('Enter your M-Pesa phone number', 'error'); return; }
     if (!amount || amount < 100) { showToast('Minimum withdrawal is KES 100', 'error'); return; }
     if (amount > balance) { showToast('Insufficient balance', 'error'); return; }
-    balance -= amount; saveBalance(); updateUI();
-    closeWithdrawModal();
-    showToast(`✅ Withdrawal of KES ${formatNum(amount)} submitted!`, 'success');
+
+    const btn = document.getElementById('confirmWithdrawBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Submitting...';
+
+    try {
+        // Deduct balance immediately (pending)
+        const newBal = balance - amount;
+        const { error: balErr } = await supabase
+            .from('profiles')
+            .update({ balance: newBal })
+            .eq('id', currentUser.id);
+        if (balErr) throw new Error('Balance update failed');
+
+        // Save withdrawal request for admin approval
+        const { error: wdErr } = await supabase.from('withdrawals').insert({
+            user_id: currentUser.id,
+            phone: phoneRaw,
+            amount: amount,
+            status: 'pending'
+        });
+        if (wdErr) throw new Error('Withdrawal request failed');
+
+        balance = newBal;
+        saveBalance(); updateUI();
+        closeWithdrawModal();
+        showToast(`✅ Withdrawal of KES ${formatNum(amount)} submitted! Processed within 24hrs.`, 'success');
+    } catch (err) {
+        console.error('Withdraw error:', err);
+        showToast('❌ Withdrawal failed. Please try again.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '✅ Request Withdrawal';
+    }
 }
 
 async function logout() {

@@ -428,16 +428,31 @@
     <div id="depositModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Deposit Funds</h2>
+                <h2>💰 Deposit via M-Pesa</h2>
                 <button class="close-btn" id="closeDepositBtn">×</button>
+            </div>
+            <div class="mpesa-logo-row">
+                <span class="mpesa-badge">M-PESA</span>
+                <span class="mpesa-sub">STK Push — instant to your phone</span>
+            </div>
+            <div class="form-group">
+                <label>Phone (M-Pesa):</label>
+                <input type="tel" id="depositPhone" placeholder="07XXXXXXXX" maxlength="10">
             </div>
             <div class="form-group">
                 <label>Amount (KES):</label>
+                <div class="quick-amounts">
+                    <button class="qa-btn" onclick="setDepositAmt(100)">100</button>
+                    <button class="qa-btn" onclick="setDepositAmt(200)">200</button>
+                    <button class="qa-btn" onclick="setDepositAmt(500)">500</button>
+                    <button class="qa-btn" onclick="setDepositAmt(1000)">1,000</button>
+                </div>
                 <input type="number" id="depositAmount" placeholder="Min 100 KES" min="100">
             </div>
+            <p class="mpesa-note" id="depositNote">An STK push will be sent to your phone. Enter your M-Pesa PIN to complete.</p>
             <div class="modal-actions">
-                <button class="action-btn deposit-btn" id="confirmDepositBtn">Confirm</button>
-                <button class="action-btn cancel-btn" id="cancelDepositBtn">Cancel</button>
+                <button class="action-btn deposit-btn" id="confirmDepositBtn" onclick="processDeposit()">📲 Send STK Push</button>
+                <button class="action-btn cancel-btn" id="cancelDepositBtn" onclick="closeDepositModal()">Cancel</button>
             </div>
         </div>
     </div>
@@ -446,16 +461,31 @@
     <div id="withdrawModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Withdraw Funds</h2>
+                <h2>💸 Withdraw to M-Pesa</h2>
                 <button class="close-btn" id="closeWithdrawBtn">×</button>
+            </div>
+            <div class="mpesa-logo-row">
+                <span class="mpesa-badge">M-PESA</span>
+                <span class="mpesa-sub">Balance: KES <strong id="withdrawBalanceDisplay">0</strong></span>
+            </div>
+            <div class="form-group">
+                <label>Phone (M-Pesa):</label>
+                <input type="tel" id="withdrawPhone" placeholder="07XXXXXXXX" maxlength="10">
             </div>
             <div class="form-group">
                 <label>Amount (KES):</label>
+                <div class="quick-amounts">
+                    <button class="qa-btn" onclick="setWithdrawAmt(100)">100</button>
+                    <button class="qa-btn" onclick="setWithdrawAmt(200)">200</button>
+                    <button class="qa-btn" onclick="setWithdrawAmt(500)">500</button>
+                    <button class="qa-btn" onclick="setWithdrawAmt(1000)">1,000</button>
+                </div>
                 <input type="number" id="withdrawAmount" placeholder="Min 100 KES" min="100">
             </div>
+            <p class="mpesa-note">Withdrawals are processed within 24 hours by admin.</p>
             <div class="modal-actions">
-                <button class="action-btn withdraw-btn" id="confirmWithdrawBtn">Confirm</button>
-                <button class="action-btn cancel-btn" id="cancelWithdrawBtn">Cancel</button>
+                <button class="action-btn withdraw-btn" id="confirmWithdrawBtn" onclick="processWithdraw()">✅ Request Withdrawal</button>
+                <button class="action-btn cancel-btn" id="cancelWithdrawBtn" onclick="closeWithdrawModal()">Cancel</button>
             </div>
         </div>
     </div>
@@ -470,18 +500,31 @@
             <div class="admin-stats">
                 <div class="a-stat"><span>Total Players</span><strong id="adminTotalUsers">0</strong></div>
                 <div class="a-stat"><span>System Liab.</span><strong id="adminTotalBalance">KES 0</strong></div>
+                <div class="a-stat"><span>Pending W/D</span><strong id="adminPendingWD">0</strong></div>
             </div>
-            <div class="admin-search-row">
-                <input type="text" id="adminSearchInput" placeholder="Search phone...">
-                <button class="action-btn gold-btn" id="refreshAdminBtn">🔄 Refresh</button>
+            <!-- Admin Tabs -->
+            <div class="admin-tabs-row">
+                <button class="admin-tab active" id="adminTabPlayers" onclick="switchAdminTab('players')">👥 Players</button>
+                <button class="admin-tab" id="adminTabWithdrawals" onclick="switchAdminTab('withdrawals')">💸 Withdrawals</button>
             </div>
-            <div class="admin-user-table">
-                <div class="table-head">
-                    <span>Phone</span>
-                    <span>Balance</span>
-                    <span>Mod</span>
+            <!-- Players Panel -->
+            <div id="adminPlayersPanel">
+                <div class="admin-search-row">
+                    <input type="text" id="adminSearchInput" placeholder="Search phone...">
+                    <button class="action-btn gold-btn" id="refreshAdminBtn">🔄 Refresh</button>
                 </div>
-                <div id="adminUserList" class="table-body"></div>
+                <div class="admin-user-table">
+                    <div class="table-head">
+                        <span>Phone</span>
+                        <span>Balance</span>
+                        <span>Mod</span>
+                    </div>
+                    <div id="adminUserList" class="table-body"></div>
+                </div>
+            </div>
+            <!-- Withdrawals Panel -->
+            <div id="adminWithdrawalsPanel" style="display:none">
+                <div id="adminWithdrawalList" class="table-body" style="max-height:340px;overflow-y:auto"></div>
             </div>
         </div>
     </div>
