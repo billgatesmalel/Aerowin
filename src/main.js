@@ -1179,8 +1179,23 @@ async function processWithdraw() {
 }
 
 async function logout() {
-    await supabase.auth.signOut();
-    window.location.href = 'auth.html';
+    try {
+        showToast('Logging out...', 'info');
+        
+        // 1. Clear Supabase Session
+        await supabase.auth.signOut();
+        
+        // 2. Clear Local State
+        currentUser = null;
+        balance = 0;
+        localStorage.clear(); // Clear all local caches
+        sessionStorage.clear();
+
+        // 3. Smooth Redirect (replace prevents "Back" button issues)
+        window.location.replace('auth.html');
+    } catch (e) {
+        window.location.href = 'auth.html';
+    }
 }
 
 window.addEventListener('click', e => {
