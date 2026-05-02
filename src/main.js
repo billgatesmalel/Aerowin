@@ -469,7 +469,7 @@ function drawGraph() {
     const W = graphCanvas.width;
     const H = graphCanvas.height;
     graphCtx2d.clearRect(0, 0, W, H);
-    if (!graphPoints || graphPoints.length < 2) return;
+    if (!graphPoints || graphPoints.length === 0) return;
 
     // Convert raw multipliers to current screen points
     const pts = graphPoints.map(m => getGraphXY(m, W, H));
@@ -510,19 +510,21 @@ function drawGraph() {
     
     // Calculate position based on PHYSICAL board size, not internal canvas size
     const boardEl = document.getElementById('gameBoard');
-    const boardW = boardEl ? boardEl.clientWidth : W || 800;
-    const boardH = boardEl ? boardEl.clientHeight : H || 400;
+    const boardW = boardEl ? boardEl.clientWidth : (W || 800);
+    const boardH = boardEl ? boardEl.clientHeight : (H || 400);
     
     const last = getGraphXY(lastMult, boardW, boardH);
     const prev2 = getGraphXY(prevMult, boardW, boardH);
     
-    const angle = Math.atan2(last.y - prev2.y, last.x - prev2.x) * 180 / Math.PI;
+    // 📐 Angle fix: if only 1 point, use a slight climb angle
+    const angle = graphPoints.length > 1 
+        ? Math.atan2(last.y - prev2.y, last.x - prev2.x) * 180 / Math.PI 
+        : -10; // Default takeoff tilt
+    
     const planeSvg = document.getElementById('plane');
     
     if (planeSvg && gameState !== 'crashed') {
         planeSvg.style.transform = `translate(${last.x - 60}px, ${last.y - 30}px) rotate(${Math.max(-30, Math.min(10, angle))}deg)`;
-        planeSvg.style.left = '0';
-        planeSvg.style.top = '0';
         planeSvg.style.opacity = '1';
         planeSvg.style.display = 'block';
     }
@@ -896,7 +898,12 @@ function launchRound() {
     const statusEl = document.getElementById('status');
     const plane = document.getElementById('plane');
     if (statusEl) statusEl.textContent = '';
-    if (plane) plane.classList.add('fly');
+    
+    if (plane) {
+        plane.classList.add('fly');
+        plane.style.left = '0'; // 🚀 Wipe out starting static styles
+        plane.style.top = '0';
+    }
 
     if (graphCanvas) {
         const { x, y } = getGraphXY(1.0, graphCanvas.width, graphCanvas.height);
