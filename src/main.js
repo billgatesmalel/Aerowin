@@ -443,17 +443,22 @@ function initCanvas() {
     // Initial resize
     resizeCanvas();
     
-    // 📱 Mobile fix: Force a second resize after DOM settles
+    // 📱 Mobile fix: Force resize after DOM settles (multiple attempts for slow devices)
     setTimeout(resizeCanvas, 100);
     setTimeout(resizeCanvas, 500);
+    setTimeout(resizeCanvas, 1000);
 
     window.addEventListener('resize', resizeCanvas);
 }
 
 function resizeCanvas() {
     if (!graphCanvas) return;
-    graphCanvas.width = graphCanvas.offsetWidth;
-    graphCanvas.height = graphCanvas.offsetHeight;
+    const w = graphCanvas.offsetWidth;
+    const h = graphCanvas.offsetHeight;
+    if (w > 0 && h > 0) {
+        graphCanvas.width = w;
+        graphCanvas.height = h;
+    }
     graphCtx2d = graphCanvas.getContext('2d');
 }
 
@@ -465,13 +470,10 @@ function getGraphXY(mult, canvasW, canvasH) {
 }
 
 function drawGraph() {
-    if (!graphCtx2d || !graphCanvas) return;
-
-    // 🛡️ Guard: if canvas still has zero size, force a resize then bail
-    if (graphCanvas.width === 0 || graphCanvas.height === 0) {
-        resizeCanvas();
-        return;
-    }
+    // 🛡️ Guard: ensure canvas has valid dimensions before drawing
+    if (!graphCanvas) return;
+    if (graphCanvas.width === 0 || graphCanvas.height === 0) resizeCanvas();
+    if (!graphCtx2d || graphCanvas.width === 0 || graphCanvas.height === 0) return;
 
     const W = graphCanvas.width;
     const H = graphCanvas.height;
