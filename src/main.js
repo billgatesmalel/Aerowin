@@ -23,6 +23,8 @@ let audioCtx = null;
 let tickSpeed = 50;
 let tickIncrement = 0.02;
 let elapsedTicks = 0;
+let activeBetsTab = 'all'; // 'all' | 'previous' | 'top'
+let personalHistory = []; // Stores user's personal bets
 
 // ── PERFECT TIME SYNC ──
 const ROUND_DURATION = 15000; // 15s total
@@ -166,6 +168,11 @@ window.addEventListener('load', async () => {
     bind('closeWithdrawBtn', closeWithdrawModal);
     bind('confirmWithdrawBtn', processWithdraw);
     bind('cancelWithdrawBtn', closeWithdrawModal);
+    
+    // Bet Feed Tabs
+    bind('tabAll', () => switchBetTab('all'));
+    bind('tabPrevious', () => switchBetTab('previous'));
+    bind('tabTop', () => switchBetTab('top'));
 
     showGameLoader(() => startNewRound());
 });
@@ -654,6 +661,19 @@ function setBet(num, val) {
 // ══════════════════════════════════════════════
 // TAB SWITCHING
 // ══════════════════════════════════════════════
+function switchBetTab(mode) {
+    activeBetsTab = mode;
+    document.getElementById('tabAll').classList.toggle('active', mode === 'all');
+    document.getElementById('tabPrevious').classList.toggle('active', mode === 'previous');
+    document.getElementById('tabTop').classList.toggle('active', mode === 'top');
+    
+    // Update the header text
+    const header = document.querySelector('.all-bets-header span');
+    if (header) header.textContent = mode === 'all' ? 'ALL BETS' : (mode === 'previous' ? 'MY BETS' : 'TOP BETS');
+    
+    renderAllBets();
+}
+
 function switchTab(num, mode) {
     document.getElementById('betTab' + num).classList.toggle('active', mode === 'bet');
     document.getElementById('autoTab' + num).classList.toggle('active', mode === 'auto');
@@ -711,6 +731,16 @@ async function cashOutBet(num) {
     bet.cashed = true;
 
     updateMyBetInFeed(num, currentMultiplier, bet.winnings, 'cashed');
+
+    // 📜 ADD TO PERSONAL HISTORY
+    personalHistory.unshift({
+        name: currentUser.phone.slice(-4).padStart(4, '*'),
+        avatar: '🌟',
+        betAmt: bet.amount,
+        mult: currentMultiplier.toFixed(2) + 'x',
+        winAmt: bet.winnings,
+        status: 'cashed'
+    });
 
     const status = document.getElementById('status');
     if (status) status.textContent = `✅ Cashed at ${currentMultiplier.toFixed(2)}x!`;
@@ -970,6 +1000,15 @@ function crash() {
 
     [bet1, bet2].forEach(bet => {
         if (bet.active && !bet.cashed) {
+            // 📜 Add loss to history
+            personalHistory.unshift({
+                name: currentUser.phone.slice(-4).padStart(4, '*'),
+                avatar: '🌟',
+                betAmt: bet.amount,
+                mult: currentMultiplier.toFixed(2) + 'x',
+                winAmt: 0,
+                status: 'crashed'
+            });
             showToast(`💥 Flew away at ${currentMultiplier.toFixed(2)}x! Lost KES ${formatNum(bet.amount)}`, 'error');
         }
     });
@@ -1119,16 +1158,21 @@ function renderAllBets() {
     const list = document.getElementById('allBetsList');
     if (!list) return;
     updateTotalCountDisplay();
-    list.innerHTML = allBets.map(b => {
+
+    // 🎯 Switch Source based on Active Tab
+    const sourceData = activeBetsTab === 'previous' ? personalHistory : allBets;
+
+    list.innerHTML = sourceData.map(b => {
         const multClass = b.status === 'cashed' ? 'won' : b.status === 'crashed' ? 'lost' : 'playing';
-        const multTxt = b.status === 'playing' ? '–' : (b.mult ? parseFloat(b.mult).toFixed(2) + 'x' : '–');
-        const winTxt = b.status === 'cashed' ? formatNum(b.winAmt) : b.status === 'crashed' ? '–' : '...';
-        const rowClass = b.status === 'cashed' ? 'cashed' : b.status === 'crashed' ? 'crashed' : '';
-        return `<div class="bet-row ${rowClass}">
-            <div class="player"><div class="player-avatar">${b.avatar}</div><span>${b.name}</span></div>
-            <span class="bet-amt">${formatNum(b.betAmt)}</span>
-            <span class="mult ${multClass}">${multTxt}</span>
-            <span class="win-amt">${winTxt}</span>
+        const multTxt = b.status === 'playing' ? '–' : (typeof b.mult === 'string' ? b.mult : (b.mult ? parseFloat(b.mult).toFixed(2) + 'x' : '–'));
+        const winTxt = b.status === 'cashed' ? formatNum(b.winAmt) : b.status === 'crashed' ? (activeBetsTab === 'previous' ? '-'+formatNum(b.betAmt) : '–') : '...';
+        const meClass = b.isMe || activeBetsTab === 'previous' ? 'me-highlight' : '';
+        
+        return `<div class="bet-row ${b.status} ${meClass}">
+            <div class="player"><span>${b.avatar}</span> ${b.name}</div>
+            <div class="bet-amt">${formatNum(b.betAmt)}</div>
+            <div class="mult ${multClass}">${multTxt}</div>
+            <div class="win-amt">${winTxt}</div>
         </div>`;
     }).join('');
 }
