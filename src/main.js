@@ -459,9 +459,9 @@ function resizeCanvas() {
 
 function getGraphXY(mult, canvasW, canvasH) {
     const progress = Math.min(1, (mult - 1.0) / 19.0);
-    const x = progress * canvasW * 0.92 + canvasW * 0.04;
-    const y = canvasH - (canvasH * 0.1 + Math.pow(progress, 0.7) * canvasH * 0.78);
-    return { x, y };
+    const x = progress * 0.92 + 0.04; // 🛰️ Return relative 0 to 1
+    const y = 1.0 - (0.1 + Math.pow(progress, 0.7) * 0.78); 
+    return { x, y, pxX: x * canvasW, pxY: y * canvasH };
 }
 
 function drawGraph() {
@@ -477,9 +477,9 @@ function drawGraph() {
 
     // Gradient fill under curve
     graphCtx2d.beginPath();
-    graphCtx2d.moveTo(pts[0].x, H);
-    pts.forEach(p => graphCtx2d.lineTo(p.x, p.y));
-    graphCtx2d.lineTo(pts[pts.length - 1].x, H);
+    graphCtx2d.moveTo(pts[0].pxX, H);
+    pts.forEach(p => graphCtx2d.lineTo(p.pxX, p.pxY));
+    graphCtx2d.lineTo(pts[pts.length - 1].pxX, H);
     graphCtx2d.closePath();
     
     const fillGrad = graphCtx2d.createLinearGradient(0, 0, 0, H);
@@ -490,12 +490,12 @@ function drawGraph() {
 
     // Curve line
     graphCtx2d.beginPath();
-    graphCtx2d.moveTo(pts[0].x, pts[0].y);
+    graphCtx2d.moveTo(pts[0].pxX, pts[0].pxY);
     for (let i = 1; i < pts.length; i++) {
         const prev = pts[i - 1];
         const curr = pts[i];
-        const cx = (prev.x + curr.x) / 2;
-        graphCtx2d.bezierCurveTo(cx, prev.y, cx, curr.y, curr.x, curr.y);
+        const cx = (prev.pxX + curr.pxX) / 2;
+        graphCtx2d.bezierCurveTo(cx, prev.pxY, cx, curr.pxY, curr.pxX, curr.pxY);
     }
     graphCtx2d.strokeStyle = crashed ? '#ff2244' : '#ff1a50';
     graphCtx2d.lineWidth = 3;
@@ -504,27 +504,26 @@ function drawGraph() {
     // Particle trail
     drawParticles();
 
-    // 🚀 LIVE PLANE MOVE: Move SVG plane to end of curve
+    // 🚀 LIVE PLANE MOVE: Percentage-based positioning
     const lastMult = graphPoints[graphPoints.length - 1];
     const prevMult = graphPoints.length > 1 ? graphPoints[graphPoints.length - 2] : graphPoints[0];
     
-    // Calculate position based on PHYSICAL board size, not internal canvas size
-    const boardEl = document.getElementById('gameBoard');
-    const boardW = boardEl ? boardEl.clientWidth : (W || 800);
-    const boardH = boardEl ? boardEl.clientHeight : (H || 400);
+    // Get relative 0-1 coordinates
+    const last = getGraphXY(lastMult, 100, 100);
+    const prev2 = getGraphXY(prevMult, 100, 100);
     
-    const last = getGraphXY(lastMult, boardW, boardH);
-    const prev2 = getGraphXY(prevMult, boardW, boardH);
-    
-    // 📐 Angle fix: if only 1 point, use a slight climb angle
     const angle = graphPoints.length > 1 
         ? Math.atan2(last.y - prev2.y, last.x - prev2.x) * 180 / Math.PI 
-        : -10; // Default takeoff tilt
+        : -10; 
     
     const planeSvg = document.getElementById('plane');
-    
     if (planeSvg && gameState !== 'crashed') {
-        planeSvg.style.transform = `translate(${last.x - 60}px, ${last.y - 30}px) rotate(${Math.max(-30, Math.min(10, angle))}deg)`;
+        const xPercent = last.x * 100;
+        const yPercent = last.y * 100;
+
+        planeSvg.style.left = `${xPercent}%`;
+        planeSvg.style.top = `${yPercent}%`;
+        planeSvg.style.transform = `translate(-60%, -50%) rotate(${Math.max(-30, Math.min(10, angle))}deg)`;
         planeSvg.style.opacity = '1';
         planeSvg.style.display = 'block';
     }
@@ -930,9 +929,8 @@ function gameTick() {
     graphPoints.push(currentMultiplier);
     
     if (graphCanvas) {
-        // Calculate current position for particles
-        const { x, y } = getGraphXY(currentMultiplier, graphCanvas.width, graphCanvas.height);
-        if (graphPoints.length > 1) spawnParticles(x, y);
+        const rel = getGraphXY(currentMultiplier, graphCanvas.width, graphCanvas.height);
+        if (graphPoints.length > 1) spawnParticles(rel.pxX, rel.pxY);
         updateParticles();
         drawGraph();
     }
