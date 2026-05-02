@@ -518,8 +518,9 @@ function drawGraph() {
     
     const planeSvg = document.getElementById('plane');
     if (planeSvg && gameState !== 'crashed') {
-        const xPercent = last.x * 100;
-        const yPercent = last.y * 100;
+        // 🛰️ COORDINATE FIX: last.x is already 0-100 because we passed 100 to getGraphXY
+        const xPercent = last.x; 
+        const yPercent = last.y;
 
         planeSvg.style.left = `${xPercent}%`;
         planeSvg.style.top = `${yPercent}%`;
