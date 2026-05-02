@@ -515,12 +515,15 @@ function drawGraph() {
         const scaleX = boardEl.clientWidth / W;
         const scaleY = boardEl.clientHeight / H;
         
-        // 🛰️ Precise positioning inside the game board
-        planeSvg.style.transform = `translate(${last.x * scaleX - 60}px, ${last.y * scaleY - 20}px) rotate(${Math.max(-35, Math.min(5, angle))}deg)`;
-        planeSvg.style.position = 'absolute';
+        // 🛰️ Simplified Absolute Positioning (More reliable for mobile)
+        const posX = (last.x * scaleX) - 60;
+        const posY = (last.y * scaleY) - 30;
+        
+        planeSvg.style.transform = `rotate(${Math.max(-30, Math.min(10, angle))}deg)`;
+        planeSvg.style.left = `${posX}px`;
+        planeSvg.style.top = `${posY}px`;
         planeSvg.style.opacity = '1';
-        planeSvg.style.left = '0';
-        planeSvg.style.top = '0';
+        planeSvg.style.display = 'block';
     }
 }
 
