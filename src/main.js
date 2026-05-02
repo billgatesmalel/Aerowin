@@ -497,14 +497,15 @@ function drawGraph() {
     const planeSvg = document.getElementById('plane');
     if (planeSvg && gameState !== 'crashed') {
         const boardEl = document.getElementById('gameBoard');
-        const scaleX = boardEl.offsetWidth / W;
-        const scaleY = boardEl.offsetHeight / H;
-        planeSvg.style.left = (last.x * scaleX - 60) + 'px';
-        planeSvg.style.top = (last.y * scaleY - 20) + 'px';
-        planeSvg.style.transform = `rotate(${Math.max(-35, Math.min(5, angle))}deg)`;
+        const scaleX = boardEl.clientWidth / W;
+        const scaleY = boardEl.clientHeight / H;
+        
+        // 🛰️ Precise positioning inside the game board
+        planeSvg.style.transform = `translate(${last.x * scaleX - 60}px, ${last.y * scaleY - 20}px) rotate(${Math.max(-35, Math.min(5, angle))}deg)`;
         planeSvg.style.position = 'absolute';
-        planeSvg.style.right = 'auto';
-        planeSvg.style.bottom = 'auto';
+        planeSvg.style.opacity = '1';
+        planeSvg.style.left = '0';
+        planeSvg.style.top = '0';
     }
 }
 
@@ -1062,7 +1063,8 @@ function renderTicker() {
     ticker.innerHTML = crashHistory.map(c => {
         // 🛡️ Robust fallback: check if it's an object or just a value
         const val = (typeof c === 'object' && c !== null) ? c.multiplier : c;
-        if (val === undefined || val === null) return ''; // Skip corrupted entries
+        // 🚩 Aggressively skip any undefined/null/bad data
+        if (!val || val === 'undefined' || val === 'null' || isNaN(parseFloat(val))) return '';
         
         const m = parseFloat(val);
         const cls = m < 2 ? 'red' : m < 5 ? 'green' : m < 10 ? 'purple' : 'gold';
