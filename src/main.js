@@ -1014,16 +1014,8 @@ function crash() {
     });
 
     saveBalance();
-    saveCrashToHistory(currentMultiplier); // Persist to Supabase
     updateUI();
     setTimeout(startNewRound, 3500);
-}
-
-async function saveCrashToHistory(mult) {
-    const { error } = await supabase
-        .from('game_history')
-        .insert([{ multiplier: mult }]);
-    if (error) console.error('Error saving crash history:', error);
 }
 
 // ══════════════════════════════════════════════
@@ -1048,21 +1040,37 @@ function triggerExplosion() {
 // ══════════════════════════════════════════════
 // CRASH HISTORY & TICKER
 // ══════════════════════════════════════════════
-function addToCrashHistory(m) {
-    crashHistory.unshift({ multiplier: parseFloat(m).toFixed(2) });
-    if (crashHistory.length > 30) crashHistory.pop();
-    if (currentUser) localStorage.setItem('crashHistory_' + currentUser.phone, JSON.stringify(crashHistory));
-    renderTicker();
+async function addToCrashHistory(m) {
+    const mult = parseFloat(m).toFixed(2);
+    // 🌍 Sync to Supabase so it's "across the system"
+    const { error } = await supabase.from('game_history').insert([{ multiplier: mult }]);
+    
+    if (!error) {
+        // Only add to local state if DB insert succeeded to keep things in sync
+        crashHistory.unshift(mult);
+        if (crashHistory.length > 50) crashHistory.pop();
+        renderTicker();
+    } else {
+        console.error("History sync failed", error);
+    }
 }
 
 function renderTicker() {
     const ticker = document.getElementById('historyTicker');
     if (!ticker) return;
-    if (crashHistory.length === 0) { ticker.innerHTML = '<div class="tick-pill gray">–</div>'; return; }
+    if (!crashHistory || crashHistory.length === 0) { 
+        ticker.innerHTML = '<div class="tick-pill gray">–</div>'; 
+        return; 
+    }
+    
     ticker.innerHTML = crashHistory.map(c => {
-        const m = parseFloat(c.multiplier);
+        // 🛡️ Robust fallback: check if it's an object or just a value
+        const val = (typeof c === 'object' && c !== null) ? c.multiplier : c;
+        if (val === undefined || val === null) return ''; // Skip corrupted entries
+        
+        const m = parseFloat(val);
         const cls = m < 2 ? 'red' : m < 5 ? 'green' : m < 10 ? 'purple' : 'gold';
-        return `<div class="tick-pill ${cls}">${c.multiplier}x</div>`;
+        return `<div class="tick-pill ${cls}">${m.toFixed(2)}x</div>`;
     }).join('');
 }
 
