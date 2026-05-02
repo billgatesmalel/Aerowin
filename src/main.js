@@ -175,6 +175,16 @@ window.addEventListener('load', async () => {
     bind('tabPrevious', () => switchBetTab('previous'));
     bind('tabTop', () => switchBetTab('top'));
 
+    // ... existing binds ...
+    bind('closeAdminBtn', () => document.getElementById('adminModal').classList.remove('show'));
+    bind('refreshAdminBtn', fetchAdminUsers);
+    
+    // Search filter
+    const searchInp = document.getElementById('adminSearchInput');
+    if (searchInp) {
+        searchInp.addEventListener('input', (e) => filterAdminUsers(e.target.value));
+    }
+
     showGameLoader(() => startNewRound());
 });
 
@@ -1264,8 +1274,89 @@ function openProfile() {
     document.getElementById('profileModal').classList.add('show');
 }
 
-window.openAdminDashboard = () => {
-    alert("Admin Dashboard: You can now view all transactions and manage users from the Supabase Dashboard directly at: https://supabase.com/dashboard/project/hnqrmmmctmfdothyblsp");
+let adminCachedUsers = [];
+
+window.openAdminDashboard = async () => {
+    closeProfile();
+    document.getElementById('adminModal').classList.add('show');
+    await fetchAdminUsers();
+};
+
+async function fetchAdminUsers() {
+    const listEl = document.getElementById('adminUserList');
+    if (!listEl) return;
+    listEl.innerHTML = '<div style="padding:20px;text-align:center;">⌛ Fetching players...</div>';
+
+    const { data: users, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        showToast('Failed to fetch users', 'error');
+        return;
+    }
+
+    adminCachedUsers = users;
+    renderAdminUserList(users);
+    
+    // Update Stats
+    document.getElementById('adminTotalUsers').textContent = users.length;
+    const totalBal = users.reduce((sum, u) => sum + (u.balance || 0), 0);
+    document.getElementById('adminTotalBalance').textContent = `KES ${totalBal.toLocaleString()}`;
+}
+
+function filterAdminUsers(query) {
+    const filtered = adminCachedUsers.filter(u => String(u.phone).includes(query));
+    renderAdminUserList(filtered);
+}
+
+function renderAdminUserList(users) {
+    const listEl = document.getElementById('adminUserList');
+    if (!listEl) return;
+    
+    if (users.length === 0) {
+        listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#666;">No players found</div>';
+        return;
+    }
+
+    listEl.innerHTML = users.map(u => `
+        <div class="admin-row">
+            <span class="phone">${u.phone || 'Unknown'}</span>
+            <span class="bal">KES ${formatNum(u.balance || 0)}</span>
+            <div class="actions">
+                <button class="small-btn gold-btn" onclick="adjustBalance('${u.id}', 500)">+500</button>
+                <button class="small-btn" style="background:#ff4444;color:#fff;" onclick="adjustBalance('${u.id}', -500)">-500</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+window.adjustBalance = async (userId, delta) => {
+    const user = adminCachedUsers.find(u => u.id === userId);
+    if (!user) return;
+    
+    const newBal = (user.balance || 0) + delta;
+    if (newBal < 0) { showToast('Balance cannot be negative', 'error'); return; }
+
+    const { error } = await supabase
+        .from('profiles')
+        .update({ balance: newBal })
+        .eq('id', userId);
+
+    if (error) {
+        showToast('Update failed', 'error');
+    } else {
+        showToast(`Balance updated for ${user.phone}`, 'success');
+        haptic([30, 50]);
+        fetchAdminUsers(); // Refresh
+        
+        // If it was ME, update local balance
+        if (currentUser && userId === currentUser.id) {
+            balance = newBal;
+            updateUI();
+        }
+    }
 };
 
 function copyReferralCode() {

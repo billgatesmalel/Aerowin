@@ -452,6 +452,31 @@
         </div>
     </div>
 
+    <!-- 👑 ADMIN DASHBOARD MODAL -->
+    <div class="modal" id="adminModal">
+        <div class="modal-content admin-content">
+            <div class="modal-header">
+                <h2>👑 System Management</h2>
+                <button class="close-btn" id="closeAdminBtn">&times;</button>
+            </div>
+            <div class="admin-stats">
+                <div class="a-stat"><span>Total Players</span><strong id="adminTotalUsers">0</strong></div>
+                <div class="a-stat"><span>System Liab.</span><strong id="adminTotalBalance">KES 0</strong></div>
+            </div>
+            <div class="admin-search-row">
+                <input type="text" id="adminSearchInput" placeholder="Search phone...">
+                <button class="action-btn gold-btn" id="refreshAdminBtn">🔄 Refresh</button>
+            </div>
+            <div class="admin-user-table">
+                <div class="table-head">
+                    <span>Phone</span>
+                    <span>Balance</span>
+                    <span>Mod</span>
+                </div>
+                <div id="adminUserList" class="table-body"></div>
+            </div>
+        </div>
+    </div>
     <script type="module" src="/src/main.js"></script>
     <script src="/src/chat.js"></script>
 </body>
