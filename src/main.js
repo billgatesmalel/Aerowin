@@ -87,50 +87,46 @@ let engineRumbleGain = null;
 // BOOT
 // ══════════════════════════════════════════════
 window.addEventListener('load', async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) { 
-        window.location.href = 'auth.html'; 
-        return; 
-    }
-
-    // Fetch profile from Supabase
-    const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
-
-    if (error || !profile) {
-        console.error('Profile not found', error);
-        window.location.href = 'auth.html';
-        return;
-    }
-
-    currentUser = { ...session.user, ...profile };
-    balance = profile.balance;
-    
-    // 👑 ADMIN CHECK: Specific phone number becomes the administrator
-    if (currentUser.phone === '0799289214' || profile.phone === '0799289214') {
-        currentUser.isAdmin = true;
-        console.log("Admin logged in: Accessing Superuser tools.");
-    }
-
-    // Fetch crash history (could be local or from DB, let's stick to local for simplicity or DB if table exists)
-    const { data: history } = await supabase
-        .from('game_history')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-    if (history) {
-        crashHistory = history.map(h => h.multiplier);
-        renderTicker();
-    }
-
+    // 🚀 Start initializing UI while data fetches in background
     initAudio();
     initCanvas();
     updateUI();
+
+    // 🛡️ Pre-populate from LocalStorage for instant feel
+    const cached = localStorage.getItem('aerowin_global_history');
+    if (cached) {
+        try {
+            crashHistory = JSON.parse(cached).filter(v => v !== null && v !== 'undefined');
+            renderTicker();
+        } catch(e) {}
+    }
+
+    // 📡 Background Database Sync (Non-blocking)
+    Promise.all([
+        supabase.auth.getSession(),
+        supabase.from('game_history').select('multiplier').order('created_at', { ascending: false }).limit(30)
+    ]).then(async ([sessionResult, historyResult]) => {
+        const { data: { session } } = sessionResult;
+        if (!session) { window.location.href = 'auth.html'; return; }
+
+        const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+        if (profile) {
+            currentUser = { ...session.user, ...profile };
+            balance = profile.balance;
+            if (profile.phone === '0799289214') currentUser.isAdmin = true;
+            updateUI();
+        }
+
+        if (historyResult.data) {
+            // 🛡️ STRICT SANITIZATION: filter out nulls or 'undefined' literals
+            crashHistory = historyResult.data
+                .map(h => h.multiplier)
+                .filter(m => m !== null && m !== undefined && m !== 'undefined' && m !== '');
+            
+            localStorage.setItem('aerowin_global_history', JSON.stringify(crashHistory));
+            renderTicker();
+        }
+    }).catch(err => console.error("Boot sequence error:", err));
 
     // 📱 ULTIMATE MOBILE BINDINGS (Instant Touch)
     const bind = (id, fn) => {
