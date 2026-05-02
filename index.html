@@ -28,11 +28,10 @@
         <div class="topbar-brand">✈️ <span>Aerowin</span></div>
         <div class="topbar-actions">
             <span class="balance-pill">KES <strong id="headerBalance">1000</strong></span>
-            <button class="btn-icon" onclick="openProfile()">👤</button>
+            <button class="btn-icon" id="profileBtn">👤</button>
             <button class="btn-icon" id="muteBtn">🔊</button>
-            <button class="btn-icon theme-toggle" onclick="toggleTheme()" id="themeBtn"
-                title="Toggle dark/light mode">🌙</button>
-            <button class="btn-logout" onclick="logout()">Logout</button>
+            <button class="btn-icon theme-toggle" id="themeBtn" title="Toggle dark/light mode">🌙</button>
+            <button class="btn-logout" id="logoutBtn">Logout</button>
         </div>
     </div>
 
@@ -380,8 +379,8 @@
     <div id="profileModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>My Profile</h2>
-                <button class="close-btn" onclick="closeProfile()">×</button>
+                <h2>Player Profile</h2>
+                <button class="close-btn" id="closeProfileBtn">×</button>
             </div>
             <div class="profile-section">
                 <div class="profile-item">
@@ -410,8 +409,8 @@
                 </div>
             </div>
             <div class="profile-actions">
-                <button class="action-btn deposit-btn" onclick="openDepositModal()">💰 Deposit</button>
-                <button class="action-btn withdraw-btn" onclick="openWithdrawModal()">💸 Withdraw</button>
+                <button class="action-btn deposit-btn" id="openDepositBtn">💰 Deposit</button>
+                <button class="action-btn withdraw-btn" id="openWithdrawBtn">💸 Withdraw</button>
             </div>
         </div>
     </div>
@@ -421,15 +420,15 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Deposit Funds</h2>
-                <button class="close-btn" onclick="closeDepositModal()">×</button>
+                <button class="close-btn" id="closeDepositBtn">×</button>
             </div>
             <div class="form-group">
                 <label>Amount (KES):</label>
                 <input type="number" id="depositAmount" placeholder="Min 100 KES" min="100">
             </div>
             <div class="modal-actions">
-                <button class="action-btn deposit-btn" onclick="processDeposit()">Confirm</button>
-                <button class="action-btn cancel-btn" onclick="closeDepositModal()">Cancel</button>
+                <button class="action-btn deposit-btn" id="confirmDepositBtn">Confirm</button>
+                <button class="action-btn cancel-btn" id="cancelDepositBtn">Cancel</button>
             </div>
         </div>
     </div>
@@ -439,15 +438,15 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Withdraw Funds</h2>
-                <button class="close-btn" onclick="closeWithdrawModal()">×</button>
+                <button class="close-btn" id="closeWithdrawBtn">×</button>
             </div>
             <div class="form-group">
                 <label>Amount (KES):</label>
                 <input type="number" id="withdrawAmount" placeholder="Min 100 KES" min="100">
             </div>
             <div class="modal-actions">
-                <button class="action-btn withdraw-btn" onclick="processWithdraw()">Confirm</button>
-                <button class="action-btn cancel-btn" onclick="closeWithdrawModal()">Cancel</button>
+                <button class="action-btn withdraw-btn" id="confirmWithdrawBtn">Confirm</button>
+                <button class="action-btn cancel-btn" id="cancelWithdrawBtn">Cancel</button>
             </div>
         </div>
     </div>

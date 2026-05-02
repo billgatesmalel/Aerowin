@@ -124,14 +124,32 @@ window.addEventListener('load', async () => {
     initCanvas();
     updateUI();
 
-    // 🔊 Robust Mute Binding
-    const muteBtn = document.getElementById('muteBtn');
-    if (muteBtn) {
-        muteBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            toggleMute();
-        });
-    }
+    // 📱 ROBUST MOBILE BINDINGS
+    const bind = (id, fn) => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('click', (e) => { e.preventDefault(); fn(); haptic([20]); });
+    };
+
+    bind('profileBtn', openProfile);
+    bind('muteBtn', toggleMute);
+    bind('logoutBtn', logout);
+    bind('themeBtn', () => {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+        const btn = document.getElementById('themeBtn');
+        if (btn) btn.textContent = isDark ? '🌞' : '🌙';
+    });
+
+    // Modals
+    bind('closeProfileBtn', closeProfile);
+    bind('openDepositBtn', openDepositModal);
+    bind('closeDepositBtn', closeDepositModal);
+    bind('cancelDepositBtn', closeDepositModal);
+    bind('confirmDepositBtn', processDeposit);
+    bind('openWithdrawBtn', openWithdrawModal);
+    bind('closeWithdrawBtn', closeWithdrawModal);
+    bind('confirmWithdrawBtn', processWithdraw);
+    bind('cancelWithdrawBtn', closeWithdrawModal);
 
     showGameLoader(() => startNewRound());
 });
