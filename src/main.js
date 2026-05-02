@@ -1159,14 +1159,30 @@ function renderAllBets() {
     if (!list) return;
     updateTotalCountDisplay();
 
-    // 🎯 Switch Source based on Active Tab
-    const sourceData = activeBetsTab === 'previous' ? personalHistory : allBets;
+    // 🎯 Dynamic Source Selection
+    let sourceData = [];
+    if (activeBetsTab === 'all') {
+        sourceData = allBets;
+    } else if (activeBetsTab === 'previous') {
+        sourceData = personalHistory;
+    } else if (activeBetsTab === 'top') {
+        // 🏆 Sort All Bets by highest win amount for the 'Top' tab
+        sourceData = [...allBets].sort((a, b) => b.winAmt - a.winAmt).slice(0, 50);
+    }
 
     list.innerHTML = sourceData.map(b => {
         const multClass = b.status === 'cashed' ? 'won' : b.status === 'crashed' ? 'lost' : 'playing';
-        const multTxt = b.status === 'playing' ? '–' : (typeof b.mult === 'string' ? b.mult : (b.mult ? parseFloat(b.mult).toFixed(2) + 'x' : '–'));
-        const winTxt = b.status === 'cashed' ? formatNum(b.winAmt) : b.status === 'crashed' ? (activeBetsTab === 'previous' ? '-'+formatNum(b.betAmt) : '–') : '...';
-        const meClass = b.isMe || activeBetsTab === 'previous' ? 'me-highlight' : '';
+        
+        let multTxt = '–';
+        if (b.status === 'playing') multTxt = '...';
+        else if (typeof b.mult === 'string') multTxt = b.mult;
+        else if (b.mult) multTxt = parseFloat(b.mult).toFixed(2) + 'x';
+
+        let winTxt = '...';
+        if (b.status === 'cashed') winTxt = formatNum(b.winAmt);
+        else if (b.status === 'crashed') winTxt = (activeBetsTab === 'previous' ? '-'+formatNum(b.betAmt) : '–');
+        
+        const meClass = b.isMe ? 'me-highlight' : '';
         
         return `<div class="bet-row ${b.status} ${meClass}">
             <div class="player"><span>${b.avatar}</span> ${b.name}</div>
