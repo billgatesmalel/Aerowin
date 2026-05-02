@@ -134,7 +134,7 @@ async function handleSignup(e) {
         .insert([{
             id: authData.user.id,
             phone: normalizedPhone,
-            balance: 1000,
+            balance: 0,
             referral_code: referralCode,
             referred_by: referral || null,
         }]);
