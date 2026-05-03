@@ -26,7 +26,7 @@
             <h1>✈️ Aerowin</h1>
 
             <!-- Login Form -->
-            <form id="loginForm" class="form-section active" onsubmit="handleLogin(event)">
+            <form id="loginForm" class="form-section active">
                 <h2>Login</h2>
                 <div class="form-group">
                     <label for="loginPhone">Phone Number</label>
@@ -35,19 +35,20 @@
                 <div class="form-group">
                     <label for="loginPassword">Password</label>
                     <div class="pass-wrapper">
-                        <input type="password" id="loginPassword" placeholder="Enter your password" required autocomplete="current-password">
-                        <button type="button" class="pass-toggle" onclick="togglePass('loginPassword')">👁️</button>
+                        <input type="password" id="loginPassword" placeholder="Enter your password" required
+                            autocomplete="current-password">
+                        <button type="button" class="pass-toggle" data-target="loginPassword">👁️</button>
                     </div>
                 </div>
                 <div class="form-footer">
-                    <a href="#" class="forgot-link" onclick="toggleResetForm(true)">Forgot Password?</a>
+                    <a href="#" class="forgot-link" id="forgotLink">Forgot Password?</a>
                 </div>
                 <button type="submit" class="btn btn-primary">Login</button>
-                <p class="form-toggle">Don't have an account? <a href="#" onclick="toggleForms()">Sign Up</a></p>
+                <p class="form-toggle">Don't have an account? <a href="#" id="toSignupFromLogin">Sign Up</a></p>
             </form>
 
             <!-- Reset Password Form -->
-            <form id="resetForm" class="form-section" onsubmit="handleResetPassword(event)">
+            <form id="resetForm" class="form-section">
                 <h2>Reset Password</h2>
                 <p class="form-desc">Enter your phone number to receive a password reset link.</p>
                 <div class="form-group">
@@ -55,11 +56,11 @@
                     <input type="tel" id="resetPhone" placeholder="+254 or 0..." required autocomplete="tel">
                 </div>
                 <button type="submit" class="btn btn-primary">Send Reset Link</button>
-                <p class="form-toggle"><a href="#" onclick="toggleResetForm(false)">Back to Login</a></p>
+                <p class="form-toggle"><a href="#" id="backToLogin">Back to Login</a></p>
             </form>
 
             <!-- Sign Up Form -->
-            <form id="signupForm" class="form-section" onsubmit="handleSignup(event)">
+            <form id="signupForm" class="form-section">
                 <h2>Create Account</h2>
 
                 <!-- Free bet banner -->
@@ -74,15 +75,17 @@
                 <div class="form-group">
                     <label for="signupPassword">Password</label>
                     <div class="pass-wrapper">
-                        <input type="password" id="signupPassword" placeholder="At least 6 characters" required autocomplete="new-password">
-                        <button type="button" class="pass-toggle" onclick="togglePass('signupPassword')">👁️</button>
+                        <input type="password" id="signupPassword" placeholder="At least 6 characters" required
+                            autocomplete="new-password">
+                        <button type="button" class="pass-toggle" data-target="signupPassword">👁️</button>
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="signupConfirm">Confirm Password</label>
                     <div class="pass-wrapper">
-                        <input type="password" id="signupConfirm" placeholder="Confirm your password" required autocomplete="new-password">
-                        <button type="button" class="pass-toggle" onclick="togglePass('signupConfirm')">👁️</button>
+                        <input type="password" id="signupConfirm" placeholder="Confirm your password" required
+                            autocomplete="new-password">
+                        <button type="button" class="pass-toggle" data-target="signupConfirm">👁️</button>
                     </div>
                 </div>
 
@@ -100,20 +103,20 @@
                         <span class="terms-check-box"></span>
                         <span class="terms-text">
                             I have read and agree to the
-                            <a href="#" onclick="openTerms(event)">Terms &amp; Conditions</a>
+                            <a href="#" id="openTermsLink">Terms &amp; Conditions</a>
                             and confirm I am 18 years or older.
                         </span>
                     </label>
                 </div>
 
                 <button type="submit" class="btn btn-primary">Create Account</button>
-                <p class="form-toggle">Already have an account? <a href="#" onclick="toggleForms()">Login</a></p>
+                <p class="form-toggle">Already have an account? <a href="#" id="toLoginFromSignup">Login</a></p>
             </form>
 
             <div id="messageBox" class="message-box"></div>
         </div>
     </div>
-    
+
     <footer class="game-footer">
         <div class="footer-content">
             <div class="footer-top">
@@ -121,8 +124,20 @@
                 <div class="payment-methods">
                     <div class="pay-item"><strong>M-PESA</strong></div>
                     <div class="pay-item"><strong>Airtel</strong></div>
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa">
+                    <!-- Mastercard inline SVG -->
+                    <svg class="pay-logo-svg" viewBox="0 0 152 108" xmlns="http://www.w3.org/2000/svg"
+                        aria-label="Mastercard" role="img" width="38" height="28">
+                        <circle cx="58" cy="54" r="38" fill="#EB001B" />
+                        <circle cx="94" cy="54" r="38" fill="#F79E1B" />
+                        <path d="M76 21.9a38 38 0 0 1 0 64.2A38 38 0 0 1 76 21.9z" fill="#FF5F00" />
+                    </svg>
+                    <!-- Visa inline SVG -->
+                    <svg class="pay-logo-svg" viewBox="0 0 216 68" xmlns="http://www.w3.org/2000/svg" aria-label="Visa"
+                        role="img" width="48" height="28">
+                        <rect width="216" height="68" rx="6" fill="#1a1f71" />
+                        <text x="108" y="50" font-family="Arial,sans-serif" font-size="46" font-weight="bold"
+                            fill="#fff" text-anchor="middle" letter-spacing="-2">VISA</text>
+                    </svg>
                 </div>
             </div>
             <div class="footer-bottom">
@@ -134,7 +149,7 @@
     <!-- PREMIUM CUSTOMER SUPPORT CHAT -->
     <div class="chat-widget" id="chatWidget">
         <!-- Floating Trigger -->
-        <button class="chat-trigger" id="chatTrigger" onclick="toggleChat()">
+        <button class="chat-trigger" id="chatTrigger">
             <svg viewBox="0 0 24 24" class="chat-icon">
                 <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
             </svg>
@@ -148,32 +163,34 @@
                 </div>
                 <div class="header-actions">
                     <button class="action-btn">🔊</button>
-                    <button class="action-btn" onclick="toggleChat()">✕</button>
+                    <button class="action-btn" id="chatCloseBtn">✕</button>
                 </div>
             </div>
 
             <div class="chat-body" id="chatBody">
                 <div class="chat-date">02 May</div>
                 <div class="unread-banner">Unread messages</div>
-                
+
                 <div class="message assistant">
                     <div class="avatar">🤖</div>
                     <div class="msg-content">
                         <div class="sender-name">Assistant</div>
                         <p>👋 Hi there! Welcome to Support.
 
-                        We'd love to help! Leave us a message below and we'll get back to you shortly.
+                            We'd love to help! Leave us a message below and we'll get back to you shortly.
 
-                        Just describe your issue and we'll take it from there. 😊</p>
+                            Just describe your issue and we'll take it from there. 😊</p>
                         <span class="msg-time">10:29</span>
                     </div>
                 </div>
             </div>
 
             <div class="chat-footer">
-                <input type="text" id="chatInput" placeholder="Write a message..." onkeypress="handleChatKey(event)">
-                <button class="send-btn" onclick="sendChatMessage()">
-                    <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                <input type="text" id="chatInput" placeholder="Write a message...">
+                <button class="send-btn" id="chatSendBtn">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                    </svg>
                 </button>
             </div>
         </div>
@@ -184,7 +201,7 @@
         <div class="terms-modal-content">
             <div class="terms-modal-header">
                 <h3>📋 Terms &amp; Conditions</h3>
-                <button class="terms-close" onclick="closeTerms()">✕</button>
+                <button class="terms-close" id="termsCloseBtn">✕</button>
             </div>
             <div class="terms-body">
                 <h4>1. Eligibility</h4>
@@ -221,7 +238,7 @@
 
                 <h4>8. Privacy</h4>
                 <p>Your personal data is stored securely and used only for account management and game operation. We do
-                not sell your data to third parties.</p>
+                    not sell your data to third parties.</p>
 
                 <h4>9. Changes to Terms</h4>
                 <p>Aerowin reserves the right to update these terms at any time. Continued use of the platform
@@ -232,7 +249,7 @@
                     jurisdiction of Kenyan courts.</p>
             </div>
             <div class="terms-modal-footer">
-                <button class="btn btn-primary" onclick="acceptTerms()">✅ I Agree</button>
+                <button class="btn btn-primary" id="termsAcceptBtn">✅ I Agree</button>
             </div>
         </div>
     </div>
@@ -240,30 +257,80 @@
     <script type="module" src="/src/auth.js"></script>
     <script src="/src/chat.js"></script>
     <script>
-        // Show auth container after loader
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                const loader = document.getElementById('authLoader');
-                const container = document.getElementById('authContainer');
-                if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 400); }
-                if (container) container.style.display = 'flex';
-            }, 1400);
-        });
+        // ── All UI event wiring (runs after DOM ready) ──────────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
 
-        function openTerms(e) {
-            e.preventDefault();
-            document.getElementById('termsModal').classList.add('open');
-        }
-        function closeTerms() {
-            document.getElementById('termsModal').classList.remove('open');
-        }
-        function acceptTerms() {
-            document.getElementById('termsCheckbox').checked = true;
-            closeTerms();
-        }
-        // Close modal on backdrop click
-        document.getElementById('termsModal').addEventListener('click', function (e) {
-            if (e.target === this) closeTerms();
+            // Loader → show container
+            window.addEventListener('load', () => {
+                setTimeout(() => {
+                    const loader = document.getElementById('authLoader');
+                    const container = document.getElementById('authContainer');
+                    if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 400); }
+                    if (container) container.style.display = 'flex';
+                }, 1400);
+            });
+
+            // ── Form submissions ────────────────────────────────────────────────
+            document.getElementById('loginForm').addEventListener('submit', e => {
+                e.preventDefault();
+                if (typeof handleLogin === 'function') handleLogin(e);
+            });
+            document.getElementById('resetForm').addEventListener('submit', e => {
+                e.preventDefault();
+                if (typeof handleResetPassword === 'function') handleResetPassword(e);
+            });
+            document.getElementById('signupForm').addEventListener('submit', e => {
+                e.preventDefault();
+                if (typeof handleSignup === 'function') handleSignup(e);
+            });
+
+            // ── Password toggles (data-target attribute) ────────────────────────
+            document.querySelectorAll('.pass-toggle[data-target]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const input = document.getElementById(btn.dataset.target);
+                    if (!input) return;
+                    input.type = input.type === 'password' ? 'text' : 'password';
+                    btn.textContent = input.type === 'password' ? '👁️' : '🙈';
+                });
+            });
+
+            // ── Form navigation ─────────────────────────────────────────────────
+            const toSignupFromLogin = document.getElementById('toSignupFromLogin');
+            const toLoginFromSignup = document.getElementById('toLoginFromSignup');
+            const forgotLink = document.getElementById('forgotLink');
+            const backToLogin = document.getElementById('backToLogin');
+
+            if (toSignupFromLogin) toSignupFromLogin.addEventListener('click', e => { e.preventDefault(); if (typeof toggleForms === 'function') toggleForms(); });
+            if (toLoginFromSignup) toLoginFromSignup.addEventListener('click', e => { e.preventDefault(); if (typeof toggleForms === 'function') toggleForms(); });
+            if (forgotLink) forgotLink.addEventListener('click', e => { e.preventDefault(); if (typeof toggleResetForm === 'function') toggleResetForm(true); });
+            if (backToLogin) backToLogin.addEventListener('click', e => { e.preventDefault(); if (typeof toggleResetForm === 'function') toggleResetForm(false); });
+
+            // ── Terms modal ─────────────────────────────────────────────────────
+            const termsModal = document.getElementById('termsModal');
+            const openTermsLink = document.getElementById('openTermsLink');
+            const termsCloseBtn = document.getElementById('termsCloseBtn');
+            const termsAcceptBtn = document.getElementById('termsAcceptBtn');
+
+            function openTerms() { termsModal.classList.add('open'); }
+            function closeTerms() { termsModal.classList.remove('open'); }
+            function acceptTerms() { document.getElementById('termsCheckbox').checked = true; closeTerms(); }
+
+            if (openTermsLink) openTermsLink.addEventListener('click', e => { e.preventDefault(); openTerms(); });
+            if (termsCloseBtn) termsCloseBtn.addEventListener('click', closeTerms);
+            if (termsAcceptBtn) termsAcceptBtn.addEventListener('click', acceptTerms);
+            if (termsModal) termsModal.addEventListener('click', e => { if (e.target === termsModal) closeTerms(); });
+
+            // ── Chat widget ─────────────────────────────────────────────────────
+            // chat.js is a plain (non-module) script; wire its functions here
+            const chatTrigger = document.getElementById('chatTrigger');
+            const chatCloseBtn = document.getElementById('chatCloseBtn');
+            const chatSendBtn = document.getElementById('chatSendBtn');
+            const chatInput = document.getElementById('chatInput');
+
+            if (chatTrigger) chatTrigger.addEventListener('click', () => { if (typeof toggleChat === 'function') toggleChat(); });
+            if (chatCloseBtn) chatCloseBtn.addEventListener('click', () => { if (typeof toggleChat === 'function') toggleChat(); });
+            if (chatSendBtn) chatSendBtn.addEventListener('click', () => { if (typeof sendChatMessage === 'function') sendChatMessage(); });
+            if (chatInput) chatInput.addEventListener('keypress', e => { if (e.key === 'Enter' && typeof sendChatMessage === 'function') sendChatMessage(); });
         });
     </script>
 </body>

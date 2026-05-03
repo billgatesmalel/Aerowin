@@ -6,13 +6,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <title>Aerowin - Virtual Flight Sim & Gaming</title>
-    <meta name="description" content="Experience the Aerowin virtual flight simulation. A premium gaming experience for entertainment purposes.">
+    <meta name="description"
+        content="Experience the Aerowin virtual flight simulation. A premium gaming experience for entertainment purposes.">
     <link rel="stylesheet" href="src/styles/styles.css">
+    <style>
+        body {
+            visibility: hidden;
+        }
+
+        @keyframes spinProp {
+            0% {
+                transform: scaleY(1);
+            }
+
+            50% {
+                transform: scaleY(-0.1);
+            }
+
+            100% {
+                transform: scaleY(1);
+            }
+        }
+    </style>
     <script type="module">
         import { supabase } from './src/lib/supabase.js';
         async function checkSession() {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) window.location.href = 'auth.html';
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) {
+                    window.location.replace('auth.html');
+                } else {
+                    document.body.style.visibility = 'visible';
+                }
+            } catch (err) {
+                console.error('Session check failed:', err);
+                window.location.replace('auth.html');
+            }
         }
         checkSession();
     </script>
@@ -96,12 +125,15 @@
                 </svg>
 
                 <svg id="plane" class="plane-svg" viewBox="0 0 318 127" xmlns="http://www.w3.org/2000/svg">
-                    <path fill="#e8003a" d="M294.6,35.4c-3.1-0.2-6.5-0.1-10,0.6c-1.8-3.4-3.5-6.7-5-9.8c-2.3-4.8-4-8.8-5.1-12 c-1.2-3.3-2.6-4.5-5.1-4.7c-3-0.2-5.4,1.8-6,5.3c-0.6,3.6,0.5,8.1,2.8,13.2c1.7,3.6,3.7,7.6,6.1,11.8c-10.7,3.5-22.3,7-34.9,10.1 c-1.8-1.5-3.6-3.1-5.6-4.9c-8.9-7.9-19-12.8-29.3-13.6c-4.8-0.4-9.3,0.3-13.3,1.9c-6.8,2.7-11.8,7.9-15,14.6 c-5.4-3.1-12.3-3.6-20.3-2.1c-13,2.4-23.7,9.6-33.1,19.3c-13.1,13.5-24.1,27.1-34.5,41.9L80.1,91.3c-2,1.2-4.1,2.1-6.4,2.5 c-3,0.6-6-0.1-8.5-1.5L50.4,85c-1.1-0.6-2.5-1-4-1C43.5,83.9,41,85,39,87l-2.4,2.6l4.6,7.5c2.3,3.7,5.5,5.6,9.1,6 c2.9,0.3,5.9-0.5,8.6-1.8l17.7-8.9c0.8-0.4,1.8-0.7,2.8-0.9l193.3-38.3c4.2-0.8,7.9-2.7,11-5.4c4.1-3.6,6.3-8.1,6-13.1 C289.4,39,287.4,36.5,294.6,35.4z M179.8,29c11.3,1,21.5,5.9,30.3,13.8c1.3,1.1,2.5,2.4,3.7,3.7l-47.5,9.6 C169.5,44.9,173.8,35.2,179.8,29z M282.8,47.7c-2.4,2.2-5.4,3.7-8.9,4.4L87.2,89.1c-2.1,0.4-4.2,0-6.1-0.9l-11.9-6.3 c12.9-16.1,25-30.8,38.8-44.5c9.2-9.2,19.2-15.6,31-17.6l23.5-4.2c6.2,11.3,13.2,25.6,20.4,41.4l5.3-2.6 c-7-15.5-13.9-29.6-20.2-41l21.2-3.8c1,4.7,2,9.3,2.9,13.5l-6,2.1c-0.8-3.4-1.6-6.6-2.3-9.6l5.7-2c1.7,5.9,3.4,11.5,5.1,16.7 l-5.2,1.9c-1.6-4.9-3.3-10-5-15.3l4.9-1.9c4.2,12.7,8.6,24.1,13.1,33.5l5.5-2.8c-4.7-9.7-9.3-21.5-13.6-34.5l8.7-3.4 c11.5-3.5,22.1-6.7,31.8-9.9C281.8,43.2,284,45.2,282.8,47.7z M294.9,64.3c-2.5-4-3.7-8.2-3.5-12.4c0.1-2.9,1-5.6,2.6-7.8l5,0.7 c-2.4,3.2-3,7.1-1.6,11.3c1,2.9,2.6,5.6,4.6,8.2L294.9,64.3z"/>
+                    <path fill="#e8003a"
+                        d="M294.6,35.4c-3.1-0.2-6.5-0.1-10,0.6c-1.8-3.4-3.5-6.7-5-9.8c-2.3-4.8-4-8.8-5.1-12 c-1.2-3.3-2.6-4.5-5.1-4.7c-3-0.2-5.4,1.8-6,5.3c-0.6,3.6,0.5,8.1,2.8,13.2c1.7,3.6,3.7,7.6,6.1,11.8c-10.7,3.5-22.3,7-34.9,10.1 c-1.8-1.5-3.6-3.1-5.6-4.9c-8.9-7.9-19-12.8-29.3-13.6c-4.8-0.4-9.3,0.3-13.3,1.9c-6.8,2.7-11.8,7.9-15,14.6 c-5.4-3.1-12.3-3.6-20.3-2.1c-13,2.4-23.7,9.6-33.1,19.3c-13.1,13.5-24.1,27.1-34.5,41.9L80.1,91.3c-2,1.2-4.1,2.1-6.4,2.5 c-3,0.6-6-0.1-8.5-1.5L50.4,85c-1.1-0.6-2.5-1-4-1C43.5,83.9,41,85,39,87l-2.4,2.6l4.6,7.5c2.3,3.7,5.5,5.6,9.1,6 c2.9,0.3,5.9-0.5,8.6-1.8l17.7-8.9c0.8-0.4,1.8-0.7,2.8-0.9l193.3-38.3c4.2-0.8,7.9-2.7,11-5.4c4.1-3.6,6.3-8.1,6-13.1 C289.4,39,287.4,36.5,294.6,35.4z M179.8,29c11.3,1,21.5,5.9,30.3,13.8c1.3,1.1,2.5,2.4,3.7,3.7l-47.5,9.6 C169.5,44.9,173.8,35.2,179.8,29z M282.8,47.7c-2.4,2.2-5.4,3.7-8.9,4.4L87.2,89.1c-2.1,0.4-4.2,0-6.1-0.9l-11.9-6.3 c12.9-16.1,25-30.8,38.8-44.5c9.2-9.2,19.2-15.6,31-17.6l23.5-4.2c6.2,11.3,13.2,25.6,20.4,41.4l5.3-2.6 c-7-15.5-13.9-29.6-20.2-41l21.2-3.8c1,4.7,2,9.3,2.9,13.5l-6,2.1c-0.8-3.4-1.6-6.6-2.3-9.6l5.7-2c1.7,5.9,3.4,11.5,5.1,16.7 l-5.2,1.9c-1.6-4.9-3.3-10-5-15.3l4.9-1.9c4.2,12.7,8.6,24.1,13.1,33.5l5.5-2.8c-4.7-9.7-9.3-21.5-13.6-34.5l8.7-3.4 c11.5-3.5,22.1-6.7,31.8-9.9C281.8,43.2,284,45.2,282.8,47.7z M294.9,64.3c-2.5-4-3.7-8.2-3.5-12.4c0.1-2.9,1-5.6,2.6-7.8l5,0.7 c-2.4,3.2-3,7.1-1.6,11.3c1,2.9,2.6,5.6,4.6,8.2L294.9,64.3z" />
                     <g style="transform-origin: 305px 63px; animation: spinProp 0.05s linear infinite;">
-                        <path fill="#e8003a" d="M305,62.8c2.1,0,4.2-0.8,5.8-2.5c2.4-2.5,3.1-6.2,1.6-9.6c-0.9-2.1-2.4-3.6-4.2-4.5c-0.9-0.5-2-0.7-3.1-0.7 c-2.6,0-5.1,1.3-6.6,3.6l4.2,2.3c0.7-1,1.8-1.5,2.9-1.5c1.4,0,2.6,0.9,3.1,2.1c0.7,1.8,0.3,3.7-1.1,5.2 c-0.8,0.8-1.8,1.3-2.9,1.3c-1.1,0-2.3-0.5-3.2-1.3c-0.8-0.8-1.4-1.9-1.4-3.3v-1.7l-4.7-0.4v2.1c0,2.6,0.9,4.9,2.5,6.5 C300,62.1,302.3,62.8,305,62.8z"/>
+                        <path fill="#e8003a"
+                            d="M305,62.8c2.1,0,4.2-0.8,5.8-2.5c2.4-2.5,3.1-6.2,1.6-9.6c-0.9-2.1-2.4-3.6-4.2-4.5c-0.9-0.5-2-0.7-3.1-0.7 c-2.6,0-5.1,1.3-6.6,3.6l4.2,2.3c0.7-1,1.8-1.5,2.9-1.5c1.4,0,2.6,0.9,3.1,2.1c0.7,1.8,0.3,3.7-1.1,5.2 c-0.8,0.8-1.8,1.3-2.9,1.3c-1.1,0-2.3-0.5-3.2-1.3c-0.8-0.8-1.4-1.9-1.4-3.3v-1.7l-4.7-0.4v2.1c0,2.6,0.9,4.9,2.5,6.5 C300,62.1,302.3,62.8,305,62.8z" />
                     </g>
-                    <path fill="#e8003a" d="M298.5,74.7c-17.7,2.8-38.4,6.4-62.1,10.6l-50.6,9l-58,10.3l-55.9,10c-15.6,2.8-29.6,5.3-41.9,7.5 c-3.3,0.6-6,3.1-6.7,6.3c-0.6,2.8,0.3,5.6,2.5,7.5c2,1.7,4.8,2.5,7.5,1.9c13.7-2.5,29.1-5.3,46.1-8.3l62-11.1l59-10.6 l53.8-9.6C279.7,93.4,296,90.5,301,89.5c6.5-1.3,11.1-7.2,10.5-13.6C310.8,70.5,304.7,73.7,298.5,74.7z"/>
-                    <style>@keyframes spinProp { 0% { transform: scaleY(1); } 50% { transform: scaleY(-0.1); } 100% { transform: scaleY(1); } }</style>
+                    <path fill="#e8003a"
+                        d="M298.5,74.7c-17.7,2.8-38.4,6.4-62.1,10.6l-50.6,9l-58,10.3l-55.9,10c-15.6,2.8-29.6,5.3-41.9,7.5 c-3.3,0.6-6,3.1-6.7,6.3c-0.6,2.8,0.3,5.6,2.5,7.5c2,1.7,4.8,2.5,7.5,1.9c13.7-2.5,29.1-5.3,46.1-8.3l62-11.1l59-10.6 l53.8-9.6C279.7,93.4,296,90.5,301,89.5c6.5-1.3,11.1-7.2,10.5-13.6C310.8,70.5,304.7,73.7,298.5,74.7z" />
+                    <!-- spinProp keyframes moved to <head> style block -->
                 </svg>
 
                 <div class="crashed-overlay hidden" id="crashedOverlay">
@@ -191,7 +223,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- ═══════════════════════════════════════
          PREMIUM FOOTER
     ═══════════════════════════════════════ -->
@@ -200,15 +232,28 @@
             <div class="footer-top">
                 <div class="footer-logo">✈️ Aerowin</div>
                 <div class="payment-methods">
-                <div class="pay-item"><strong>M-PESA</strong></div>
-                <div class="pay-item"><strong>Airtel</strong></div>
-                <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa">
+                    <div class="pay-item"><strong>M-PESA</strong></div>
+                    <div class="pay-item"><strong>Airtel</strong></div>
+                    <!-- Mastercard inline SVG -->
+                    <svg class="pay-logo-svg" viewBox="0 0 152 108" xmlns="http://www.w3.org/2000/svg"
+                        aria-label="Mastercard" role="img" width="38" height="28">
+                        <rect width="152" height="108" rx="8" fill="#1a1a2e" opacity="0" />
+                        <circle cx="58" cy="54" r="38" fill="#EB001B" />
+                        <circle cx="94" cy="54" r="38" fill="#F79E1B" />
+                        <path d="M76 21.9a38 38 0 0 1 0 64.2A38 38 0 0 1 76 21.9z" fill="#FF5F00" />
+                    </svg>
+                    <!-- Visa inline SVG -->
+                    <svg class="pay-logo-svg" viewBox="0 0 216 68" xmlns="http://www.w3.org/2000/svg" aria-label="Visa"
+                        role="img" width="48" height="28">
+                        <rect width="216" height="68" rx="6" fill="#1a1f71" />
+                        <text x="108" y="50" font-family="Arial,sans-serif" font-size="46" font-weight="bold"
+                            fill="#fff" text-anchor="middle" letter-spacing="-2">VISA</text>
+                    </svg>
+                </div>
             </div>
-            </div>
-            
+
             <hr class="footer-sep">
-            
+
             <div class="footer-mid">
                 <div class="footer-links">
                     <a href="#">About Us</a>
@@ -219,11 +264,12 @@
                     <a href="#">Contact Support</a>
                 </div>
                 <p class="footer-disclaimer">
-                    Aerowin is licensed and regulated by the Betting Control and Licensing Board of Kenya under license number 0000XXX. 
+                    Aerowin is licensed and regulated by the Betting Control and Licensing Board of Kenya under license
+                    number 0000XXX.
                     Gaming can be addictive. Please gamble responsibly. 🔞 18+ Only.
                 </p>
             </div>
-            
+
             <div class="footer-bottom">
                 &copy; 2026 Aerowin Gaming Group. All rights reserved.
             </div>
@@ -233,7 +279,7 @@
     <!-- PREMIUM CUSTOMER SUPPORT CHAT -->
     <div class="chat-widget" id="chatWidget">
         <!-- Floating Trigger -->
-        <button class="chat-trigger" id="chatTrigger" onclick="toggleChat()">
+        <button class="chat-trigger" id="chatTrigger">
             <svg viewBox="0 0 24 24" class="chat-icon">
                 <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
             </svg>
@@ -247,32 +293,34 @@
                 </div>
                 <div class="header-actions">
                     <button class="action-btn">🔊</button>
-                    <button class="action-btn" onclick="toggleChat()">✕</button>
+                    <button class="action-btn" id="chatCloseBtn">✕</button>
                 </div>
             </div>
 
             <div class="chat-body" id="chatBody">
                 <div class="chat-date">02 May</div>
                 <div class="unread-banner">Unread messages</div>
-                
+
                 <div class="message assistant">
                     <div class="avatar">🤖</div>
                     <div class="msg-content">
                         <div class="sender-name">Assistant</div>
                         <p>👋 Hi there! Welcome to Support.
 
-                        We'd love to help! Leave us a message below and we'll get back to you shortly.
+                            We'd love to help! Leave us a message below and we'll get back to you shortly.
 
-                        Just describe your issue and we'll take it from there. 😊</p>
+                            Just describe your issue and we'll take it from there. 😊</p>
                         <span class="msg-time">10:29</span>
                     </div>
                 </div>
             </div>
 
             <div class="chat-footer">
-                <input type="text" id="chatInput" placeholder="Write a message..." onkeypress="handleChatKey(event)">
-                <button class="send-btn" onclick="sendChatMessage()">
-                    <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                <input type="text" id="chatInput" placeholder="Write a message...">
+                <button class="send-btn" id="chatSendBtn">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                    </svg>
                 </button>
             </div>
         </div>
@@ -304,6 +352,19 @@
     </button>
 
     <script>
+        // ── Chat widget wiring ────────────────────────────────────────────────
+        window.addEventListener('load', () => {
+            const chatTrigger = document.getElementById('chatTrigger');
+            const chatCloseBtn = document.getElementById('chatCloseBtn');
+            const chatSendBtn = document.getElementById('chatSendBtn');
+            const chatInput = document.getElementById('chatInput');
+
+            if (chatTrigger) chatTrigger.addEventListener('click', () => { if (typeof toggleChat === 'function') toggleChat(); });
+            if (chatCloseBtn) chatCloseBtn.addEventListener('click', () => { if (typeof toggleChat === 'function') toggleChat(); });
+            if (chatSendBtn) chatSendBtn.addEventListener('click', () => { if (typeof sendChatMessage === 'function') sendChatMessage(); });
+            if (chatInput) chatInput.addEventListener('keypress', e => { if (e.key === 'Enter' && typeof sendChatMessage === 'function') sendChatMessage(); });
+        });
+
         // ── Theme Toggle ──────────────────────────────────────────
         function toggleTheme() {
             const html = document.documentElement;
@@ -401,7 +462,7 @@
                     🎁 Deposit to unlock your <strong>KES 20 free bet!</strong>
                 </div>
             </div>
-            
+
             <div id="adminArea"></div>
 
             <div class="profile-actions">
@@ -436,10 +497,13 @@
                 </div>
                 <input type="number" id="depositAmount" placeholder="Min 100 KES" min="100">
             </div>
-            <p class="mpesa-note" id="depositNote">An STK push will be sent to your phone. Enter your M-Pesa PIN to complete.</p>
+            <p class="mpesa-note" id="depositNote">An STK push will be sent to your phone. Enter your M-Pesa PIN to
+                complete.</p>
             <div class="modal-actions">
-                <button class="action-btn deposit-btn" id="confirmDepositBtn" onclick="processDeposit()">📲 Send STK Push</button>
-                <button class="action-btn cancel-btn" id="cancelDepositBtn" onclick="closeDepositModal()">Cancel</button>
+                <button class="action-btn deposit-btn" id="confirmDepositBtn" onclick="processDeposit()">📲 Send STK
+                    Push</button>
+                <button class="action-btn cancel-btn" id="cancelDepositBtn"
+                    onclick="closeDepositModal()">Cancel</button>
             </div>
         </div>
     </div>
@@ -471,8 +535,10 @@
             </div>
             <p class="mpesa-note">Withdrawals are processed within 24 hours by admin.</p>
             <div class="modal-actions">
-                <button class="action-btn withdraw-btn" id="confirmWithdrawBtn" onclick="processWithdraw()">✅ Request Withdrawal</button>
-                <button class="action-btn cancel-btn" id="cancelWithdrawBtn" onclick="closeWithdrawModal()">Cancel</button>
+                <button class="action-btn withdraw-btn" id="confirmWithdrawBtn" onclick="processWithdraw()">✅ Request
+                    Withdrawal</button>
+                <button class="action-btn cancel-btn" id="cancelWithdrawBtn"
+                    onclick="closeWithdrawModal()">Cancel</button>
             </div>
         </div>
     </div>
@@ -491,8 +557,10 @@
             </div>
             <!-- Admin Tabs -->
             <div class="admin-tabs-row">
-                <button class="admin-tab active" id="adminTabPlayers" onclick="switchAdminTab('players')">👥 Players</button>
-                <button class="admin-tab" id="adminTabWithdrawals" onclick="switchAdminTab('withdrawals')">💸 Withdrawals</button>
+                <button class="admin-tab active" id="adminTabPlayers" onclick="switchAdminTab('players')">👥
+                    Players</button>
+                <button class="admin-tab" id="adminTabWithdrawals" onclick="switchAdminTab('withdrawals')">💸
+                    Withdrawals</button>
             </div>
             <!-- Players Panel -->
             <div id="adminPlayersPanel">

@@ -1,216 +1,132 @@
-// ══════════════════════════════════════════════
-// AUTH.JS — Supabase Migration
-// ══════════════════════════════════════════════
+/**
+ * auth.js  (ES Module)
+ *
+ * All auth logic lives here as a proper ES module.
+ * Functions are explicitly attached to `window` so the event listeners
+ * wired up in auth.html's inline <script> can call them.
+ *
+ * Fix #4: No inline onsubmit/onclick attributes needed — everything is
+ * wired via addEventListener in the HTML's DOMContentLoaded block.
+ */
+
 import { supabase } from './lib/supabase.js';
 
-// ── Form toggle ───────────────────────────────
-function toggleForms() {
-    const loginForm = document.getElementById('loginForm');
-    const signupForm = document.getElementById('signupForm');
-    const resetForm = document.getElementById('resetForm');
-    const messageBox = document.getElementById('messageBox');
-    
-    // Toggle between login and signup
-    if (loginForm.classList.contains('active')) {
-        loginForm.classList.remove('active');
-        signupForm.classList.add('active');
+// ─── Helpers ───────────────────────────────────────────────────────────────
+
+function showMessage(msg, type = 'info') {
+    const box = document.getElementById('messageBox');
+    if (!box) return;
+    box.textContent = msg;
+    box.className = `message-box ${type}`;
+    box.style.display = 'block';
+    setTimeout(() => { box.style.display = 'none'; }, 5000);
+}
+
+/** Normalise Kenyan phone to +2547XXXXXXXX format */
+function normalisePhone(raw) {
+    const digits = raw.replace(/\D/g, '');
+    if (digits.startsWith('254')) return '+' + digits;
+    if (digits.startsWith('0')) return '+254' + digits.slice(1);
+    if (digits.startsWith('7') || digits.startsWith('1')) return '+254' + digits;
+    return '+' + digits;
+}
+
+// ─── Form Toggles ─────────────────────────────────────────────────────────
+
+window.toggleForms = function () {
+    const login = document.getElementById('loginForm');
+    const signup = document.getElementById('signupForm');
+    login.classList.toggle('active');
+    signup.classList.toggle('active');
+};
+
+window.toggleResetForm = function (show) {
+    const login = document.getElementById('loginForm');
+    const reset = document.getElementById('resetForm');
+    login.classList.toggle('active', !show);
+    reset.classList.toggle('active', show);
+};
+
+// ─── Login ────────────────────────────────────────────────────────────────
+
+window.handleLogin = async function (e) {
+    e.preventDefault();
+    const phone = normalisePhone(document.getElementById('loginPhone').value.trim());
+    const password = document.getElementById('loginPassword').value;
+    const email = phone + '@aerowin.app'; // Supabase requires email format
+
+    showMessage('Logging in…', 'info');
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+        showMessage(error.message || 'Login failed. Check your credentials.', 'error');
     } else {
-        loginForm.classList.add('active');
-        signupForm.classList.remove('active');
+        showMessage('Login successful! Redirecting…', 'success');
+        setTimeout(() => window.location.replace('index.html'), 800);
     }
-    
-    resetForm.classList.remove('active');
-    messageBox.className = 'message-box';
-    messageBox.textContent = '';
-}
+};
 
-function toggleResetForm(show) {
-    const loginForm = document.getElementById('loginForm');
-    const signupForm = document.getElementById('signupForm');
-    const resetForm = document.getElementById('resetForm');
-    const messageBox = document.getElementById('messageBox');
+// ─── Sign Up ──────────────────────────────────────────────────────────────
 
-    if (show) {
-        loginForm.classList.remove('active');
-        signupForm.classList.remove('active');
-        resetForm.classList.add('active');
-    } else {
-        loginForm.classList.add('active');
-        signupForm.classList.remove('active');
-        resetForm.classList.remove('active');
-    }
-    
-    messageBox.className = 'message-box';
-    messageBox.textContent = '';
-}
+window.handleSignup = async function (e) {
+    e.preventDefault();
 
-// ── Message display ───────────────────────────
-function showMessage(message, isSuccess = true) {
-    const messageBox = document.getElementById('messageBox');
-    if (!messageBox) return;
-    messageBox.textContent = message;
-    messageBox.className = 'message-box ' + (isSuccess ? 'success' : 'error');
-    if (isSuccess) setTimeout(() => { messageBox.className = 'message-box'; }, 3000);
-}
-
-// ── Phone validation ──────────────────────────
-function validatePhone(phone) {
-    const cleaned = phone.replace(/\D/g, '');
-    return cleaned.length >= 9 && cleaned.length <= 12;
-}
-
-function normalizePhone(phone) {
-    const cleaned = phone.replace(/\D/g, '');
-    if (cleaned.startsWith('254')) return cleaned;
-    if (cleaned.startsWith('0')) return '254' + cleaned.substring(1);
-    return '254' + cleaned;
-}
-
-// ── Haptic feedback helper ────────────────────
-function haptic(pattern = [30]) {
-    try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) { }
-}
-
-function togglePass(id) {
-    const input = document.getElementById(id);
-    const btn = input.nextElementSibling;
-    if (input.type === 'password') {
-        input.type = 'text';
-        btn.textContent = '🙈';
-    } else {
-        input.type = 'password';
-        btn.textContent = '👁️';
-    }
-}
-
-// ── Referral code generator ───────────────────
-function generateReferralCode(phone) {
-    const tail = phone.slice(-4);
-    const rand = Math.random().toString(36).substring(2, 4).toUpperCase();
-    return (tail + rand).toUpperCase();
-}
-
-// ══════════════════════════════════════════════
-// SIGN UP
-// ══════════════════════════════════════════════
-async function handleSignup(e) {
-    if (e) e.preventDefault();
-    haptic([20]);
-    const phone = document.getElementById('signupPhone').value.trim();
+    const phone = normalisePhone(document.getElementById('signupPhone').value.trim());
     const password = document.getElementById('signupPassword').value;
     const confirm = document.getElementById('signupConfirm').value;
-    const referral = (document.getElementById('signupReferral')?.value || '').trim().toUpperCase();
-    const termsOk = document.getElementById('termsCheckbox')?.checked;
+    const referral = document.getElementById('signupReferral').value.trim().toUpperCase();
+    const terms = document.getElementById('termsCheckbox').checked;
 
-    if (!phone || !validatePhone(phone)) { showMessage('Invalid phone number', false); return; }
-    if (password.length < 6) { showMessage('Password too short', false); return; }
-    if (password !== confirm) { showMessage('Passwords do not match', false); return; }
-    if (!termsOk) { showMessage('Please accept Terms & Conditions', false); return; }
+    if (!terms) { showMessage('Please accept the Terms & Conditions.', 'error'); return; }
+    if (password.length < 6) { showMessage('Password must be at least 6 characters.', 'error'); return; }
+    if (password !== confirm) { showMessage('Passwords do not match.', 'error'); return; }
 
-    const normalizedPhone = normalizePhone(phone);
-    const referralCode = generateReferralCode(normalizedPhone);
+    const email = phone + '@aerowin.app';
+    showMessage('Creating account…', 'info');
 
-    showMessage('Creating account...', true);
-
-    // 1. Supabase Auth Signup (Simulated Free Mode)
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: normalizedPhone + '@aerowin.ke',
-        password: password,
+    const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { phone, referral_code: referral || null } },
     });
 
-    if (authError) {
-        showMessage(authError.message, false);
+    if (error) {
+        showMessage(error.message || 'Sign-up failed. Try again.', 'error');
         return;
     }
 
-    if (!authData.user) {
-        showMessage('Error creating account', false);
-        return;
-    }
-
-    // 2. Create Profile in Database
-    const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([{
-            id: authData.user.id,
-            phone: normalizedPhone,
-            balance: 0,
-            referral_code: referralCode,
+    // Insert profile row
+    if (data?.user) {
+        const { error: profileErr } = await supabase.from('profiles').upsert({
+            id: data.user.id,
+            phone,
             referred_by: referral || null,
-        }]);
-
-    if (profileError) {
-        console.error('Profile error:', profileError);
-        // User might exist but profile creation failed
+            balance: 1000,
+        });
+        if (profileErr) console.error('Profile insert error:', profileErr);
     }
 
-    showMessage('Account created! Logging in...', true);
-    setTimeout(() => { window.location.href = 'index.html'; }, 1500);
-}
+    showMessage('Account created! Redirecting…', 'success');
+    setTimeout(() => window.location.replace('index.html'), 800);
+};
 
-// ══════════════════════════════════════════════
-// LOGIN
-// ══════════════════════════════════════════════
-async function handleLogin(e) {
-    if (e) e.preventDefault();
-    haptic([20]);
-    const phone = document.getElementById('loginPhone').value.trim();
-    const password = document.getElementById('loginPassword').value;
+// ─── Password Reset ───────────────────────────────────────────────────────
 
-    if (!phone || !password) { showMessage('All fields required', false); return; }
+window.handleResetPassword = async function (e) {
+    e.preventDefault();
+    const phone = normalisePhone(document.getElementById('resetPhone').value.trim());
+    const email = phone + '@aerowin.app';
 
-    const normalizedPhone = normalizePhone(phone);
-    
-    showMessage('Logging in...', true);
+    showMessage('Sending reset link…', 'info');
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-        email: normalizedPhone + '@aerowin.ke',
-        password: password,
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/auth.html',
     });
 
     if (error) {
-        showMessage(error.message, false);
-        return;
+        showMessage(error.message || 'Reset failed. Try again.', 'error');
+    } else {
+        showMessage('Reset link sent! Check your registered email/SMS.', 'success');
     }
-
-    showMessage('Login successful!', true);
-    setTimeout(() => { window.location.href = 'index.html'; }, 1000);
-}
-
-// ══════════════════════════════════════════════
-// RESET PASSWORD
-// ══════════════════════════════════════════════
-async function handleResetPassword(e) {
-    if (e) e.preventDefault();
-    haptic([20]);
-    const phone = document.getElementById('resetPhone').value.trim();
-    if (!phone || !validatePhone(phone)) { showMessage('Invalid phone number', false); return; }
-
-    const normalizedPhone = normalizePhone(phone);
-    showMessage('Sending reset link...', true);
-
-    const { error } = await supabase.auth.resetPasswordForEmail(normalizedPhone + '@aerowin.ke', {
-        redirectTo: window.location.origin + '/auth.html#reset',
-    });
-
-    if (error) {
-        showMessage(error.message, false);
-        return;
-    }
-
-    showMessage('Reset link sent to your registered channel!', true);
-    setTimeout(() => toggleResetForm(false), 3000);
-}
-
-// ══════════════════════════════════════════════
-// EXPOSE TO WINDOW
-// ══════════════════════════════════════════════
-window.handleSignup = handleSignup;
-window.handleLogin = handleLogin;
-window.handleResetPassword = handleResetPassword;
-window.toggleForms = toggleForms;
-window.toggleResetForm = toggleResetForm;
-window.togglePass = togglePass;
-window.normalizePhone = normalizePhone;
-window.validatePhone = validatePhone;
-window.haptic = haptic;
+};
