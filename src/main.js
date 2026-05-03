@@ -512,8 +512,8 @@ function drawGraph() {
     graphCtx2d.closePath();
     
     const fillGrad = graphCtx2d.createLinearGradient(0, 0, 0, H);
-    fillGrad.addColorStop(0, crashed ? 'rgba(255,40,80,0.45)' : 'rgba(200,0,60,0.5)');
-    fillGrad.addColorStop(1, crashed ? 'rgba(255,40,80,0.02)' : 'rgba(200,0,60,0.03)');
+    fillGrad.addColorStop(0, crashed ? 'rgba(255,40,80,0.8)' : 'rgba(228,0,55,1)');
+    fillGrad.addColorStop(1, crashed ? 'rgba(255,40,80,0.2)' : 'rgba(228,0,55,0.7)');
     graphCtx2d.fillStyle = fillGrad;
     graphCtx2d.fill();
 
