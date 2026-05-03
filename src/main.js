@@ -37,15 +37,23 @@ function getGlobalTimeMultiplier() {
     return null;
 }
 
-function calculateSyncedCrashPoint() {
-    const seed = Math.floor(Date.now() / ROUND_DURATION);
-    const x = Math.sin(seed) * 10000;
-    const r = x - Math.floor(x);
-    
-    if (r < 0.1) return 1.05;
-    if (r < 0.5) return 1.2 + (r * 2);
-    if (r < 0.8) return 3.0 + (r * 8);
-    return 15.0 + (r * 50);
+async function calculateSyncedCrashPoint() {
+    try {
+        const res = await fetch('/api/game');
+        if (!res.ok) throw new Error('API failed');
+        const data = await res.json();
+        return data.crashPoint;
+    } catch(err) {
+        console.error("API error, falling back:", err);
+        // Fallback offline generator
+        const seed = Math.floor(Date.now() / 15000);
+        const x = Math.sin(seed) * 10000;
+        const r = x - Math.floor(x);
+        if (r < 0.1) return 1.05;
+        if (r < 0.5) return 1.2 + (r * 2);
+        if (r < 0.8) return 3.0 + (r * 8);
+        return 15.0 + (r * 50);
+    }
 }
 
 // Graph canvas state
@@ -904,15 +912,17 @@ function hideCountdownRing() {
     if (ring) ring.style.opacity = '0';
 }
 
+let animationFrameId = null;
+
 // ══════════════════════════════════════════════
 // LAUNCH & TICK
 // ══════════════════════════════════════════════
-function launchRound() {
+async function launchRound() {
     gameState = 'playing';
     roundStartTime = Date.now();
     
-    // EVERYONE calculates the SAME crash point based on the SAME time seed
-    crashPoint = calculateSyncedCrashPoint();
+    // Server-Side Secure Multiplier Sync
+    crashPoint = await calculateSyncedCrashPoint();
 
     const statusEl = document.getElementById('status');
     const plane = document.getElementById('plane');
@@ -934,10 +944,12 @@ function launchRound() {
     startRisingTone();
     playSoundTakeoff();
 
-    gameInterval = setInterval(gameTick, tickSpeed);
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    animationFrameId = requestAnimationFrame(gameTick);
 }
 
 function gameTick() {
+    if (gameState !== 'playing') return;
     // 🌍 FLIGHT SYNC: Calculate exact multiplier using elapsed round time for flawless smooth curve drawing
     const elapsed = Date.now() - roundStartTime;
     const mt = Math.pow(1.08, elapsed / 1000); // Base growth
@@ -995,7 +1007,11 @@ function gameTick() {
     syncBetCard(1);
     syncBetCard(2);
 
-    if (currentMultiplier >= crashPoint) crash();
+    if (currentMultiplier >= crashPoint) {
+        crash();
+    } else {
+        animationFrameId = requestAnimationFrame(gameTick);
+    }
 }
 
 // ══════════════════════════════════════════════
@@ -1011,7 +1027,8 @@ function triggerMultiplierBounce(el) {
 // CRASH
 // ══════════════════════════════════════════════
 function crash() {
-    clearInterval(gameInterval);
+    if (gameInterval) clearInterval(gameInterval);
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
     stopEngineRumble(); // 🔊 Engine dies
     stopRisingTone();
     gameState = 'crashed';
