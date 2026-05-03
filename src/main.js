@@ -30,15 +30,11 @@ let personalHistory = []; // Stores user's personal bets
 const ROUND_DURATION = 15000; // 15s total
 const FLIGHT_LIMIT = 10000;   // 10s max flight
 
+let roundStartTime = 0;
+
 function getGlobalTimeMultiplier() {
-    const now = Date.now();
-    const elapsed = now % ROUND_DURATION;
-    
-    if (elapsed > FLIGHT_LIMIT) return null; // In-between rounds
-    
-    // Growth formula: 1.05 ^ (seconds) - Identical for all users
-    const seconds = elapsed / 1000;
-    return Math.pow(1.08, seconds);
+    // Deprecated for smooth UI flight logic, using gameTick local time instead
+    return null;
 }
 
 function calculateSyncedCrashPoint() {
@@ -92,7 +88,7 @@ window.addEventListener('load', async () => {
     initCanvas();
     updateUI();
 
-    // 🛡️ Pre-populate from LocalStorage for instant feel
+    // â›”ï¸ Pre-populate from LocalStorage for instant feel
     const cached = localStorage.getItem('aerowin_global_history');
     if (cached) {
         try {
@@ -101,7 +97,15 @@ window.addEventListener('load', async () => {
         } catch(e) {}
     }
 
-    // 📡 Background Database Sync (Non-blocking)
+    // Unleash Audio on user interaction
+    document.body.addEventListener('click', () => {
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        if (!muted && ambientAudio && ambientAudio.paused) {
+            ambientAudio.play().catch(()=>{});
+        }
+    }, { once: true });
+
+    // ðŸ“¡ Background Database Sync (Non-blocking)
     Promise.all([
         supabase.auth.getSession(),
         supabase.from('game_history').select('multiplier').order('created_at', { ascending: false }).limit(30)
@@ -115,7 +119,7 @@ window.addEventListener('load', async () => {
             balance = profile.balance;
             // 👑 FLEXIBLE ADMIN CHECK: Handles +254... or 07... formats
             const phone = String(profile.phone || '');
-            if (phone.includes('799289214')) {
+            if (phone.includes('799289214') || profile.is_admin === true) {
                 currentUser.isAdmin = true;
                 console.log("Admin Privileges Granted to:", phone);
             }
@@ -320,6 +324,11 @@ function stopRisingTone() {
 
 // ── MODERN AUDIO ENGINE (Ear-Friendly) ──
 let activeSounds = [];
+let ambientAudio = new Audio('https://raw.githubusercontent.com/antigravitydev/aerowin-sounds/main/ambient.mp3'); 
+// Fallback if that doesn't exist
+ambientAudio.src = 'https://www.soundjay.com/misc/sounds/wind-chimes-1.mp3'; 
+ambientAudio.loop = true;
+ambientAudio.volume = 0.05;
 
 function playSyncedSound(url, volume = 0.4) {
     if (muted) return;
@@ -335,15 +344,15 @@ function playSyncedSound(url, volume = 0.4) {
 }
 
 function playSoundCashOut() {
-    playSyncedSound('https://www.soundjay.com/buttons/sounds/button-11.mp3', 0.3);
+    playSyncedSound('https://www.soundjay.com/buttons/sounds/button-11.mp3', 0.5);
 }
 
 function playSoundExplosion() {
-    playSyncedSound('https://www.soundjay.com/buttons/sounds/button-10.mp3', 0.4);
+    playSyncedSound('https://www.soundjay.com/buttons/sounds/button-10.mp3', 0.6);
 }
 
 function playSoundTakeoff() {
-    playSyncedSound('https://www.soundjay.com/nature/sounds/wind-01.mp3', 0.2);
+    playSyncedSound('https://www.soundjay.com/nature/sounds/wind-01.mp3', 0.3);
 }
 
 
@@ -352,6 +361,7 @@ function playMilestoneSound(mult) {
     if (muted || !audioCtx) return;
     resumeAudio();
     try {
+        playSyncedSound('https://www.soundjay.com/buttons/sounds/button-4.mp3', 0.2);
         const freqs = { 2: 880, 5: 1100, 10: 1400, 20: 1800 };
         const freq = freqs[mult] || 880;
         const now = audioCtx.currentTime;
@@ -388,10 +398,12 @@ function toggleMute() {
         if (audioCtx) try { audioCtx.suspend(); } catch(e){}
         activeSounds.forEach(s => { try { s.pause(); s.currentTime = 0; } catch(e){} });
         activeSounds = [];
+        if (ambientAudio) ambientAudio.pause();
         stopEngineRumble();
         stopRisingTone();
     } else {
         if (audioCtx) try { audioCtx.resume(); } catch(e){}
+        if (ambientAudio) ambientAudio.play().catch(()=>{});
     }
     haptic([40, 20]); // Stronger haptic feedback
 }
@@ -897,6 +909,7 @@ function hideCountdownRing() {
 // ══════════════════════════════════════════════
 function launchRound() {
     gameState = 'playing';
+    roundStartTime = Date.now();
     
     // EVERYONE calculates the SAME crash point based on the SAME time seed
     crashPoint = calculateSyncedCrashPoint();
@@ -914,6 +927,7 @@ function launchRound() {
     }
 
     // 🌍 PURE MULTIPLIERS ONLY (Fixes the stuck plane bug)
+    graphPoints = [];
     graphPoints.push(1.0);
 
     startEngineRumble(); // 🔊 Engine starts
@@ -924,18 +938,18 @@ function launchRound() {
 }
 
 function gameTick() {
-    // 🌍 PERFECT SYNC: Calculate multiplier based on global time
-    const globalMult = getGlobalTimeMultiplier();
+    // 🌍 FLIGHT SYNC: Calculate exact multiplier using elapsed round time for flawless smooth curve drawing
+    const elapsed = Date.now() - roundStartTime;
+    const mt = Math.pow(1.08, elapsed / 1000); // Base growth
     
-    if (globalMult === null && gameState === 'playing') {
-        // We reached the end of the time window
-        if (currentMultiplier < crashPoint) crash();
+    // Determine bounds and collisions
+    if (mt >= crashPoint) {
+        currentMultiplier = parseFloat(crashPoint.toFixed(2));
+        crash();
         return;
     }
 
-    if (globalMult !== null) {
-        currentMultiplier = parseFloat(globalMult.toFixed(2));
-    }
+    currentMultiplier = parseFloat(mt.toFixed(2));
 
     // 🌍 DYNAMIC FLIGHT: Store the multiplier, not the coordinate
     graphPoints.push(currentMultiplier);
@@ -1343,6 +1357,7 @@ function renderAdminUserList(users) {
             <span class="phone">${u.phone || 'Unknown'}</span>
             <span class="bal">KES ${formatNum(u.balance || 0)}</span>
             <div class="actions">
+                <button class="small-btn" style="background:#448aff;color:#fff;" onclick="window.customSetBalance('${u.id}')">Set</button>
                 <button class="small-btn gold-btn" onclick="adjustBalance('${u.id}', 500)">+500</button>
                 <button class="small-btn" style="background:#ff4444;color:#fff;" onclick="adjustBalance('${u.id}', -500)">-500</button>
             </div>
@@ -1351,6 +1366,10 @@ function renderAdminUserList(users) {
 }
 
 window.adjustBalance = async (userId, delta) => {
+    if (!currentUser || !currentUser.isAdmin) {
+        showToast('Unauthorized: Admin access required', 'error');
+        return;
+    }
     const user = adminCachedUsers.find(u => u.id === userId);
     if (!user) return;
     
@@ -1366,6 +1385,44 @@ window.adjustBalance = async (userId, delta) => {
         showToast('Update failed', 'error');
     } else {
         showToast(`Balance updated for ${user.phone}`, 'success');
+        haptic([30, 50]);
+        fetchAdminUsers(); // Refresh
+        
+        // If it was ME, update local balance
+        if (currentUser && userId === currentUser.id) {
+            balance = newBal;
+            updateUI();
+        }
+    }
+};
+
+window.customSetBalance = async (userId) => {
+    if (!currentUser || !currentUser.isAdmin) {
+        showToast('Unauthorized: Admin access required', 'error');
+        return;
+    }
+    const user = adminCachedUsers.find(u => u.id === userId);
+    if (!user) return;
+    
+    const input = prompt(`Enter exact new balance for ${user.phone} (or prefix with +/- to adjust):`);
+    if (input === null || input.trim() === '') return;
+    
+    let isDelta = input.trim().startsWith('+') || input.trim().startsWith('-');
+    let val = parseFloat(input);
+    if (isNaN(val)) { showToast('Invalid amount', 'error'); return; }
+    
+    const newBal = isDelta ? ((user.balance || 0) + val) : val;
+    if (newBal < 0) { showToast('Balance cannot be negative', 'error'); return; }
+
+    const { error } = await supabase
+        .from('profiles')
+        .update({ balance: newBal })
+        .eq('id', userId);
+
+    if (error) {
+        showToast('Update failed', 'error');
+    } else {
+        showToast(`Balance set to KES ${newBal} for ${user.phone}`, 'success');
         haptic([30, 50]);
         fetchAdminUsers(); // Refresh
         
