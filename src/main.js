@@ -546,8 +546,8 @@ function drawGraph() {
     // so canvas px == gameBoard px. We use left:0;top:0 + translate(pxX,pxY).
     const planeSvg = document.getElementById('plane');
     if (planeSvg && gameState !== 'crashed') {
-        const planeW = 100;
-        const planeH = 34;
+        const planeW = 140;
+        const planeH = 56;
         planeSvg.style.left = '0';
         planeSvg.style.top  = '0';
         planeSvg.style.transform = `translate(${lastPt.pxX - planeW}px, ${lastPt.pxY - planeH / 2}px) rotate(${Math.max(-35, Math.min(5, angle))}deg)`;
