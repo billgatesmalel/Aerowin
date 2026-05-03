@@ -20,7 +20,7 @@ import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const CORS_HEADERS = {
-    'Access-Control-Allow-Origin':  '*',
+    'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
@@ -80,7 +80,7 @@ serve(async (req: Request) => {
                 }
                 const { error } = await admin.rpc('increment_balance', {
                     user_id: target_user_id,
-                    amount:  delta,
+                    amount: delta,
                 });
                 if (error) return json({ error: error.message }, 500);
                 return json({ ok: true });
