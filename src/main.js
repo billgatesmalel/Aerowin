@@ -3,7 +3,7 @@
 // ══════════════════════════════════════════════
 import { supabase } from './lib/supabase.js';
 
-// ══════════════════════════════════════════════
+ // ══════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════
 let balance = 1000;
@@ -26,33 +26,119 @@ let elapsedTicks = 0;
 let activeBetsTab = 'all'; // 'all' | 'previous' | 'top'
 let personalHistory = []; // Stores user's personal bets
 
-// ── PERFECT TIME SYNC ──
+// ── SERVER-AUTHORITATIVE TIME SYNC ──
 const ROUND_DURATION = 15000; // 15s total
-const FLIGHT_LIMIT = 10000;   // 10s max flight
+const FLIGHT_DURATION = 10000; // 10s max flight
+const COUNTDOWN_DURATION = 5000; // 5s countdown before takeoff
 
-let roundStartTime = 0;
+// Server-provided state (authoritative source)
+let serverRoundId = 0;
+let serverRoundStartTime = 0;
+let serverCrashPoint = 0;
+let serverGameStatus = 'waiting';
+let serverTimeOffset = 0; // Client clock offset from server (ms)
 
-function getGlobalTimeMultiplier() {
-    // Deprecated for smooth UI flight logic, using gameTick local time instead
-    return null;
+let roundStartTime = 0; // Local reference (synced to server)
+
+// ── SERVER STATE: Fetch current game state from authoritative source ──
+async function fetchServerGameState() {
+    try {
+        const response = await fetch('https://functions.supabase.co/functions/v1/game-state');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        
+        // Calculate clock offset: serverTime - clientTime
+        serverTimeOffset = data.serverTime - Date.now();
+        
+        // Store authoritative state
+        serverRoundId = data.roundId;
+        serverRoundStartTime = data.roundStartTime;
+        serverCrashPoint = data.crashPoint;
+        serverGameStatus = data.gameStatus;
+        
+        // Local references for compatibility
+        roundStartTime = serverRoundStartTime;
+        crashPoint = serverCrashPoint;
+        
+        console.log('[Server Sync] Round', serverRoundId, 'Status:', serverGameStatus, 
+                    'Crash:', serverCrashPoint, 'Elapsed:', data.timeElapsed, 'ms');
+        
+        return data;
+    } catch (err) {
+        console.error('Failed to fetch server game state:', err);
+        // Fallback: use legacy local generation
+        return await fallbackCalculateGameState();
+    }
+}
+
+// ── FALLBACK: Local generation when server unavailable ──
+async function fallbackCalculateGameState() {
+    const now = Date.now();
+    const currentWindowStart = Math.floor(now / ROUND_DURATION);
+    const x = Math.sin(currentWindowStart) * 10000;
+    const r = x - Math.floor(x);
+    
+    let fallbackCrashPoint = 1.05;
+    if (r < 0.1) fallbackCrashPoint = 1.05;
+    else if (r < 0.5) fallbackCrashPoint = 1.2 + (r * 2);
+    else if (r < 0.8) fallbackCrashPoint = 3.0 + (r * 8);
+    else fallbackCrashPoint = 15.0 + (r * 50);
+    
+    fallbackCrashPoint = parseFloat(fallbackCrashPoint.toFixed(2));
+    
+    // Determine which phase we're in based on window
+    const windowElapsed = now % ROUND_DURATION;
+    let fallbackStatus = 'waiting';
+    if (windowElapsed >= COUNTDOWN_DURATION && windowElapsed < COUNTDOWN_DURATION + FLIGHT_DURATION) {
+        fallbackStatus = 'playing';
+    } else if (windowElapsed >= COUNTDOWN_DURATION + FLIGHT_DURATION) {
+        fallbackStatus = 'crashed';
+    }
+    
+    const fallbackRoundStart = now - windowElapsed;
+    
+    serverRoundId = Math.floor(now / ROUND_DURATION);
+    serverRoundStartTime = fallbackRoundStart;
+    serverCrashPoint = fallbackCrashPoint;
+    serverGameStatus = fallbackStatus;
+    serverTimeOffset = 0;
+    roundStartTime = fallbackRoundStart;
+    crashPoint = fallbackCrashPoint;
+    
+    return {
+        roundId: serverRoundId,
+        roundStartTime: serverRoundStartTime,
+        crashPoint: serverCrashPoint,
+        gameStatus: serverGameStatus,
+        serverTime: now,
+        currentMultiplier: 1.0,
+        timeElapsed: windowElapsed,
+    };
+}
+
+// ── FRAME REPLAY: Calculate current multiplier from server startTime ──
+function calculateCurrentMultiplierFromServer() {
+    const now = Date.now();
+    const serverNow = now + serverTimeOffset;
+    const elapsed = serverNow - serverRoundStartTime;
+    
+    if (serverGameStatus === 'waiting') {
+        return 1.0;
+    } else if (serverGameStatus === 'crashed') {
+        return serverCrashPoint;
+    } else {
+        // Playing: calculate based on elapsed flight time
+        const flightElapsed = Math.max(0, elapsed - COUNTDOWN_DURATION);
+        if (flightElapsed <= 0) return 1.0;
+        const mult = Math.pow(1.08, flightElapsed / 1000);
+        return parseFloat(Math.min(mult, serverCrashPoint).toFixed(2));
+    }
 }
 
 async function calculateSyncedCrashPoint() {
-    try {
-        const { data, error } = await supabase.functions.invoke('game')
-        if (error) throw error;
-        return data.crashPoint;
-    } catch (err) {
-        console.error("API error, falling back:", err);
-        // Fallback offline generator
-        const seed = Math.floor(Date.now() / 15000);
-        const x = Math.sin(seed) * 10000;
-        const r = x - Math.floor(x);
-        if (r < 0.1) return 1.05;
-        if (r < 0.5) return 1.2 + (r * 2);
-        if (r < 0.8) return 3.0 + (r * 8);
-        return 15.0 + (r * 50);
-    }
+    // Now simply returns the server-authoritative crash point
+    // (fetched during initialization)
+    return serverCrashPoint;
 }
 
 // Graph canvas state
@@ -197,7 +283,12 @@ window.addEventListener('load', async () => {
         searchInp.addEventListener('input', (e) => filterAdminUsers(e.target.value));
     }
 
-    showGameLoader(() => startNewRound());
+    // 🌍 SERVER-AUTHORITATIVE INITIALIZATION
+    // Fetch current game state from server before starting first round
+    showGameLoader(async () => {
+        await fetchServerGameState();
+        startNewRound();
+    });
 });
 
 // ══════════════════════════════════════════════
@@ -860,23 +951,118 @@ function startNewRound() {
 
     spawnSimulatedBets();
     updateUI();
-    showCountdownRing(countdown);
 
-    let lastTickSec = Math.ceil(countdown);
-    const tickInterval = setInterval(() => {
-        countdown -= 0.1;
-        updateCountdownRing(Math.max(0, countdown));
-        if (statusEl) statusEl.textContent = `Starting in ${Math.max(0, countdown).toFixed(1)}s`;
-
-        // Tick sound on each whole second
-        const thisSec = Math.ceil(countdown);
-        if (thisSec < lastTickSec && thisSec > 0) {
-            playSoundTick();
-            lastTickSec = thisSec;
+    // Sync with server state before starting countdown
+    fetchServerGameState().then(serverState => {
+        // Calculate how much time has elapsed in the current server round
+        const serverNow = Date.now() + serverTimeOffset;
+        const timeElapsed = serverNow - serverRoundStartTime;
+        
+        // If server is already in playing/crashed state, sync immediately
+        if (serverGameStatus === 'playing') {
+            // Server round is already in flight - replay from current position
+            roundStartTime = serverRoundStartTime;
+            crashPoint = serverCrashPoint;
+            launchRound();
+        } else if (serverGameStatus === 'crashed') {
+            // Server round just crashed - wait for next round
+            // The server will transition to waiting soon, we'll sync on next fetch
+            showCountdownRing(countdown);
+            const tickInterval = setInterval(() => {
+                countdown -= 0.1;
+                updateCountdownRing(Math.max(0, countdown));
+                if (statusEl) statusEl.textContent = `Syncing... ${Math.max(0, countdown).toFixed(1)}s`;
+                
+                // Re-sync with server periodically
+                if (Math.floor(countdown) % 2 === 0 && Math.floor(countdown) !== Math.floor(countdown + 0.1)) {
+                    fetchServerGameState().then(s => {
+                        if (s.gameStatus === 'waiting' || s.gameStatus === 'playing') {
+                            clearInterval(tickInterval);
+                            startNewRound();
+                        }
+                    });
+                }
+                
+                if (countdown <= 0) { 
+                    clearInterval(tickInterval); 
+                    hideCountdownRing();
+                    // Re-fetch and check server state
+                    fetchServerGameState().then(s => {
+                        if (s.gameStatus === 'playing') {
+                            launchRound();
+                        } else {
+                            startNewRound();
+                        }
+                    });
+                }
+            }, 100);
+            return;
+        } else {
+            // Server is in waiting state - calculate time until takeoff
+            const timeUntilTakeoff = Math.max(0, COUNTDOWN_DURATION - timeElapsed);
+            const serverCountdown = timeUntilTakeoff / 1000;
+            
+            if (serverCountdown <= 0) {
+                // Server should be playing now - launch immediately
+                roundStartTime = serverRoundStartTime;
+                crashPoint = serverCrashPoint;
+                launchRound();
+                return;
+            }
+            
+            // Show countdown synced to server
+            countdown = serverCountdown;
+            showCountdownRing(countdown);
+            
+            const tickInterval = setInterval(() => {
+                // Re-calculate based on server time to prevent drift
+                const now = Date.now() + serverTimeOffset;
+                const elapsed = now - serverRoundStartTime;
+                const remaining = Math.max(0, (COUNTDOWN_DURATION - elapsed) / 1000);
+                
+                updateCountdownRing(remaining);
+                if (statusEl) statusEl.textContent = `Starting in ${remaining.toFixed(1)}s`;
+                
+                // Tick sound on each whole second
+                const thisSec = Math.ceil(remaining);
+                if (thisSec > 0 && thisSec <= 5) {
+                    const lastSec = Math.ceil(remaining + 0.1);
+                    if (thisSec < lastSec) {
+                        playSoundTick();
+                    }
+                }
+                
+                if (remaining <= 0) { 
+                    clearInterval(tickInterval); 
+                    hideCountdownRing();
+                    // Verify server state before launching
+                    fetchServerGameState().then(s => {
+                        roundStartTime = s.roundStartTime;
+                        crashPoint = s.crashPoint;
+                        serverGameStatus = s.gameStatus;
+                        launchRound();
+                    });
+                }
+            }, 100);
         }
-
-        if (countdown <= 0) { clearInterval(tickInterval); hideCountdownRing(); launchRound(); }
-    }, 100);
+    }).catch(err => {
+        console.error('Sync failed, using local fallback:', err);
+        // Fallback to local countdown
+        showCountdownRing(countdown);
+        const tickInterval = setInterval(() => {
+            countdown -= 0.1;
+            updateCountdownRing(Math.max(0, countdown));
+            if (statusEl) statusEl.textContent = `Starting in ${Math.max(0, countdown).toFixed(1)}s`;
+            
+            const thisSec = Math.ceil(countdown);
+            if (thisSec > 0 && thisSec <= 5) {
+                const lastSec = Math.ceil(countdown + 0.1);
+                if (thisSec < lastSec) playSoundTick();
+            }
+            
+            if (countdown <= 0) { clearInterval(tickInterval); hideCountdownRing(); launchRound(); }
+        }, 100);
+    });
 }
 
 // ══════════════════════════════════════════════
@@ -926,10 +1112,10 @@ let animationFrameId = null;
 // ══════════════════════════════════════════════
 async function launchRound() {
     gameState = 'playing';
-    roundStartTime = Date.now();
+    roundStartTime = serverRoundStartTime;
 
-    // Server-Side Secure Multiplier Sync
-    crashPoint = await calculateSyncedCrashPoint();
+    // Server-authoritative crash point
+    crashPoint = serverCrashPoint;
 
     const statusEl = document.getElementById('status');
     const plane = document.getElementById('plane');
@@ -957,13 +1143,18 @@ async function launchRound() {
 
 function gameTick() {
     if (gameState !== 'playing') return;
-    // 🌍 FLIGHT SYNC: Calculate exact multiplier using elapsed round time for flawless smooth curve drawing
-    const elapsed = Date.now() - roundStartTime;
-    const mt = Math.pow(1.08, elapsed / 1000); // Base growth
+    
+    // 🌍 SERVER-AUTHORITATIVE TIME: Calculate exact multiplier using server round start
+    const serverNow = Date.now() + serverTimeOffset;
+    const elapsed = serverNow - serverRoundStartTime;
+    const flightElapsed = Math.max(0, elapsed - COUNTDOWN_DURATION);
+    
+    // Base growth from server-authoritative start time
+    const mt = flightElapsed <= 0 ? 1.0 : Math.pow(1.08, flightElapsed / 1000);
 
-    // Determine bounds and collisions
-    if (mt >= crashPoint) {
-        currentMultiplier = parseFloat(crashPoint.toFixed(2));
+    // Determine bounds and collisions using server crashPoint
+    if (mt >= serverCrashPoint) {
+        currentMultiplier = parseFloat(serverCrashPoint.toFixed(2));
         crash();
         return;
     }
@@ -1014,7 +1205,7 @@ function gameTick() {
     syncBetCard(1);
     syncBetCard(2);
 
-    if (currentMultiplier >= crashPoint) {
+    if (currentMultiplier >= serverCrashPoint) {
         crash();
     } else {
         animationFrameId = requestAnimationFrame(gameTick);
@@ -1070,7 +1261,7 @@ function crash() {
         if (bet.active && !bet.cashed) {
             // 📜 Add loss to history
             personalHistory.unshift({
-                name: currentUser.phone.slice(-4).padStart(4, '*'),
+                name: currentUser ? currentUser.phone.slice(-4).padStart(4, '*') : '????',
                 avatar: '🌟',
                 betAmt: bet.amount,
                 mult: currentMultiplier.toFixed(2) + 'x',
@@ -1083,7 +1274,17 @@ function crash() {
 
     saveBalance();
     updateUI();
-    setTimeout(startNewRound, 3500);
+    
+    // Sync with server state before starting next round
+    // Server will have transitioned to waiting/crashed state
+    setTimeout(() => {
+        fetchServerGameState().then(s => {
+            // Server state is now authoritative for next round
+            startNewRound();
+        }).catch(() => {
+            startNewRound();
+        });
+    }, 100);
 }
 
 // ══════════════════════════════════════════════
