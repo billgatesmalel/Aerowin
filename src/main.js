@@ -931,6 +931,7 @@ function startNewRound() {
     const overlay = document.getElementById('crashedOverlay');
     const plane = document.getElementById('plane');
     const board = document.getElementById('gameBoard');
+    const graphSvg = document.querySelector('.graph-svg');
 
     if (multEl) { multEl.textContent = '1.00x'; multEl.className = 'mult-display mult-low'; multEl.style.animation = ''; }
     if (statusEl) statusEl.textContent = '';
@@ -940,6 +941,11 @@ function startNewRound() {
         plane.style.opacity = '0';
         plane.style.display = 'none';
         plane.classList.remove('fly');
+    }
+    
+    // Hide graph
+    if (graphSvg) {
+        graphSvg.classList.remove('visible');
     }
 
     if (graphCtx2d && graphCanvas) graphCtx2d.clearRect(0, 0, graphCanvas.width, graphCanvas.height);
@@ -1120,6 +1126,7 @@ async function launchRound() {
 
     const statusEl = document.getElementById('status');
     const plane = document.getElementById('plane');
+    const graphSvg = document.querySelector('.graph-svg');
     if (statusEl) statusEl.textContent = '';
 
     if (plane) {
@@ -1128,6 +1135,11 @@ async function launchRound() {
         plane.style.top = '0';
         plane.style.display = 'block';
         plane.style.opacity = '1';
+    }
+    
+    // Show bold red graph curve
+    if (graphSvg) {
+        graphSvg.classList.add('visible');
     }
 
     // 🌍 PURE MULTIPLIERS ONLY (Fixes the stuck plane bug)
@@ -1238,12 +1250,18 @@ function crash() {
     const multEl = document.getElementById('multiplier');
     const statusEl = document.getElementById('status');
     const board = document.getElementById('gameBoard');
+    const graphSvg = document.querySelector('.graph-svg');
 
     if (plane) { plane.classList.remove('fly'); plane.style.opacity = '0'; }
     if (overlay) overlay.classList.remove('hidden');
     if (crashedText) crashedText.textContent = `FLEW AWAY @ ${currentMultiplier.toFixed(2)}x`;
     if (multEl) multEl.classList.add('crashed-color');
     if (statusEl) statusEl.textContent = '';
+    
+    // Hide graph on crash
+    if (graphSvg) {
+        graphSvg.classList.remove('visible');
+    }
 
     if (board) {
         board.classList.add('screen-shake');

@@ -107,60 +107,77 @@
                 </div>
             </div>
 
-            <!-- Game Canvas -->
+    <!-- Game Canvas -->
             <div class="game-canvas" id="gameBoard">
                 <div class="burst-bg"></div>
+                
+                <!-- Sunburst Rays - Radiating from left -->
+                <div class="sunburst">
+                    <div class="ray ray-1"></div>
+                    <div class="ray ray-2"></div>
+                    <div class="ray ray-3"></div>
+                    <div class="ray ray-4"></div>
+                    <div class="ray ray-5"></div>
+                    <div class="ray ray-6"></div>
+                    <div class="ray ray-7"></div>
+                    <div class="ray ray-8"></div>
+                </div>
+                
+                <!-- Blue-teal center glow -->
+                <div class="center-glow"></div>
 
+                <!-- Bold red curve graph -->
                 <svg class="graph-svg" viewBox="0 0 1000 260" preserveAspectRatio="none" aria-hidden="true">
                     <defs>
                         <linearGradient id="graphGrad" x1="0" x2="0" y1="0" y2="1">
-                            <stop offset="0%" stop-color="#cc0033" stop-opacity="0.7" />
-                            <stop offset="100%" stop-color="#cc0033" stop-opacity="0.05" />
+                            <stop offset="0%" stop-color="#ff0033" stop-opacity="0.9" />
+                            <stop offset="100%" stop-color="#cc0022" stop-opacity="0.95" />
                         </linearGradient>
                     </defs>
-                    <path id="motionPath" d="M0,240 C200,200 500,120 1000,20 L1000,260 L0,260 Z"
-                        fill="url(#graphGrad)" />
+                    <!-- Bold red curve -->
+                    <path id="motionPath" d="M0,240 C200,200 500,120 1000,20 L1000,260 L0,260 Z" 
+                          fill="url(#graphGrad)" />
                 </svg>
 
-                <!-- Spribe-style red propeller plane -->
+                <!-- Red silhouette plane at top-right -->
                 <svg id="plane" class="plane-svg" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
                     <g transform="translate(10,10) rotate(-20, 100, 55)">
-
-                        <!-- ── Tail vertical fin ── -->
+                        <!-- Vintage propeller plane silhouette - RED -->
+                        
+                        <!-- Tail vertical fin -->
                         <path d="M30,48 L38,20 L46,26 L44,50 Z" fill="#cc0022" />
-
-                        <!-- ── Horizontal stabilisers ── -->
+                        
+                        <!-- Horizontal stabilisers -->
                         <path d="M30,54 L10,62 L13,67 L34,58 Z" fill="#cc0022" />
                         <path d="M32,50 L12,44 L14,40 L34,48 Z" fill="#aa0018" />
-
-                        <!-- ── Main fuselage ── -->
-                        <path
-                            d="M34,46 Q50,38 90,37 Q120,36 148,42 Q160,46 165,52 Q160,58 148,62 Q120,68 90,67 Q50,66 34,58 Z"
-                            fill="#e8003a" />
-                        <!-- belly shade -->
+                        
+                        <!-- Main fuselage -->
+                        <path d="M34,46 Q50,38 90,37 Q120,36 148,42 Q160,46 165,52 Q160,58 148,62 Q120,68 90,67 Q50,66 34,58 Z" 
+                              fill="#e8003a" />
+                        <!-- Belly shade -->
                         <path d="M36,56 Q60,64 100,64 Q130,64 150,58 Q135,66 90,67 Q50,66 36,58 Z" fill="#aa0018" />
-                        <!-- top highlight -->
-                        <path d="M45,39 Q85,35 130,38 Q145,40 155,44 Q140,40 110,39 Q75,37 45,42 Z" fill="#ff4466"
-                            opacity="0.45" />
-
-                        <!-- ── Cockpit ── -->
+                        <!-- Top highlight -->
+                        <path d="M45,39 Q85,35 130,38 Q145,40 155,44 Q140,40 110,39 Q75,37 45,42 Z" 
+                              fill="#ff4466" opacity="0.45" />
+                        
+                        <!-- Cockpit -->
                         <path d="M130,37 Q148,30 158,36 Q162,42 156,46 Q144,42 130,42 Z" fill="#1a2540" />
                         <path d="M133,36 Q148,30 155,35 Q148,33 135,37 Z" fill="#5599dd" opacity="0.55" />
-
-                        <!-- ── Main wing ── -->
-                        <path d="M88,62 Q94,68 86,90 Q76,104 58,110 Q50,108 53,102 Q68,96 78,80 Q84,70 88,62 Z"
-                            fill="#e8003a" />
-                        <path d="M88,60 Q92,66 85,86 Q76,100 60,108 Q54,106 56,100 Q70,94 80,78 Q85,68 88,60 Z"
-                            fill="#cc0022" />
-                        <!-- wing highlight -->
-                        <path d="M88,62 Q90,68 86,82 Q80,92 72,100 Q78,90 84,76 Q87,68 88,62 Z" fill="#ff3355"
-                            opacity="0.4" />
-
-                        <!-- ── Engine cowling ── -->
+                        
+                        <!-- Main wing -->
+                        <path d="M88,62 Q94,68 86,90 Q76,104 58,110 Q50,108 53,102 Q68,96 78,80 Q84,70 88,62 Z" 
+                              fill="#e8003a" />
+                        <path d="M88,60 Q92,66 85,86 Q76,100 60,108 Q54,106 56,100 Q70,94 80,78 Q85,68 88,60 Z" 
+                              fill="#cc0022" />
+                        <!-- Wing highlight -->
+                        <path d="M88,62 Q90,68 86,82 Q80,92 72,100 Q78,90 84,76 Q87,68 88,62 Z" 
+                              fill="#ff3355" opacity="0.4" />
+                        
+                        <!-- Engine cowling -->
                         <ellipse cx="161" cy="52" rx="10" ry="9" fill="#bb0018" />
                         <ellipse cx="165" cy="52" rx="7" ry="7" fill="#990010" />
-
-                        <!-- ── Propeller (spinning) ── -->
+                        
+                        <!-- Propeller (spinning) -->
                         <g style="transform-origin:170px 52px; animation: spinProp 0.07s linear infinite;">
                             <ellipse cx="170" cy="43" rx="2.2" ry="9" fill="#cc1122" />
                             <ellipse cx="170" cy="43" rx="2.2" ry="9" fill="#aa0010" transform="rotate(60,170,52)" />
@@ -171,12 +188,21 @@
                         </g>
                         <!-- prop hub -->
                         <circle cx="170" cy="52" r="3" fill="#660008" />
+                        
+                        <!-- X Marking on plane -->
+                        <g stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0.9">
+                            <line x1="140" y1="35" x2="155" y2="50" />
+                            <line x1="155" y1="35" x2="140" y2="50" />
+                        </g>
                     </g>
                 </svg>
 
                 <div class="crashed-overlay hidden" id="crashedOverlay">
                     <span id="crashedText">FLEW AWAY</span>
                 </div>
+                <div class="mult-display" id="multiplier">1.00x</div>
+                <div class="status-msg" id="status"></div>
+            </div>
                 <div class="mult-display" id="multiplier">1.00x</div>
                 <div class="status-msg" id="status"></div>
             </div>
