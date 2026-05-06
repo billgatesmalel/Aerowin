@@ -39,11 +39,10 @@ function getGlobalTimeMultiplier() {
 
 async function calculateSyncedCrashPoint() {
     try {
-        const res = await fetch('/api/game');
-        if (!res.ok) throw new Error('API failed');
-        const data = await res.json();
+        const { data, error } = await supabase.functions.invoke('game')
+        if (error) throw error;
         return data.crashPoint;
-    } catch(err) {
+    } catch (err) {
         console.error("API error, falling back:", err);
         // Fallback offline generator
         const seed = Math.floor(Date.now() / 15000);
@@ -102,14 +101,14 @@ window.addEventListener('load', async () => {
         try {
             crashHistory = JSON.parse(cached).filter(v => v !== null && v !== 'undefined');
             renderTicker();
-        } catch(e) {}
+        } catch (e) { }
     }
 
     // Unleash Audio on user interaction
     document.body.addEventListener('click', () => {
         if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         if (!muted && ambientAudio && ambientAudio.paused) {
-            ambientAudio.play().catch(()=>{});
+            ambientAudio.play().catch(() => { });
         }
     }, { once: true });
 
@@ -125,12 +124,13 @@ window.addEventListener('load', async () => {
         if (profile) {
             currentUser = { ...session.user, ...profile };
             balance = profile.balance;
-            // 👑 FLEXIBLE ADMIN CHECK: Handles +254... or 07... formats
-            const phone = String(profile.phone || '');
-            if (phone.includes('799289214') || profile.is_admin === true) {
-                currentUser.isAdmin = true;
-                console.log("Admin Privileges Granted to:", phone);
-            }
+             // 👑 FLEXIBLE ADMIN CHECK: Handles +254... or 07... formats
+             const phone = String(profile.phone || '');
+             const adminPhone = import.meta.env.VITE_ADMIN_PHONE || '799289214';
+             if (phone.includes(adminPhone) || profile.is_admin === true) {
+                 currentUser.isAdmin = true;
+                 console.log("Admin Privileges Granted to:", phone);
+             }
             updateUI();
         }
 
@@ -139,7 +139,7 @@ window.addEventListener('load', async () => {
             crashHistory = historyResult.data
                 .map(h => h.multiplier)
                 .filter(m => m !== null && m !== undefined && m !== 'undefined' && m !== '');
-            
+
             localStorage.setItem('aerowin_global_history', JSON.stringify(crashHistory));
             renderTicker();
         }
@@ -152,9 +152,9 @@ window.addEventListener('load', async () => {
 
         const handler = (e) => {
             // Prevent double-triggering (touch + click)
-            if (e.type === 'touchstart') e.preventDefault(); 
-            fn(); 
-            haptic([30]); 
+            if (e.type === 'touchstart') e.preventDefault();
+            fn();
+            haptic([30]);
         };
 
         el.addEventListener('click', handler);
@@ -181,7 +181,7 @@ window.addEventListener('load', async () => {
     bind('closeWithdrawBtn', closeWithdrawModal);
     bind('confirmWithdrawBtn', processWithdraw);
     bind('cancelWithdrawBtn', closeWithdrawModal);
-    
+
     // Bet Feed Tabs
     bind('tabAll', () => switchBetTab('all'));
     bind('tabPrevious', () => switchBetTab('previous'));
@@ -190,7 +190,7 @@ window.addEventListener('load', async () => {
     // ... existing binds ...
     bind('closeAdminBtn', () => document.getElementById('adminModal').classList.remove('show'));
     bind('refreshAdminBtn', fetchAdminUsers);
-    
+
     // Search filter
     const searchInp = document.getElementById('adminSearchInput');
     if (searchInp) {
@@ -332,9 +332,9 @@ function stopRisingTone() {
 
 // ── MODERN AUDIO ENGINE (Ear-Friendly) ──
 let activeSounds = [];
-let ambientAudio = new Audio('https://raw.githubusercontent.com/antigravitydev/aerowin-sounds/main/ambient.mp3'); 
+let ambientAudio = new Audio('https://raw.githubusercontent.com/antigravitydev/aerowin-sounds/main/ambient.mp3');
 // Fallback if that doesn't exist
-ambientAudio.src = 'https://www.soundjay.com/misc/sounds/wind-chimes-1.mp3'; 
+ambientAudio.src = 'https://www.soundjay.com/misc/sounds/wind-chimes-1.mp3';
 ambientAudio.loop = true;
 ambientAudio.volume = 0.05;
 
@@ -344,7 +344,7 @@ function playSyncedSound(url, volume = 0.4) {
         const audio = new Audio(url);
         audio.volume = volume;
         activeSounds.push(audio);
-        audio.play().catch(() => {});
+        audio.play().catch(() => { });
         audio.onended = () => {
             activeSounds = activeSounds.filter(a => a !== audio);
         };
@@ -403,15 +403,15 @@ function toggleMute() {
     }
 
     if (muted) {
-        if (audioCtx) try { audioCtx.suspend(); } catch(e){}
-        activeSounds.forEach(s => { try { s.pause(); s.currentTime = 0; } catch(e){} });
+        if (audioCtx) try { audioCtx.suspend(); } catch (e) { }
+        activeSounds.forEach(s => { try { s.pause(); s.currentTime = 0; } catch (e) { } });
         activeSounds = [];
         if (ambientAudio) ambientAudio.pause();
         stopEngineRumble();
         stopRisingTone();
     } else {
-        if (audioCtx) try { audioCtx.resume(); } catch(e){}
-        if (ambientAudio) ambientAudio.play().catch(()=>{});
+        if (audioCtx) try { audioCtx.resume(); } catch (e) { }
+        if (ambientAudio) ambientAudio.play().catch(() => { });
     }
     haptic([40, 20]); // Stronger haptic feedback
 }
@@ -459,16 +459,23 @@ function initCanvas() {
     graphCanvas.id = 'graphCanvas';
     graphCanvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;';
     board.appendChild(graphCanvas);
-    
+
     // Initial resize
     resizeCanvas();
-    
-    // 📱 Mobile fix: Force resize after DOM settles (multiple attempts for slow devices)
-    setTimeout(resizeCanvas, 100);
-    setTimeout(resizeCanvas, 500);
-    setTimeout(resizeCanvas, 1000);
 
-    window.addEventListener('resize', resizeCanvas);
+    // 📱 Mobile fix: Use ResizeObserver for better performance
+    if ('ResizeObserver' in window) {
+        const resizeObserver = new ResizeObserver(() => {
+            resizeCanvas();
+        });
+        resizeObserver.observe(board);
+    } else {
+        // Fallback for older browsers
+        window.addEventListener('resize', resizeCanvas);
+        setTimeout(resizeCanvas, 100);
+        setTimeout(resizeCanvas, 500);
+        setTimeout(resizeCanvas, 1000);
+    }
 }
 
 function resizeCanvas() {
@@ -485,7 +492,7 @@ function resizeCanvas() {
 function getGraphXY(mult, canvasW, canvasH) {
     const progress = Math.min(1, (mult - 1.0) / 19.0);
     const x = progress * 0.92 + 0.04; // 🛰️ Return relative 0 to 1
-    const y = 1.0 - (0.1 + Math.pow(progress, 0.7) * 0.78); 
+    const y = 1.0 - (0.1 + Math.pow(progress, 0.7) * 0.78);
     return { x, y, pxX: x * canvasW, pxY: y * canvasH };
 }
 
@@ -510,7 +517,7 @@ function drawGraph() {
     pts.forEach(p => graphCtx2d.lineTo(p.pxX, p.pxY));
     graphCtx2d.lineTo(pts[pts.length - 1].pxX, H);
     graphCtx2d.closePath();
-    
+
     const fillGrad = graphCtx2d.createLinearGradient(0, 0, 0, H);
     fillGrad.addColorStop(0, crashed ? 'rgba(255,40,80,0.8)' : 'rgba(228,0,55,1)');
     fillGrad.addColorStop(1, crashed ? 'rgba(255,40,80,0.2)' : 'rgba(228,0,55,0.7)');
@@ -549,7 +556,7 @@ function drawGraph() {
         const planeW = 140;
         const planeH = 56;
         planeSvg.style.left = '0';
-        planeSvg.style.top  = '0';
+        planeSvg.style.top = '0';
         planeSvg.style.transform = `translate(${lastPt.pxX - planeW}px, ${lastPt.pxY - planeH / 2}px) rotate(${Math.max(-35, Math.min(5, angle))}deg)`;
         planeSvg.style.transformOrigin = `${planeW}px ${planeH / 2}px`;
         planeSvg.style.opacity = '1';
@@ -715,11 +722,11 @@ function switchBetTab(mode) {
     document.getElementById('tabAll').classList.toggle('active', mode === 'all');
     document.getElementById('tabPrevious').classList.toggle('active', mode === 'previous');
     document.getElementById('tabTop').classList.toggle('active', mode === 'top');
-    
+
     // Update the header text
     const header = document.querySelector('.all-bets-header span');
     if (header) header.textContent = mode === 'all' ? 'ALL BETS' : (mode === 'previous' ? 'MY BETS' : 'TOP BETS');
-    
+
     renderAllBets();
 }
 
@@ -920,17 +927,17 @@ let animationFrameId = null;
 async function launchRound() {
     gameState = 'playing';
     roundStartTime = Date.now();
-    
+
     // Server-Side Secure Multiplier Sync
     crashPoint = await calculateSyncedCrashPoint();
 
     const statusEl = document.getElementById('status');
     const plane = document.getElementById('plane');
     if (statusEl) statusEl.textContent = '';
-    
+
     if (plane) {
         plane.classList.add('fly');
-        plane.style.left = '0'; 
+        plane.style.left = '0';
         plane.style.top = '0';
         plane.style.display = 'block';
         plane.style.opacity = '1';
@@ -953,7 +960,7 @@ function gameTick() {
     // 🌍 FLIGHT SYNC: Calculate exact multiplier using elapsed round time for flawless smooth curve drawing
     const elapsed = Date.now() - roundStartTime;
     const mt = Math.pow(1.08, elapsed / 1000); // Base growth
-    
+
     // Determine bounds and collisions
     if (mt >= crashPoint) {
         currentMultiplier = parseFloat(crashPoint.toFixed(2));
@@ -965,7 +972,7 @@ function gameTick() {
 
     // 🌍 DYNAMIC FLIGHT: Store the multiplier, not the coordinate
     graphPoints.push(currentMultiplier);
-    
+
     if (graphCanvas) {
         const rel = getGraphXY(currentMultiplier, graphCanvas.width, graphCanvas.height);
         if (graphPoints.length > 1) spawnParticles(rel.pxX, rel.pxY);
@@ -1105,7 +1112,7 @@ async function addToCrashHistory(m) {
     const mult = parseFloat(m).toFixed(2);
     // 🌍 Sync to Supabase so it's "across the system"
     const { error } = await supabase.from('game_history').insert([{ multiplier: mult }]);
-    
+
     if (!error) {
         // Only add to local state if DB insert succeeded to keep things in sync
         crashHistory.unshift(mult);
@@ -1119,17 +1126,17 @@ async function addToCrashHistory(m) {
 function renderTicker() {
     const ticker = document.getElementById('historyTicker');
     if (!ticker) return;
-    if (!crashHistory || crashHistory.length === 0) { 
-        ticker.innerHTML = '<div class="tick-pill gray">–</div>'; 
-        return; 
+    if (!crashHistory || crashHistory.length === 0) {
+        ticker.innerHTML = '<div class="tick-pill gray">–</div>';
+        return;
     }
-    
+
     ticker.innerHTML = crashHistory.map(c => {
         // 🛡️ Robust fallback: check if it's an object or just a value
         const val = (typeof c === 'object' && c !== null) ? c.multiplier : c;
         // 🚩 Aggressively skip any undefined/null/bad data
         if (!val || val === 'undefined' || val === 'null' || isNaN(parseFloat(val))) return '';
-        
+
         const m = parseFloat(val);
         const cls = m < 2 ? 'red' : m < 5 ? 'green' : m < 10 ? 'purple' : 'gold';
         return `<div class="tick-pill ${cls}">${m.toFixed(2)}x</div>`;
@@ -1242,7 +1249,7 @@ function renderAllBets() {
 
     list.innerHTML = sourceData.map(b => {
         const multClass = b.status === 'cashed' ? 'won' : b.status === 'crashed' ? 'lost' : 'playing';
-        
+
         let multTxt = '–';
         if (b.status === 'playing') multTxt = '...';
         else if (typeof b.mult === 'string') multTxt = b.mult;
@@ -1250,10 +1257,10 @@ function renderAllBets() {
 
         let winTxt = '...';
         if (b.status === 'cashed') winTxt = formatNum(b.winAmt);
-        else if (b.status === 'crashed') winTxt = (activeBetsTab === 'previous' ? '-'+formatNum(b.betAmt) : '–');
-        
+        else if (b.status === 'crashed') winTxt = (activeBetsTab === 'previous' ? '-' + formatNum(b.betAmt) : '–');
+
         const meClass = b.isMe ? 'me-highlight' : '';
-        
+
         return `<div class="bet-row ${b.status} ${meClass}">
             <div class="player"><span>${b.avatar}</span> ${b.name}</div>
             <div class="bet-amt">${formatNum(b.betAmt)}</div>
@@ -1268,7 +1275,7 @@ function renderAllBets() {
 // ══════════════════════════════════════════════
 async function saveBalance() {
     if (!currentUser) return;
-    
+
     // Update local currentUser object
     currentUser.balance = balance;
 
@@ -1348,7 +1355,7 @@ async function fetchAdminUsers() {
 
     adminCachedUsers = users;
     renderAdminUserList(users);
-    
+
     // Update Stats
     document.getElementById('adminTotalUsers').textContent = users.length;
     const totalBal = users.reduce((sum, u) => sum + (u.balance || 0), 0);
@@ -1363,7 +1370,7 @@ function filterAdminUsers(query) {
 function renderAdminUserList(users) {
     const listEl = document.getElementById('adminUserList');
     if (!listEl) return;
-    
+
     if (users.length === 0) {
         listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#666;">No players found</div>';
         return;
@@ -1389,7 +1396,7 @@ window.adjustBalance = async (userId, delta) => {
     }
     const user = adminCachedUsers.find(u => u.id === userId);
     if (!user) return;
-    
+
     const newBal = (user.balance || 0) + delta;
     if (newBal < 0) { showToast('Balance cannot be negative', 'error'); return; }
 
@@ -1404,7 +1411,7 @@ window.adjustBalance = async (userId, delta) => {
         showToast(`Balance updated for ${user.phone}`, 'success');
         haptic([30, 50]);
         fetchAdminUsers(); // Refresh
-        
+
         // If it was ME, update local balance
         if (currentUser && userId === currentUser.id) {
             balance = newBal;
@@ -1420,14 +1427,14 @@ window.customSetBalance = async (userId) => {
     }
     const user = adminCachedUsers.find(u => u.id === userId);
     if (!user) return;
-    
+
     const input = prompt(`Enter exact new balance for ${user.phone} (or prefix with +/- to adjust):`);
     if (input === null || input.trim() === '') return;
-    
+
     let isDelta = input.trim().startsWith('+') || input.trim().startsWith('-');
     let val = parseFloat(input);
     if (isNaN(val)) { showToast('Invalid amount', 'error'); return; }
-    
+
     const newBal = isDelta ? ((user.balance || 0) + val) : val;
     if (newBal < 0) { showToast('Balance cannot be negative', 'error'); return; }
 
@@ -1442,7 +1449,7 @@ window.customSetBalance = async (userId) => {
         showToast(`Balance set to KES ${newBal} for ${user.phone}`, 'success');
         haptic([30, 50]);
         fetchAdminUsers(); // Refresh
-        
+
         // If it was ME, update local balance
         if (currentUser && userId === currentUser.id) {
             balance = newBal;
@@ -1477,10 +1484,10 @@ function openWithdrawModal() {
 function closeWithdrawModal() { document.getElementById('withdrawModal').classList.remove('show'); document.getElementById('withdrawAmount').value = ''; }
 
 // ─── Admin tab switching ──────────────────────────────
-window.switchAdminTab = function(tab) {
-    document.getElementById('adminPlayersPanel').style.display    = tab === 'players'     ? '' : 'none';
+window.switchAdminTab = function (tab) {
+    document.getElementById('adminPlayersPanel').style.display = tab === 'players' ? '' : 'none';
     document.getElementById('adminWithdrawalsPanel').style.display = tab === 'withdrawals' ? '' : 'none';
-    document.getElementById('adminTabPlayers').classList.toggle('active',     tab === 'players');
+    document.getElementById('adminTabPlayers').classList.toggle('active', tab === 'players');
     document.getElementById('adminTabWithdrawals').classList.toggle('active', tab === 'withdrawals');
     if (tab === 'withdrawals') fetchAdminWithdrawals();
 };
@@ -1506,7 +1513,7 @@ async function fetchAdminWithdrawals() {
 
     listEl.innerHTML = data.map(w => {
         const phone = w.profiles?.phone || w.phone || '—';
-        const date  = new Date(w.created_at).toLocaleString();
+        const date = new Date(w.created_at).toLocaleString();
         const statusColor = w.status === 'approved' ? '#00e676' : w.status === 'rejected' ? '#f44' : '#ffd700';
         return `
         <div class="admin-row" style="flex-wrap:wrap;gap:6px;">
@@ -1546,30 +1553,30 @@ window.rejectWithdrawal = async (wdId, userId, amount) => {
 
 
 // ─── Quick-amount helpers ────────────────────────────
-window.setDepositAmt  = (n) => { document.getElementById('depositAmount').value = n; };
+window.setDepositAmt = (n) => { document.getElementById('depositAmount').value = n; };
 window.setWithdrawAmt = (n) => { document.getElementById('withdrawAmount').value = n; };
 
 // ─── STK Push via secure backend ─────────────────────
 async function requestSTKPush(phone, amount) {
     const res = await fetch('/api/deposit', {
-        method:  'POST',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ phone, amount, userId: currentUser?.id })
+        body: JSON.stringify({ phone, amount, userId: currentUser?.id })
     });
     return res.json();
 }
 
 async function processDeposit() {
-    const amount   = parseFloat(document.getElementById('depositAmount').value);
+    const amount = parseFloat(document.getElementById('depositAmount').value);
     const phoneRaw = document.getElementById('depositPhone').value.trim()
-                  || (currentUser?.phone ? String(currentUser.phone).replace(/^254/, '0') : '');
+        || (currentUser?.phone ? String(currentUser.phone).replace(/^254/, '0') : '');
 
     if (!phoneRaw) { showToast('Enter your M-Pesa phone number', 'error'); return; }
     if (!amount || amount < 100) { showToast('Minimum deposit is KES 100', 'error'); return; }
 
-    const btn  = document.getElementById('confirmDepositBtn');
+    const btn = document.getElementById('confirmDepositBtn');
     const note = document.getElementById('depositNote');
-    btn.disabled   = true;
+    btn.disabled = true;
     btn.textContent = '⏳ Sending...';
     note.textContent = 'Sending STK push to your phone…';
 
@@ -1600,7 +1607,7 @@ async function processDeposit() {
         note.textContent = 'Network error. Please try again.';
         showToast('❌ Could not reach payment server. Try again.', 'error');
     } finally {
-        btn.disabled    = false;
+        btn.disabled = false;
         btn.textContent = '📲 Send STK Push';
     }
 }
@@ -1608,7 +1615,7 @@ async function processDeposit() {
 async function processWithdraw() {
     const amount = parseFloat(document.getElementById('withdrawAmount').value);
     const phoneRaw = document.getElementById('withdrawPhone').value.trim()
-                  || (currentUser?.phone ? String(currentUser.phone) : '');
+        || (currentUser?.phone ? String(currentUser.phone) : '');
 
     if (!phoneRaw) { showToast('Enter your M-Pesa phone number', 'error'); return; }
     if (!amount || amount < 100) { showToast('Minimum withdrawal is KES 100', 'error'); return; }
@@ -1652,10 +1659,10 @@ async function processWithdraw() {
 async function logout() {
     try {
         showToast('Logging out...', 'info');
-        
+
         // 1. Clear Supabase Session
         await supabase.auth.signOut();
-        
+
         // 2. Clear Local State
         currentUser = null;
         balance = 0;
