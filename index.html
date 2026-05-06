@@ -6,9 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <title>Aerowin - Virtual Flight Sim & Gaming</title>
-    <meta name="description"
-        content="Experience the Aerowin virtual flight simulation. A premium gaming experience for entertainment purposes.">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✈️</text></svg>">
     <link rel="stylesheet" href="src/styles/styles.css">
     <style>
         body {
@@ -27,9 +24,14 @@
     </style>
     <script type="module">
         import { supabase } from './src/lib/supabase.js';
+
         async function checkSession() {
             try {
-                const { data: { session } } = await supabase.auth.getSession();
+                const {
+                    data: {
+                        session
+                    }
+                } = await supabase.auth.getSession();
                 if (!session) {
                     window.location.replace('auth.html');
                 } else {
@@ -40,460 +42,214 @@
                 window.location.replace('auth.html');
             }
         }
+
         checkSession();
     </script>
 </head>
+
 <script type="module" src="/src/main.js"></script>
 
 <body>
 
-    <!-- LOADING SCREEN -->
-    <div id="gameLoader" class="game-loader">
-        <div class="gl-plane">✈️</div>
-        <div class="gl-brand">Aerowin</div>
-        <div class="gl-sub">Aviator</div>
-        <div class="gl-bar">
-            <div class="gl-fill"></div>
-        </div>
-        <div class="gl-tip" id="glTip">Loading game...</div>
-    </div>
-
-    <!-- TOP NAV BAR -->
+    <!-- TOP NAV BAR - Minimal & Clean -->
     <div class="topbar">
-        <div class="topbar-brand">✈️ <span>Aerowin</span></div>
+        <div class="topbar-brand">✈️</div>
         <div class="topbar-actions">
-            <span class="balance-pill">KES <strong id="headerBalance">—</strong></span>
-            <button class="btn-icon" id="profileBtn">👤</button>
-            <button class="btn-icon" id="muteBtn">🔊</button>
-            <button class="btn-icon theme-toggle" id="themeBtn" title="Toggle dark/light mode">🌙</button>
-            <button class="btn-logout" id="logoutBtn">Logout</button>
+            <span class="balance-display" id="headerBalance">— KES</span>
+            <button class="btn-icon" id="chatBtn" title="Chat">💬</button>
+            <button class="btn-icon" id="menuBtn" title="Menu">☰</button>
         </div>
     </div>
 
-    <!-- MULTIPLIER HISTORY TICKER -->
-    <div class="history-ticker" id="historyTicker">
-        <div class="tick-pill gray">–</div>
-    </div>
-
-    <!-- MAIN 2-COLUMN LAYOUT -->
-    <div class="layout">
-
-        <!-- LEFT PANEL: All Bets -->
-        <div class="left-panel">
-            <div class="tabs-row">
-                <button class="tab active" id="tabAll">All Bets</button>
-                <button class="tab" id="tabPrevious">Previous</button>
-                <button class="tab" id="tabTop">Top</button>
-            </div>
-            <div class="all-bets-header">
-                <span>ALL BETS</span>
-                <span id="totalBetsCount">0</span>
-            </div>
-            <div class="bets-table-head">
-                <span>Player</span>
-                <span>Bet KES</span>
-                <span>X</span>
-                <span>Win KES</span>
-            </div>
-            <div class="bets-table-body" id="allBetsList"></div>
-        </div>
-
-        <!-- CENTER: Game Board -->
-        <div class="center-col">
-
-            <div class="room-bar">
-                <div class="live-badge">
-                    <span class="live-dot"></span> LIVE
-                </div>
-            </div>
-
-    <!-- Game Canvas -->
-            <div class="game-canvas" id="gameBoard">
-                <div class="burst-bg"></div>
-                
-                <!-- Sunburst Rays - Radiating from left -->
-                <div class="sunburst">
-                    <div class="ray ray-1"></div>
-                    <div class="ray ray-2"></div>
-                    <div class="ray ray-3"></div>
-                    <div class="ray ray-4"></div>
-                    <div class="ray ray-5"></div>
-                    <div class="ray ray-6"></div>
-                    <div class="ray ray-7"></div>
-                    <div class="ray ray-8"></div>
-                </div>
-                
-                <!-- Blue-teal center glow -->
-                <div class="center-glow"></div>
-
-                <!-- Bold red curve graph -->
-                <svg class="graph-svg" viewBox="0 0 1000 260" preserveAspectRatio="none" aria-hidden="true">
-                    <defs>
-                        <linearGradient id="graphGrad" x1="0" x2="0" y1="0" y2="1">
-                            <stop offset="0%" stop-color="#ff0033" stop-opacity="0.9" />
-                            <stop offset="100%" stop-color="#cc0022" stop-opacity="0.95" />
-                        </linearGradient>
-                    </defs>
-                    <!-- Bold red curve -->
-                    <path id="motionPath" d="M0,240 C200,200 500,120 1000,20 L1000,260 L0,260 Z" 
-                          fill="url(#graphGrad)" />
-                </svg>
-
-                <!-- Red silhouette plane at top-right -->
-                <svg id="plane" class="plane-svg" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-                    <g transform="translate(10,10) rotate(-20, 100, 55)">
-                        <!-- Vintage propeller plane silhouette - RED -->
-                        
-                        <!-- Tail vertical fin -->
-                        <path d="M30,48 L38,20 L46,26 L44,50 Z" fill="#cc0022" />
-                        
-                        <!-- Horizontal stabilisers -->
-                        <path d="M30,54 L10,62 L13,67 L34,58 Z" fill="#cc0022" />
-                        <path d="M32,50 L12,44 L14,40 L34,48 Z" fill="#aa0018" />
-                        
-                        <!-- Main fuselage -->
-                        <path d="M34,46 Q50,38 90,37 Q120,36 148,42 Q160,46 165,52 Q160,58 148,62 Q120,68 90,67 Q50,66 34,58 Z" 
-                              fill="#e8003a" />
-                        <!-- Belly shade -->
-                        <path d="M36,56 Q60,64 100,64 Q130,64 150,58 Q135,66 90,67 Q50,66 36,58 Z" fill="#aa0018" />
-                        <!-- Top highlight -->
-                        <path d="M45,39 Q85,35 130,38 Q145,40 155,44 Q140,40 110,39 Q75,37 45,42 Z" 
-                              fill="#ff4466" opacity="0.45" />
-                        
-                        <!-- Cockpit -->
-                        <path d="M130,37 Q148,30 158,36 Q162,42 156,46 Q144,42 130,42 Z" fill="#1a2540" />
-                        <path d="M133,36 Q148,30 155,35 Q148,33 135,37 Z" fill="#5599dd" opacity="0.55" />
-                        
-                        <!-- Main wing -->
-                        <path d="M88,62 Q94,68 86,90 Q76,104 58,110 Q50,108 53,102 Q68,96 78,80 Q84,70 88,62 Z" 
-                              fill="#e8003a" />
-                        <path d="M88,60 Q92,66 85,86 Q76,100 60,108 Q54,106 56,100 Q70,94 80,78 Q85,68 88,60 Z" 
-                              fill="#cc0022" />
-                        <!-- Wing highlight -->
-                        <path d="M88,62 Q90,68 86,82 Q80,92 72,100 Q78,90 84,76 Q87,68 88,62 Z" 
-                              fill="#ff3355" opacity="0.4" />
-                        
-                        <!-- Engine cowling -->
-                        <ellipse cx="161" cy="52" rx="10" ry="9" fill="#bb0018" />
-                        <ellipse cx="165" cy="52" rx="7" ry="7" fill="#990010" />
-                        
-                        <!-- Propeller (spinning) -->
-                        <g style="transform-origin:170px 52px; animation: spinProp 0.07s linear infinite;">
-                            <ellipse cx="170" cy="43" rx="2.2" ry="9" fill="#cc1122" />
-                            <ellipse cx="170" cy="43" rx="2.2" ry="9" fill="#aa0010" transform="rotate(60,170,52)" />
-                            <ellipse cx="170" cy="43" rx="2.2" ry="9" fill="#cc1122" transform="rotate(120,170,52)" />
-                            <ellipse cx="170" cy="43" rx="2.2" ry="9" fill="#aa0010" transform="rotate(180,170,52)" />
-                            <ellipse cx="170" cy="43" rx="2.2" ry="9" fill="#cc1122" transform="rotate(240,170,52)" />
-                            <ellipse cx="170" cy="43" rx="2.2" ry="9" fill="#aa0010" transform="rotate(300,170,52)" />
-                        </g>
-                        <!-- prop hub -->
-                        <circle cx="170" cy="52" r="3" fill="#660008" />
-                        
-                        <!-- X Marking on plane -->
-                        <g stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0.9">
-                            <line x1="140" y1="35" x2="155" y2="50" />
-                            <line x1="155" y1="35" x2="140" y2="50" />
-                        </g>
-                    </g>
-                </svg>
-
-                <div class="crashed-overlay hidden" id="crashedOverlay">
-                    <span id="crashedText">FLEW AWAY</span>
-                </div>
-                <div class="mult-display" id="multiplier">1.00x</div>
-                <div class="status-msg" id="status"></div>
-            </div>
-                <div class="mult-display" id="multiplier">1.00x</div>
-                <div class="status-msg" id="status"></div>
-            </div>
-
-            <!-- Bet Cards Row -->
-            <div class="bet-cards-row">
-                <!-- BET CARD 1 -->
-                <div class="bet-card" id="betCard1">
-                    <div class="bc-tabs">
-                        <button class="bc-tab active" id="betTab1" onclick="switchTab(1,'bet')">Bet</button>
-                        <button class="bc-tab" id="autoTab1" onclick="switchTab(1,'auto')">Auto</button>
-                    </div>
-                    <div class="bc-body">
-                        <div class="bc-amount-row">
-                            <button class="bc-adj" onclick="adjustBet(1,-10)">−</button>
-                            <input class="bc-amount" id="betAmount1" type="number" value="100" min="50">
-                            <button class="bc-adj" onclick="adjustBet(1,10)">+</button>
-                        </div>
-                        <div class="bc-quick">
-                            <button onclick="setBet(1,100)">100</button>
-                            <button onclick="setBet(1,250)">250</button>
-                            <button onclick="setBet(1,1000)">1,000</button>
-                            <button onclick="setBet(1,25000)">25,000</button>
-                        </div>
-                        <div class="bc-autocashout hidden" id="autoCashoutPanel1">
-                            <label>Auto Cashout at</label>
-                            <input type="number" id="autoCashOutValue1" value="2.00" min="1.01" step="0.01"> x
-                            <label class="toggle-switch"><input type="checkbox"
-                                    id="autoCashoutToggle1"><span></span></label>
-                        </div>
-                        <button id="placeBet1Btn" class="bc-bet-btn" onclick="placeBet(1)">Bet<br><span
-                                id="betLabel1">100.00</span> KES</button>
-                        <button id="cashBtn1" class="bc-cash-btn hidden" onclick="cashOutBet(1)">Cash Out<br><span
-                                id="cashLabel1">–</span> KES</button>
-                        <div class="bc-auto-row hidden" id="autoBetRow1">
-                            <label><input type="checkbox" id="autoBet1" onchange="toggleAutoBet(1)"> Auto Bet next
-                                round</label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- BET CARD 2 -->
-                <div class="bet-card" id="betCard2">
-                    <div class="bc-tabs">
-                        <button class="bc-tab active" id="betTab2" onclick="switchTab(2,'bet')">Bet</button>
-                        <button class="bc-tab" id="autoTab2" onclick="switchTab(2,'auto')">Auto</button>
-                        <button class="bc-tab-icon">⊡</button>
-                    </div>
-                    <div class="bc-body">
-                        <div class="bc-amount-row">
-                            <button class="bc-adj" onclick="adjustBet(2,-10)">−</button>
-                            <input class="bc-amount" id="betAmount2" type="number" value="100" min="50">
-                            <button class="bc-adj" onclick="adjustBet(2,10)">+</button>
-                        </div>
-                        <div class="bc-quick">
-                            <button onclick="setBet(2,100)">100</button>
-                            <button onclick="setBet(2,250)">250</button>
-                            <button onclick="setBet(2,1000)">1,000</button>
-                            <button onclick="setBet(2,25000)">25,000</button>
-                        </div>
-                        <div class="bc-autocashout hidden" id="autoCashoutPanel2">
-                            <label>Auto Cashout at</label>
-                            <input type="number" id="autoCashOutValue2" value="2.00" min="1.01" step="0.01"> x
-                            <label class="toggle-switch"><input type="checkbox"
-                                    id="autoCashoutToggle2"><span></span></label>
-                        </div>
-                        <button id="placeBet2Btn" class="bc-bet-btn" onclick="placeBet(2)">Bet<br><span
-                                id="betLabel2">100.00</span> KES</button>
-                        <button id="cashBtn2" class="bc-cash-btn hidden" onclick="cashOutBet(2)">Cash Out<br><span
-                                id="cashLabel2">–</span> KES</button>
-                        <div class="bc-auto-row hidden" id="autoBetRow2">
-                            <label><input type="checkbox" id="autoBet2" onchange="toggleAutoBet(2)"> Auto Bet next
-                                round</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="provably-row">
-                <span class="provably-fair">🔒 Provably Fair Game</span>
-                <span class="powered-by">Powered by <strong>Aerowin</strong></span>
-            </div>
+    <!-- HISTORY BAR - Previous Multipliers -->
+    <div class="history-bar" id="historyBar">
+        <div class="history-scroll" id="historyScroll">
+            <span class="history-pill">1.05x</span>
+            <span class="history-pill">2.34x</span>
+            <span class="history-pill high">5.67x</span>
+            <span class="history-pill">1.23x</span>
+            <span class="history-pill high">8.90x</span>
+            <span class="history-pill">1.45x</span>
+            <span class="history-pill high">12.34x</span>
         </div>
     </div>
 
-    <!-- ═══════════════════════════════════════
-         PREMIUM FOOTER
-    ═══════════════════════════════════════ -->
-    <footer class="game-footer">
-        <div class="footer-content">
-            <div class="footer-top">
-                <div class="footer-logo">✈️ Aerowin</div>
-                <div class="payment-methods">
-                    <div class="pay-item"><strong>M-PESA</strong></div>
-                    <div class="pay-item"><strong>Airtel</strong></div>
-                    <!-- Mastercard inline SVG -->
-                    <svg class="pay-logo-svg" viewBox="0 0 152 108" xmlns="http://www.w3.org/2000/svg"
-                        aria-label="Mastercard" role="img" width="38" height="28">
-                        <rect width="152" height="108" rx="8" fill="#1a1a2e" opacity="0" />
-                        <circle cx="58" cy="54" r="38" fill="#EB001B" />
-                        <circle cx="94" cy="54" r="38" fill="#F79E1B" />
-                        <path d="M76 21.9a38 38 0 0 1 0 64.2A38 38 0 0 1 76 21.9z" fill="#FF5F00" />
-                    </svg>
-                    <!-- Visa inline SVG -->
-                    <svg class="pay-logo-svg" viewBox="0 0 216 68" xmlns="http://www.w3.org/2000/svg" aria-label="Visa"
-                        role="img" width="48" height="28">
-                        <rect width="216" height="68" rx="6" fill="#1a1f71" />
-                        <text x="108" y="50" font-family="Arial,sans-serif" font-size="46" font-weight="bold"
-                            fill="#fff" text-anchor="middle" letter-spacing="-2">VISA</text>
-                    </svg>
-                </div>
-            </div>
+    <!-- LIVE INDICATOR -->
+    <div class="live-indicator" id="liveIndicator">
+        <span class="live-dot"></span>
+        <span class="live-text">LIVE</span>
+    </div>
 
-            <hr class="footer-sep">
+    <!-- MAIN GAME AREA -->
+    <div class="game-area">
+        <!-- Game Canvas with enhanced background -->
+        <div class="game-canvas" id="gameBoard">
+            <div class="burst-bg"></div>
+            
+            <!-- Star particles background -->
+            <div class="stars-container" id="starsContainer"></div>
 
-            <div class="footer-mid">
-                <div class="footer-links">
-                    <a href="#">About Us</a>
-                    <a href="#">Terms & Conditions</a>
-                    <a href="#">Privacy Policy</a>
-                    <a href="#">Betting Rules</a>
-                    <a href="#">Responsible Gaming</a>
-                    <a href="#">Contact Support</a>
-                </div>
-                <p class="footer-disclaimer">
-                    Aerowin is licensed and regulated by the Betting Control and Licensing Board of Kenya under license
-                    number 0000XXX.
-                    Gaming can be addictive. Please gamble responsibly. 🔞 18+ Only.
-                </p>
-            </div>
+            <!-- Sunburst rays from bottom center -->
+            <div class="sunburst-rays" id="sunburstRays"></div>
 
-            <div class="footer-bottom">
-                &copy; 2026 Aerowin Gaming Group. All rights reserved.
-            </div>
-        </div>
-    </footer>
-
-    <!-- PREMIUM CUSTOMER SUPPORT CHAT -->
-    <div class="chat-widget" id="chatWidget">
-        <!-- Floating Trigger -->
-        <button class="chat-trigger" id="chatTrigger">
-            <svg viewBox="0 0 24 24" class="chat-icon">
-                <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
+            <!-- Graph SVG -->
+            <svg class="graph-svg" viewBox="0 0 1000 300" preserveAspectRatio="none" aria-hidden="true">
+                <defs>
+                    <linearGradient id="graphGrad" x1="0" x2="0" y1="0" y2="1">
+                        <stop offset="0%" stop-color="rgba(255, 0, 51, 0.15)" />
+                        <stop offset="100%" stop-color="rgba(255, 0, 51, 0.02)" />
+                    </linearGradient>
+                    <filter id="glow">
+                        <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                        <feMerge>
+                            <feMergeNode in="coloredBlur" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+                </defs>
+                <!-- Glow under curve -->
+                <path id="glowPath" d="M0,280 C200,240 500,160 1000,40 L1000,300 L0,300 Z" fill="url(#graphGrad)" />
+                <!-- Main curve line -->
+                <path id="motionPath" d="M0,280 C200,240 500,160 1000,40" 
+                      fill="none" stroke="#ff0033" stroke-width="2" 
+                      stroke-linecap="round" filter="url(#glow)" />
             </svg>
-        </button>
 
-        <!-- Chat Window -->
-        <div class="chat-window" id="chatWindow">
-            <div class="chat-header">
-                <div class="header-info">
-                    <span class="header-title">Customer support chat</span>
-                </div>
-                <div class="header-actions">
-                    <button class="action-btn">🔊</button>
-                    <button class="action-btn" id="chatCloseBtn">✕</button>
-                </div>
+            <!-- Plane following curve -->
+            <svg id="plane" class="plane-svg" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
+                <g transform="translate(5, 5)">
+                    <!-- Plane body - more detailed -->
+                    <path d="M10,30 L85,30 L95,25 L95,35 L85,30 L10,30" 
+                          fill="#e8003a" stroke="#cc0022" stroke-width="0.5" />
+                    <!-- Wing -->
+                    <path d="M30,30 L70,30 L75,40 L25,40 Z" fill="#c00020" />
+                    <!-- Tail -->
+                    <path d="M10,30 L5,20 L10,25 Z" fill="#c00020" />
+                    <!-- Cockpit -->
+                    <ellipse cx="75" cy="30" rx="6" ry="4" fill="#1a2540" />
+                    <!-- Engine glow -->
+                    <ellipse cx="95" cy="30" rx="3" ry="2" fill="#ff4400" opacity="0.6" />
+                    <!-- X Marking -->
+                    <g stroke="#fff" stroke-width="1.5" stroke-linecap="round">
+                        <line x1="82" y1="22" x2="88" y2="28" />
+                        <line x1="88" y1="22" x2="82" y2="28" />
+                    </g>
+                </g>
+            </svg>
+
+            <!-- Multiplier Display - Large & Bold -->
+            <div class="multiplier-display" id="multiplier">1.00x</div>
+            
+            <div class="crashed-overlay hidden" id="crashedOverlay">
+                <span id="crashedText">FLEW AWAY</span>
             </div>
+            <div class="status-msg" id="status"></div>
+        </div>
 
-            <div class="chat-body" id="chatBody">
-                <div class="chat-date">02 May</div>
-                <div class="unread-banner">Unread messages</div>
-
-                <div class="message assistant">
-                    <div class="avatar">🤖</div>
-                    <div class="msg-content">
-                        <div class="sender-name">Assistant</div>
-                        <p>👋 Hi there! Welcome to Support.
-
-                            We'd love to help! Leave us a message below and we'll get back to you shortly.
-
-                            Just describe your issue and we'll take it from there. 😊</p>
-                        <span class="msg-time">10:29</span>
+        <!-- BET PANELS -->
+        <div class="bet-panels">
+            <!-- Bet Card 1 -->
+            <div class="bet-card" id="betCard1">
+                <div class="bet-amount-row">
+                    <button class="amount-btn minus" onclick="adjustBet(1,-10)">−</button>
+                    <input class="amount-input" id="betAmount1" type="number" value="100" min="50">
+                    <button class="amount-btn plus" onclick="adjustBet(1,10)">+</button>
+                </div>
+                <div class="quick-amounts">
+                    <button class="quick-btn" onclick="setBet(1,100)">100</button>
+                    <button class="quick-btn" onclick="setBet(1,250)">250</button>
+                    <button class="quick-btn" onclick="setBet(1,1000)">1K</button>
+                    <button class="quick-btn" onclick="setBet(1,25000)">25K</button>
+                </div>
+                <div class="autocash-row">
+                    <label>Auto cashout</label>
+                    <div class="autocash-control">
+                        <input type="number" id="autoCashOutValue1" value="2.00" min="1.01" step="0.01">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="autoCashoutToggle1">
+                            <span class="toggle-slider"></span>
+                        </label>
                     </div>
                 </div>
-            </div>
-
-            <div class="chat-footer">
-                <input type="text" id="chatInput" placeholder="Write a message...">
-                <button class="send-btn" id="chatSendBtn">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-                    </svg>
+                <button id="placeBet1Btn" class="bet-button" onclick="placeBet(1)">
+                    <span class="bet-label">BET</span>
+                    <span class="bet-amount" id="betLabel1">100.00</span>
+                    <span class="bet-currency">KES</span>
                 </button>
+                <button id="cashBtn1" class="cash-button hidden" onclick="cashOutBet(1)">
+                    CASH OUT <span id="cashLabel1">—</span>
+                </button>
+                <div class="auto-bet-row hidden" id="autoBetRow1">
+                    <label><input type="checkbox" id="autoBet1" onchange="toggleAutoBet(1)"> Auto bet</label>
+                </div>
+            </div>
+
+            <!-- Bet Card 2 -->
+            <div class="bet-card" id="betCard2">
+                <div class="bet-amount-row">
+                    <button class="amount-btn minus" onclick="adjustBet(2,-10)">−</button>
+                    <input class="amount-input" id="betAmount2" type="number" value="100" min="50">
+                    <button class="amount-btn plus" onclick="adjustBet(2,10)">+</button>
+                </div>
+                <div class="quick-amounts">
+                    <button class="quick-btn" onclick="setBet(2,100)">100</button>
+                    <button class="quick-btn" onclick="setBet(2,250)">250</button>
+                    <button class="quick-btn" onclick="setBet(2,1000)">1K</button>
+                    <button class="quick-btn" onclick="setBet(2,25000)">25K</button>
+                </div>
+                <div class="autocash-row">
+                    <label>Auto cashout</label>
+                    <div class="autocash-control">
+                        <input type="number" id="autoCashOutValue2" value="2.00" min="1.01" step="0.01">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="autoCashoutToggle2">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <button id="placeBet2Btn" class="bet-button" onclick="placeBet(2)">
+                    <span class="bet-label">BET</span>
+                    <span class="bet-amount" id="betLabel2">100.00</span>
+                    <span class="bet-currency">KES</span>
+                </button>
+                <button id="cashBtn2" class="cash-button hidden" onclick="cashOutBet(2)">
+                    CASH OUT <span id="cashLabel2">—</span>
+                </button>
+                <div class="auto-bet-row hidden" id="autoBetRow2">
+                    <label><input type="checkbox" id="autoBet2" onchange="toggleAutoBet(2)"> Auto bet</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTTOM SECTION - Tabs & Live Bets -->
+        <div class="bottom-section">
+            <!-- Tabs -->
+            <div class="tabs-row">
+                <button class="tab active" id="tabAll" onclick="switchBetTab('all')">All Bets</button>
+                <button class="tab" id="tabPrevious" onclick="switchBetTab('previous')">Previous</button>
+                <button class="tab" id="tabTop" onclick="switchBetTab('top')">Top</button>
+            </div>
+
+            <!-- Live Bets Count -->
+            <div class="bets-header">
+                <span>Live Bets</span>
+                <span class="bets-count" id="totalBetsCount">0</span>
+            </div>
+
+            <!-- Bets Table -->
+            <div class="bets-table">
+                <div class="table-header">
+                    <span>Player</span>
+                    <span>Bet KES</span>
+                    <span>X</span>
+                    <span>Win KES</span>
+                </div>
+                <div class="table-body" id="allBetsList"></div>
             </div>
         </div>
     </div>
 
-    <!-- ═══════════════════════════════════════
-         MOBILE BOTTOM SHEET (All Bets)
-    ═══════════════════════════════════════ -->
-    <div class="sheet-backdrop" id="sheetBackdrop" onclick="closeMobileSheet()"></div>
-    <div class="bottom-sheet" id="bottomSheet">
-        <!-- Drag handle -->
-        <div class="sheet-drag-handle" id="sheetDragHandle">
-            <div class="sheet-drag-pill"></div>
-        </div>
-        <div class="sheet-header">
-            <span class="sheet-title">👥 All Bets</span>
-            <span class="sheet-badge" id="sheetBetsCount">0</span>
-            <button class="sheet-close" onclick="closeMobileSheet()">✕</button>
-        </div>
-        <div class="bets-table-head sheet-table-head">
-            <span>Player</span><span>Bet KES</span><span>X</span><span>Win KES</span>
-        </div>
-        <div class="bets-table-body sheet-bets-body" id="sheetBetsList"></div>
-    </div>
-
-    <!-- Mobile FAB to open sheet -->
-    <button class="bets-fab" id="betsFab" onclick="openMobileSheet()">
-        👥 <span id="fabCount">0</span> bets
-    </button>
-
-    <script>
-        // ── Chat widget wiring ────────────────────────────────────────────────
-        window.addEventListener('load', () => {
-            const chatTrigger = document.getElementById('chatTrigger');
-            const chatCloseBtn = document.getElementById('chatCloseBtn');
-            const chatSendBtn = document.getElementById('chatSendBtn');
-            const chatInput = document.getElementById('chatInput');
-
-            if (chatTrigger) chatTrigger.addEventListener('click', () => { if (typeof toggleChat === 'function') toggleChat(); });
-            if (chatCloseBtn) chatCloseBtn.addEventListener('click', () => { if (typeof toggleChat === 'function') toggleChat(); });
-            if (chatSendBtn) chatSendBtn.addEventListener('click', () => { if (typeof sendChatMessage === 'function') sendChatMessage(); });
-            if (chatInput) chatInput.addEventListener('keypress', e => { if (e.key === 'Enter' && typeof sendChatMessage === 'function') sendChatMessage(); });
-        });
-
-        // ── Theme Toggle ──────────────────────────────────────────
-        function toggleTheme() {
-            const html = document.documentElement;
-            const isDark = html.getAttribute('data-theme') === 'dark';
-            const next = isDark ? 'light' : 'dark';
-            html.setAttribute('data-theme', next);
-            document.getElementById('themeBtn').textContent = next === 'dark' ? '🌙' : '☀️';
-            localStorage.setItem('aviatorTheme', next);
-        }
-        (function () {
-            const saved = localStorage.getItem('aviatorTheme') || 'dark';
-            document.documentElement.setAttribute('data-theme', saved);
-            window.addEventListener('load', () => {
-                const btn = document.getElementById('themeBtn');
-                if (btn) btn.textContent = saved === 'dark' ? '🌙' : '☀️';
-            });
-        })();
-
-        // ── Mobile Bottom Sheet ───────────────────────────────────
-        let _sheetDragStartY = 0, _sheetDragDelta = 0;
-
-        function openMobileSheet() {
-            document.getElementById('bottomSheet').classList.add('open');
-            document.getElementById('sheetBackdrop').classList.add('visible');
-            mirrorBetsToSheet();
-        }
-        function closeMobileSheet() {
-            document.getElementById('bottomSheet').classList.remove('open');
-            document.getElementById('sheetBackdrop').classList.remove('visible');
-        }
-        function mirrorBetsToSheet() {
-            const src = document.getElementById('allBetsList');
-            const dst = document.getElementById('sheetBetsList');
-            const count = document.getElementById('totalBetsCount')?.textContent || '0';
-            if (src && dst) dst.innerHTML = src.innerHTML;
-            const sc = document.getElementById('sheetBetsCount');
-            const fc = document.getElementById('fabCount');
-            if (sc) sc.textContent = count;
-            if (fc) fc.textContent = count;
-        }
-
-        // Auto-mirror when desktop list updates
-        const _obs = new MutationObserver(mirrorBetsToSheet);
-        window.addEventListener('load', () => {
-            const src = document.getElementById('allBetsList');
-            if (src) _obs.observe(src, { childList: true, subtree: true });
-        });
-
-        // Swipe-down to dismiss
-        const _handle = document.getElementById('sheetDragHandle');
-        _handle.addEventListener('touchstart', e => { _sheetDragStartY = e.touches[0].clientY; }, { passive: true });
-        _handle.addEventListener('touchmove', e => {
-            _sheetDragDelta = e.touches[0].clientY - _sheetDragStartY;
-            const sheet = document.getElementById('bottomSheet');
-            if (_sheetDragDelta > 0) sheet.style.transform = `translateY(${_sheetDragDelta}px)`;
-        }, { passive: true });
-        _handle.addEventListener('touchend', () => {
-            const sheet = document.getElementById('bottomSheet');
-            sheet.style.transform = '';
-            if (_sheetDragDelta > 80) closeMobileSheet();
-            _sheetDragDelta = 0;
-        });
-    </script>
-
-    <!-- PROFILE MODAL -->
+    <!-- Profile Modal -->
     <div id="profileModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -526,9 +282,7 @@
                     🎁 Deposit to unlock your <strong>KES 20 free bet!</strong>
                 </div>
             </div>
-
             <div id="adminArea"></div>
-
             <div class="profile-actions">
                 <button class="action-btn deposit-btn" id="openDepositBtn">💰 Deposit</button>
                 <button class="action-btn withdraw-btn" id="openWithdrawBtn">💸 Withdraw</button>
@@ -536,7 +290,7 @@
         </div>
     </div>
 
-    <!-- DEPOSIT MODAL -->
+    <!-- Deposit Modal -->
     <div id="depositModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -572,7 +326,7 @@
         </div>
     </div>
 
-    <!-- WITHDRAW MODAL -->
+    <!-- Withdraw Modal -->
     <div id="withdrawModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -647,7 +401,7 @@
             </div>
         </div>
     </div>
-    <script type="module" src="/src/main.js"></script>
+    
     <script src="/src/chat.js"></script>
 </body>
 
