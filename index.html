@@ -401,7 +401,106 @@
             </div>
         </div>
     </div>
-    
+
+    <!-- ════════════════════════════════════════
+          FOOTER - Payment & Info
+     ════════════════════════════════════════ -->
+    <footer class="game-footer">
+        <div class="footer-content">
+            <div class="footer-top">
+                <div class="footer-logo">✈️ Aerowin</div>
+                <div class="payment-methods">
+                    <div class="pay-item"><strong>M-PESA</strong></div>
+                    <div class="pay-item"><strong>Airtel</strong></div>
+                    <!-- Mastercard inline SVG -->
+                    <svg class="pay-logo-svg" viewBox="0 0 152 108" xmlns="http://www.w3.org/2000/svg" aria-label="Mastercard" role="img" width="38" height="28">
+                        <rect width="152" height="108" rx="8" fill="#1a1a2e" opacity="0" />
+                        <circle cx="58" cy="54" r="38" fill="#EB001B" />
+                        <circle cx="94" cy="54" r="38" fill="#F79E1B" />
+                        <path d="M76 21.9a38 38 0 0 1 0 64.2A38 38 0 0 1 76 21.9z" fill="#FF5F00" />
+                    </svg>
+                    <!-- Visa inline SVG -->
+                    <svg class="pay-logo-svg" viewBox="0 0 216 68" xmlns="http://www.w3.org/2000/svg" aria-label="Visa" role="img" width="48" height="28">
+                        <rect width="216" height="68" rx="6" fill="#1a1f71" />
+                        <text x="108" y="50" font-family="Arial,sans-serif" font-size="46" font-weight="bold" fill="#fff" text-anchor="middle" letter-spacing="-2">VISA</text>
+                    </svg>
+                </div>
+            </div>
+
+            <hr class="footer-sep">
+
+            <div class="footer-mid">
+                <div class="footer-links">
+                    <a href="#">About Us</a>
+                    <a href="#">Terms & Conditions</a>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Betting Rules</a>
+                    <a href="#">Responsible Gaming</a>
+                    <a href="#">Contact Support</a>
+                </div>
+                <p class="footer-disclaimer">
+                    Aerowin is licensed and regulated by the Betting Control and Licensing Board of Kenya under license
+                    number 0000XXX.
+                    Gaming can be addictive. Please gamble responsibly. 🔞 18+ Only.
+                </p>
+            </div>
+
+            <div class="footer-bottom">
+                &copy; 2026 Aerowin Gaming Group. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <!-- PREMIUM CUSTOMER SUPPORT CHAT -->
+    <div class="chat-widget" id="chatWidget">
+        <!-- Floating Trigger -->
+        <button class="chat-trigger" id="chatTrigger">
+            <svg viewBox="0 0 24 24" class="chat-icon">
+                <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
+            </svg>
+        </button>
+
+        <!-- Chat Window -->
+        <div class="chat-window" id="chatWindow">
+            <div class="chat-header">
+                <div class="header-info">
+                    <span class="header-title">Customer support chat</span>
+                </div>
+                <div class="header-actions">
+                    <button class="action-btn">🔊</button>
+                    <button class="action-btn" id="chatCloseBtn">✕</button>
+                </div>
+            </div>
+
+            <div class="chat-body" id="chatBody">
+                <div class="chat-date">02 May</div>
+                <div class="unread-banner">Unread messages</div>
+
+                <div class="message assistant">
+                    <div class="avatar">🤖</div>
+                    <div class="msg-content">
+                        <div class="sender-name">Assistant</div>
+                        <p>👋 Hi there! Welcome to Support.
+
+                            We'd love to help! Leave us a message below and we'll get back to you shortly.
+
+                            Just describe your issue and we'll take it from there. 😊</p>
+                        <span class="msg-time">10:29</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-footer">
+                <input type="text" id="chatInput" placeholder="Write a message...">
+                <button class="send-btn" id="chatSendBtn">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="/src/chat.js"></script>
 </body>
 
