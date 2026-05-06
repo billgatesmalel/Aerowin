@@ -43,7 +43,8 @@ let roundStartTime = 0; // Local reference (synced to server)
 // ── SERVER STATE: Fetch current game state from authoritative source ──
 async function fetchServerGameState() {
     try {
-        const response = await fetch('https://functions.supabase.co/functions/v1/game-state');
+        const edgeFunctionUrl = import.meta.env.VITE_GAME_STATE_URL || 'https://functions.supabase.co/functions/v1/game-state';
+        const response = await fetch(edgeFunctionUrl);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
         
