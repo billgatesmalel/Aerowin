@@ -122,6 +122,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Calculate Total GGR (Total Bets - Total Winnings)
+CREATE OR REPLACE FUNCTION public.calculate_total_ggr()
+RETURNS DECIMAL AS $$
+DECLARE
+    total_bets DECIMAL;
+    total_wins DECIMAL;
+BEGIN
+    SELECT COALESCE(SUM(amount), 0) INTO total_bets FROM public.bets;
+    SELECT COALESCE(SUM(winnings), 0) INTO total_wins FROM public.bets;
+    RETURN total_bets - total_wins;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- RPC: SECURE PLACE BET
 CREATE OR REPLACE FUNCTION public.place_bet(p_amount DECIMAL, p_round_id BIGINT, p_use_free_bet BOOLEAN)
 RETURNS JSON AS $$
