@@ -1,339 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
-    <title>Aerowin - Training Portal</title>
-    <meta name="description" content="Access the Aerowin virtual flight simulation portal.">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✈️</text></svg>">
-    <link rel="stylesheet" href="src/styles/auth.css">
+    <title>Login | Nexus Hub</title>
+    <link rel="stylesheet" href="auth.css">
 </head>
-
 <body>
 
-    <!-- LOADING SCREEN -->
-    <div id="authLoader" class="auth-loader">
-        <div class="loader-plane">✈️</div>
-        <div class="loader-brand">Aerowin</div>
-        <div class="loader-bar">
-            <div class="loader-fill"></div>
+    <div class="auth-container">
+        
+        <div class="auth-brand">
+            <span class="brand-icon">✈️</span>
+            <div class="brand-name">NEXUS HUB</div>
         </div>
-    </div>
 
-    <div class="auth-container" id="authContainer" style="display:none">
-        <div class="auth-box">
-            <h1>✈️ Aerowin</h1>
-
-            <!-- Login Form -->
-            <form id="loginForm" class="form-section active">
-                <h2>Login</h2>
-                <div class="form-group">
-                    <label for="loginPhone">Phone Number</label>
-                    <input type="tel" id="loginPhone" placeholder="+254 or 0..." required autocomplete="username tel">
-                </div>
-                <div class="form-group">
-                    <label for="loginPassword">Password</label>
-                    <div class="pass-wrapper">
-                        <input type="password" id="loginPassword" placeholder="Enter your password" required
-                            autocomplete="current-password">
-                        <button type="button" class="pass-toggle" data-target="loginPassword">👁️</button>
-                    </div>
-                </div>
-                <div class="form-footer">
-                    <a href="#" class="forgot-link" id="forgotLink">Forgot Password?</a>
-                </div>
-                <button type="submit" class="btn btn-primary">Login</button>
-                <p class="form-toggle">Don't have an account? <a href="#" id="toSignupFromLogin">Sign Up</a></p>
-            </form>
-
-            <!-- Reset Password Form -->
-            <form id="resetForm" class="form-section">
-                <h2>Reset Password</h2>
-                <p class="form-desc">Enter your phone number to receive a password reset link.</p>
-                <div class="form-group">
-                    <label for="resetPhone">Phone Number</label>
-                    <input type="tel" id="resetPhone" placeholder="+254 or 0..." required autocomplete="tel">
-                </div>
-                <button type="submit" class="btn btn-primary">Send Reset Link</button>
-                <p class="form-toggle"><a href="#" id="backToLogin">Back to Login</a></p>
-            </form>
-
-            <!-- Sign Up Form -->
-            <form id="signupForm" class="form-section">
-                <h2>Create Account</h2>
-
-                <!-- Free bet banner -->
-                <div class="free-bet-banner">
-                    🎁 Deposit any amount and get a <strong>KES 20 free bet!</strong>
-                </div>
-
-                <div class="form-group">
-                    <label for="signupPhone">Phone Number</label>
-                    <input type="tel" id="signupPhone" placeholder="+254 or 0..." required autocomplete="username tel">
-                </div>
-                <div class="form-group">
-                    <label for="signupPassword">Password</label>
-                    <div class="pass-wrapper">
-                        <input type="password" id="signupPassword" placeholder="At least 6 characters" required
-                            autocomplete="new-password">
-                        <button type="button" class="pass-toggle" data-target="signupPassword">👁️</button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="signupConfirm">Confirm Password</label>
-                    <div class="pass-wrapper">
-                        <input type="password" id="signupConfirm" placeholder="Confirm your password" required
-                            autocomplete="new-password">
-                        <button type="button" class="pass-toggle" data-target="signupConfirm">👁️</button>
-                    </div>
-                </div>
-
-                <!-- Referral Code (optional) -->
-                <div class="form-group">
-                    <label for="signupReferral">Referral Code <span class="optional">(optional)</span></label>
-                    <input type="text" id="signupReferral" placeholder="Enter referral code" maxlength="8"
-                        style="text-transform:uppercase">
-                </div>
-
-                <!-- Terms & Conditions -->
-                <div class="terms-group">
-                    <label class="terms-label">
-                        <input type="checkbox" id="termsCheckbox">
-                        <span class="terms-check-box"></span>
-                        <span class="terms-text">
-                            I have read and agree to the
-                            <a href="#" id="openTermsLink">Terms &amp; Conditions</a>
-                            and confirm I am 18 years or older.
-                        </span>
-                    </label>
-                </div>
-
-                <button type="submit" class="btn btn-primary">Create Account</button>
-                <p class="form-toggle">Already have an account? <a href="#" id="toLoginFromSignup">Login</a></p>
-            </form>
-
+        <div class="auth-card">
+            
             <div id="messageBox" class="message-box"></div>
-        </div>
-    </div>
 
-    <footer class="game-footer">
-        <div class="footer-content">
-            <div class="footer-top">
-                <div class="footer-logo">✈️ <span>Aerowin</span></div>
-                <div class="payment-methods">
-                    <div class="pay-item"><strong>M-PESA</strong></div>
-                    <div class="pay-item"><strong>Airtel</strong></div>
-                    <!-- Mastercard inline SVG -->
-                    <svg class="pay-logo-svg" viewBox="0 0 152 108" xmlns="http://www.w3.org/2000/svg"
-                        aria-label="Mastercard" role="img" width="38" height="28">
-                        <circle cx="58" cy="54" r="38" fill="#EB001B" />
-                        <circle cx="94" cy="54" r="38" fill="#F79E1B" />
-                        <path d="M76 21.9a38 38 0 0 1 0 64.2A38 38 0 0 1 76 21.9z" fill="#FF5F00" />
-                    </svg>
-                    <!-- Visa inline SVG -->
-                    <svg class="pay-logo-svg" viewBox="0 0 216 68" xmlns="http://www.w3.org/2000/svg" aria-label="Visa"
-                        role="img" width="48" height="28">
-                        <rect width="216" height="68" rx="6" fill="#1a1f71" />
-                        <text x="108" y="50" font-family="Arial,sans-serif" font-size="46" font-weight="bold"
-                            fill="#fff" text-anchor="middle" letter-spacing="-2">VISA</text>
-                    </svg>
+            <!-- LOGIN FORM -->
+            <div id="loginForm" class="active">
+                <div class="auth-header">
+                    <h1>Welcome Back</h1>
+                    <p>Enter your phone and password to continue</p>
                 </div>
-            </div>
-            <div class="footer-bottom">
-                &copy; 2026 Aerowin Gaming Group.
-            </div>
-        </div>
-    </footer>
 
-    <!-- PREMIUM CUSTOMER SUPPORT CHAT -->
-    <div class="chat-widget" id="chatWidget">
-        <!-- Floating Trigger -->
-        <button class="chat-trigger" id="chatTrigger">
-            <svg viewBox="0 0 24 24" class="chat-icon">
-                <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
-            </svg>
-        </button>
-
-        <!-- Chat Window -->
-        <div class="chat-window" id="chatWindow">
-            <div class="chat-header">
-                <div class="header-info">
-                    <span class="header-title">Customer support chat</span>
-                </div>
-                <div class="header-actions">
-                    <button class="action-btn">🔊</button>
-                    <button class="action-btn" id="chatCloseBtn">✕</button>
-                </div>
-            </div>
-
-            <div class="chat-body" id="chatBody">
-                <div class="chat-date">02 May</div>
-                <div class="unread-banner">Unread messages</div>
-
-                <div class="message assistant">
-                    <div class="avatar">🤖</div>
-                    <div class="msg-content">
-                        <div class="sender-name">Assistant</div>
-                        <p>👋 Hi there! Welcome to Support.
-
-                            We'd love to help! Leave us a message below and we'll get back to you shortly.
-
-                            Just describe your issue and we'll take it from there. 😊</p>
-                        <span class="msg-time">10:29</span>
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="loginPhone" placeholder="07xxxxxxxx" required>
+                        </div>
                     </div>
+
+                    <div class="form-group">
+                        <label>Password</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="loginPassword" placeholder="••••••••" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="auth-btn">LOGIN TO PLATFORM</button>
+                </form>
+
+                <div class="auth-footer">
+                    Don't have an account? <a href="#" onclick="toggleForms()">Create account</a>
                 </div>
             </div>
 
-            <div class="chat-footer">
-                <input type="text" id="chatInput" placeholder="Write a message...">
-                <button class="send-btn" id="chatSendBtn">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-                    </svg>
-                </button>
+            <!-- SIGNUP FORM -->
+            <div id="signupForm">
+                <div class="auth-header">
+                    <h1>Join Nexus Hub</h1>
+                    <p>Start your high-stakes flight today</p>
+                </div>
+
+                <form onsubmit="handleSignup(event)">
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="signupPhone" placeholder="07xxxxxxxx" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Password</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="signupPassword" placeholder="Minimum 6 characters" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Confirm Password</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="signupConfirm" placeholder="Repeat password" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Referral Code (Optional)</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="signupReferral" placeholder="CODE">
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 20px; font-size: 0.8rem; color: var(--text-secondary); display: flex; gap: 8px; align-items: flex-start;">
+                        <input type="checkbox" id="termsCheckbox" required style="margin-top: 3px;">
+                        <span>I agree to the Terms & Conditions and understand the risks of gambling.</span>
+                    </div>
+
+                    <button type="submit" class="auth-btn">CREATE SECURE ACCOUNT</button>
+                </form>
+
+                <div class="auth-footer">
+                    Already have an account? <a href="#" onclick="toggleForms()">Login here</a>
+                </div>
             </div>
+
         </div>
+
     </div>
 
-    <!-- TERMS & CONDITIONS MODAL -->
-    <div id="termsModal" class="terms-modal">
-        <div class="terms-modal-content">
-            <div class="terms-modal-header">
-                <h3>📋 Terms &amp; Conditions</h3>
-                <button class="terms-close" id="termsCloseBtn">✕</button>
-            </div>
-            <div class="terms-body">
-                <h4>1. Eligibility</h4>
-                <p>You must be at least 18 years of age to use Aerowin. By registering, you confirm that you meet this
-                    requirement and that online betting is legal in your jurisdiction.</p>
-
-                <h4>2. Account Responsibility</h4>
-                <p>You are solely responsible for maintaining the confidentiality of your account credentials. Aerowin
-                    is not liable for any losses resulting from unauthorized access due to your failure to secure your
-                    login details.</p>
-
-                <h4>3. Fair Play</h4>
-                <p>Any attempt to manipulate, exploit, or cheat the game system will result in immediate account
-                    suspension and forfeiture of all balances. Aerowin reserves the right to void bets placed in bad
-                    faith.</p>
-
-                <h4>4. Deposits &amp; Withdrawals</h4>
-                <p>All deposits and withdrawals are processed in Kenya Shillings (KES). Minimum deposit and withdrawal
-                    amounts apply. Aerowin reserves the right to request identity verification before processing
-                    withdrawals.</p>
-
-                <h4>5. Free Bet Bonus</h4>
-                <p>The KES 20 free bet is awarded once upon your first deposit. It cannot be withdrawn directly —
-                    winnings from the free bet are credited to your main balance and are fully withdrawable.</p>
-
-                <h4>6. Referral Program</h4>
-                <p>Referral codes are issued to existing users. Both the referrer and the new user may receive a bonus
-                    as defined at the time of referral. Aerowin reserves the right to modify or cancel the referral
-                    program at any time.</p>
-
-                <h4>7. Responsible Gambling</h4>
-                <p>Gambling should be for entertainment only. Never bet more than you can afford to lose. If you feel
-                    you may have a gambling problem, please seek help from a professional organization.</p>
-
-                <h4>8. Privacy</h4>
-                <p>Your personal data is stored securely and used only for account management and game operation. We do
-                    not sell your data to third parties.</p>
-
-                <h4>9. Changes to Terms</h4>
-                <p>Aerowin reserves the right to update these terms at any time. Continued use of the platform
-                    constitutes acceptance of the latest terms.</p>
-
-                <h4>10. Governing Law</h4>
-                <p>These terms are governed by the laws of the Republic of Kenya. Any disputes shall be subject to the
-                    jurisdiction of Kenyan courts.</p>
-            </div>
-            <div class="terms-modal-footer">
-                <button class="btn btn-primary" id="termsAcceptBtn">✅ I Agree</button>
-            </div>
-        </div>
-    </div>
-
+    <!-- Use Vite Entry Point -->
     <script type="module" src="/src/auth.js"></script>
-    <script src="/src/chat.js"></script>
-    <script>
-        // ── All UI event wiring (runs after DOM ready) ──────────────────────────
-        document.addEventListener('DOMContentLoaded', () => {
-
-            // Loader → show container
-            window.addEventListener('load', () => {
-                setTimeout(() => {
-                    const loader = document.getElementById('authLoader');
-                    const container = document.getElementById('authContainer');
-                    if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 400); }
-                    if (container) container.style.display = 'flex';
-                }, 1400);
-            });
-
-            // ── Form submissions ────────────────────────────────────────────────
-            document.getElementById('loginForm').addEventListener('submit', e => {
-                e.preventDefault();
-                if (typeof handleLogin === 'function') handleLogin(e);
-            });
-            document.getElementById('resetForm').addEventListener('submit', e => {
-                e.preventDefault();
-                if (typeof handleResetPassword === 'function') handleResetPassword(e);
-            });
-            document.getElementById('signupForm').addEventListener('submit', e => {
-                e.preventDefault();
-                if (typeof handleSignup === 'function') handleSignup(e);
-            });
-
-            // ── Password toggles (data-target attribute) ────────────────────────
-            document.querySelectorAll('.pass-toggle[data-target]').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const input = document.getElementById(btn.dataset.target);
-                    if (!input) return;
-                    input.type = input.type === 'password' ? 'text' : 'password';
-                    btn.textContent = input.type === 'password' ? '👁️' : '🙈';
-                });
-            });
-
-            // ── Form navigation ─────────────────────────────────────────────────
-            const toSignupFromLogin = document.getElementById('toSignupFromLogin');
-            const toLoginFromSignup = document.getElementById('toLoginFromSignup');
-            const forgotLink = document.getElementById('forgotLink');
-            const backToLogin = document.getElementById('backToLogin');
-
-            if (toSignupFromLogin) toSignupFromLogin.addEventListener('click', e => { e.preventDefault(); if (typeof toggleForms === 'function') toggleForms(); });
-            if (toLoginFromSignup) toLoginFromSignup.addEventListener('click', e => { e.preventDefault(); if (typeof toggleForms === 'function') toggleForms(); });
-            if (forgotLink) forgotLink.addEventListener('click', e => { e.preventDefault(); if (typeof toggleResetForm === 'function') toggleResetForm(true); });
-            if (backToLogin) backToLogin.addEventListener('click', e => { e.preventDefault(); if (typeof toggleResetForm === 'function') toggleResetForm(false); });
-
-            // ── Terms modal ─────────────────────────────────────────────────────
-            const termsModal = document.getElementById('termsModal');
-            const openTermsLink = document.getElementById('openTermsLink');
-            const termsCloseBtn = document.getElementById('termsCloseBtn');
-            const termsAcceptBtn = document.getElementById('termsAcceptBtn');
-
-            function openTerms() { termsModal.classList.add('open'); }
-            function closeTerms() { termsModal.classList.remove('open'); }
-            function acceptTerms() { document.getElementById('termsCheckbox').checked = true; closeTerms(); }
-
-            if (openTermsLink) openTermsLink.addEventListener('click', e => { e.preventDefault(); openTerms(); });
-            if (termsCloseBtn) termsCloseBtn.addEventListener('click', closeTerms);
-            if (termsAcceptBtn) termsAcceptBtn.addEventListener('click', acceptTerms);
-            if (termsModal) termsModal.addEventListener('click', e => { if (e.target === termsModal) closeTerms(); });
-
-            // ── Chat widget ─────────────────────────────────────────────────────
-            // chat.js is a plain (non-module) script; wire its functions here
-            const chatTrigger = document.getElementById('chatTrigger');
-            const chatCloseBtn = document.getElementById('chatCloseBtn');
-            const chatSendBtn = document.getElementById('chatSendBtn');
-            const chatInput = document.getElementById('chatInput');
-
-            if (chatTrigger) chatTrigger.addEventListener('click', () => { if (typeof toggleChat === 'function') toggleChat(); });
-            if (chatCloseBtn) chatCloseBtn.addEventListener('click', () => { if (typeof toggleChat === 'function') toggleChat(); });
-            if (chatSendBtn) chatSendBtn.addEventListener('click', () => { if (typeof sendChatMessage === 'function') sendChatMessage(); });
-            if (chatInput) chatInput.addEventListener('keypress', e => { if (e.key === 'Enter' && typeof sendChatMessage === 'function') sendChatMessage(); });
-        });
-    </script>
 </body>
-
 </html>

@@ -1,507 +1,174 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
-
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
-    <title>Aerowin - Virtual Flight Sim & Gaming</title>
-    <link rel="stylesheet" href="src/styles/styles.css">
-    <style>
-        body {
-            visibility: hidden;
-        }
-
-        @keyframes spinProp {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
-        }
-    </style>
-    <script type="module">
-        import { supabase } from './src/lib/supabase.js';
-
-        async function checkSession() {
-            try {
-                const {
-                    data: {
-                        session
-                    }
-                } = await supabase.auth.getSession();
-                if (!session) {
-                    window.location.replace('auth.html');
-                } else {
-                    document.body.style.visibility = 'visible';
-                }
-            } catch (err) {
-                console.error('Session check failed:', err);
-                window.location.replace('auth.html');
-            }
-        }
-
-        checkSession();
-    </script>
+    <title>Nexus Hub | Aviator Elite</title>
+    <meta name="description" content="The world's most advanced Aviator game platform. High-stakes, provably fair, and ultra-secure.">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Lucide Icons for premium feel -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-
-<script type="module" src="/src/main.js"></script>
-
 <body>
 
-    <!-- TOP NAV BAR - Minimal & Clean -->
-    <div class="topbar">
-        <div class="topbar-brand">✈️</div>
-        <div class="topbar-actions">
-            <span class="balance-display" id="headerBalance">— KES</span>
-            <button class="btn-icon" id="chatBtn" title="Chat">💬</button>
-            <button class="btn-icon" id="menuBtn" title="Menu">☰</button>
-        </div>
-    </div>
-
-    <!-- HISTORY BAR - Previous Multipliers -->
-    <div class="history-bar" id="historyBar">
-        <div class="history-scroll" id="historyScroll">
-            <span class="history-pill">1.05x</span>
-            <span class="history-pill">2.34x</span>
-            <span class="history-pill high">5.67x</span>
-            <span class="history-pill">1.23x</span>
-            <span class="history-pill high">8.90x</span>
-            <span class="history-pill">1.45x</span>
-            <span class="history-pill high">12.34x</span>
-        </div>
-    </div>
-
-    <!-- LIVE INDICATOR -->
-    <div class="live-indicator" id="liveIndicator">
-        <span class="live-dot"></span>
-        <span class="live-text">LIVE</span>
-    </div>
-
-    <!-- MAIN GAME AREA -->
-    <div class="game-area">
-        <!-- Game Canvas with enhanced background -->
-        <div class="game-canvas" id="gameBoard">
-            <div class="burst-bg"></div>
-            
-            <!-- Star particles background -->
-            <div class="stars-container" id="starsContainer"></div>
-
-            <!-- Sunburst rays from bottom center -->
-            <div class="sunburst-rays" id="sunburstRays"></div>
-
-            <!-- Graph SVG -->
-            <svg class="graph-svg" viewBox="0 0 1000 300" preserveAspectRatio="none" aria-hidden="true">
-                <defs>
-                    <linearGradient id="graphGrad" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="0%" stop-color="rgba(255, 0, 51, 0.15)" />
-                        <stop offset="100%" stop-color="rgba(255, 0, 51, 0.02)" />
-                    </linearGradient>
-                    <filter id="glow">
-                        <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-                        <feMerge>
-                            <feMergeNode in="coloredBlur" />
-                            <feMergeNode in="SourceGraphic" />
-                        </feMerge>
-                    </filter>
-                </defs>
-                <!-- Glow under curve -->
-                <path id="glowPath" d="M0,280 C200,240 500,160 1000,40 L1000,300 L0,300 Z" fill="url(#graphGrad)" />
-                <!-- Main curve line -->
-                <path id="motionPath" d="M0,280 C200,240 500,160 1000,40" 
-                      fill="none" stroke="#ff0033" stroke-width="2" 
-                      stroke-linecap="round" filter="url(#glow)" />
-            </svg>
-
-            <!-- Plane following curve -->
-            <svg id="plane" class="plane-svg" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
-                <g transform="translate(5, 5)">
-                    <!-- Plane body - more detailed -->
-                    <path d="M10,30 L85,30 L95,25 L95,35 L85,30 L10,30" 
-                          fill="#e8003a" stroke="#cc0022" stroke-width="0.5" />
-                    <!-- Wing -->
-                    <path d="M30,30 L70,30 L75,40 L25,40 Z" fill="#c00020" />
-                    <!-- Tail -->
-                    <path d="M10,30 L5,20 L10,25 Z" fill="#c00020" />
-                    <!-- Cockpit -->
-                    <ellipse cx="75" cy="30" rx="6" ry="4" fill="#1a2540" />
-                    <!-- Engine glow -->
-                    <ellipse cx="95" cy="30" rx="3" ry="2" fill="#ff4400" opacity="0.6" />
-                    <!-- X Marking -->
-                    <g stroke="#fff" stroke-width="1.5" stroke-linecap="round">
-                        <line x1="82" y1="22" x2="88" y2="28" />
-                        <line x1="88" y1="22" x2="82" y2="28" />
-                    </g>
-                </g>
-            </svg>
-
-            <!-- Multiplier Display - Large & Bold -->
-            <div class="multiplier-display" id="multiplier">1.00x</div>
-            
-            <div class="crashed-overlay hidden" id="crashedOverlay">
-                <span id="crashedText">FLEW AWAY</span>
+    <div id="app">
+        <!-- TOPBAR -->
+        <header class="topbar">
+            <div class="topbar-brand">
+                <span class="brand-icon">✈️</span>
+                <span class="brand-name">NEXUS HUB</span>
             </div>
-            <div class="status-msg" id="status"></div>
-        </div>
 
-        <!-- BET PANELS -->
-        <div class="bet-panels">
-            <!-- Bet Card 1 -->
-            <div class="bet-card" id="betCard1">
-                <div class="bet-amount-row">
-                    <button class="amount-btn minus" onclick="adjustBet(1,-10)">−</button>
-                    <input class="amount-input" id="betAmount1" type="number" value="100" min="50">
-                    <button class="amount-btn plus" onclick="adjustBet(1,10)">+</button>
+            <div class="topbar-actions">
+                <div class="balance-card">
+                    <span class="balance-label">Balance</span>
+                    <span class="balance-value" id="headerBalance">KES 0.00</span>
                 </div>
-                <div class="quick-amounts">
-                    <button class="quick-btn" onclick="setBet(1,100)">100</button>
-                    <button class="quick-btn" onclick="setBet(1,250)">250</button>
-                    <button class="quick-btn" onclick="setBet(1,1000)">1K</button>
-                    <button class="quick-btn" onclick="setBet(1,25000)">25K</button>
-                </div>
-                <div class="autocash-row">
-                    <label>Auto cashout</label>
-                    <div class="autocash-control">
-                        <input type="number" id="autoCashOutValue1" value="2.00" min="1.01" step="0.01">
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="autoCashoutToggle1">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                </div>
-                <button id="placeBet1Btn" class="bet-button" onclick="placeBet(1)">
-                    <span class="bet-label">BET</span>
-                    <span class="bet-amount" id="betLabel1">100.00</span>
-                    <span class="bet-currency">KES</span>
+                
+                <button class="user-btn" id="profileBtn" aria-label="Profile">
+                    <i data-lucide="user"></i>
                 </button>
-                <button id="cashBtn1" class="cash-button hidden" onclick="cashOutBet(1)">
-                    CASH OUT <span id="cashLabel1">—</span>
+                
+                <button class="user-btn" id="muteBtn" aria-label="Toggle Audio">
+                    <i data-lucide="volume-2"></i>
                 </button>
-                <div class="auto-bet-row hidden" id="autoBetRow1">
-                    <label><input type="checkbox" id="autoBet1" onchange="toggleAutoBet(1)"> Auto bet</label>
-                </div>
+            </div>
+        </header>
+
+        <!-- SIDEBAR (All Bets) -->
+        <aside class="sidebar">
+            <div class="sidebar-tabs">
+                <button class="tab-btn active" id="tabAll">ALL BETS</button>
+                <button class="tab-btn" id="tabPrevious">MY BETS</button>
+                <button class="tab-btn" id="tabTop">TOP</button>
             </div>
 
-            <!-- Bet Card 2 -->
-            <div class="bet-card" id="betCard2">
-                <div class="bet-amount-row">
-                    <button class="amount-btn minus" onclick="adjustBet(2,-10)">−</button>
-                    <input class="amount-input" id="betAmount2" type="number" value="100" min="50">
-                    <button class="amount-btn plus" onclick="adjustBet(2,10)">+</button>
-                </div>
-                <div class="quick-amounts">
-                    <button class="quick-btn" onclick="setBet(2,100)">100</button>
-                    <button class="quick-btn" onclick="setBet(2,250)">250</button>
-                    <button class="quick-btn" onclick="setBet(2,1000)">1K</button>
-                    <button class="quick-btn" onclick="setBet(2,25000)">25K</button>
-                </div>
-                <div class="autocash-row">
-                    <label>Auto cashout</label>
-                    <div class="autocash-control">
-                        <input type="number" id="autoCashOutValue2" value="2.00" min="1.01" step="0.01">
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="autoCashoutToggle2">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                </div>
-                <button id="placeBet2Btn" class="bet-button" onclick="placeBet(2)">
-                    <span class="bet-label">BET</span>
-                    <span class="bet-amount" id="betLabel2">100.00</span>
-                    <span class="bet-currency">KES</span>
-                </button>
-                <button id="cashBtn2" class="cash-button hidden" onclick="cashOutBet(2)">
-                    CASH OUT <span id="cashLabel2">—</span>
-                </button>
-                <div class="auto-bet-row hidden" id="autoBetRow2">
-                    <label><input type="checkbox" id="autoBet2" onchange="toggleAutoBet(2)"> Auto bet</label>
-                </div>
-            </div>
-        </div>
-
-        <!-- BOTTOM SECTION - Tabs & Live Bets -->
-        <div class="bottom-section">
-            <!-- Tabs -->
-            <div class="tabs-row">
-                <button class="tab active" id="tabAll" onclick="switchBetTab('all')">All Bets</button>
-                <button class="tab" id="tabPrevious" onclick="switchBetTab('previous')">Previous</button>
-                <button class="tab" id="tabTop" onclick="switchBetTab('top')">Top</button>
+            <div class="stats-bar">
+                <span>Active Players</span>
+                <span class="count-badge" id="livePlayerCount">0</span>
             </div>
 
-            <!-- Live Bets Count -->
-            <div class="bets-header">
-                <span>Live Bets</span>
-                <span class="bets-count" id="totalBetsCount">0</span>
-            </div>
-
-            <!-- Bets Table -->
-            <div class="bets-table">
-                <div class="table-header">
-                    <span>Player</span>
-                    <span>Bet KES</span>
+            <div class="bets-list">
+                <header class="bet-row" style="background: rgba(0,0,0,0.2); font-weight: 700; color: var(--text-muted);">
+                    <span>PLAYER</span>
+                    <span>BET</span>
                     <span>X</span>
-                    <span>Win KES</span>
+                    <span>WIN</span>
+                </header>
+                <div id="allBetsList">
+                    <!-- Dynamic Rows -->
                 </div>
-                <div class="table-body" id="allBetsList"></div>
             </div>
-        </div>
-    </div>
+        </aside>
 
-    <!-- Profile Modal -->
-    <div id="profileModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Player Profile</h2>
-                <button class="close-btn" id="closeProfileBtn">×</button>
+        <!-- MAIN GAME AREA -->
+        <main class="main-content">
+            <!-- Global History -->
+            <div class="history-strip" id="historyTicker">
+                <!-- Dynamic Pills -->
             </div>
-            <div class="profile-section">
-                <div class="profile-item">
-                    <span class="profile-label">Account:</span>
-                    <span class="profile-value" id="profilePhone">–</span>
-                </div>
-                <div class="profile-item">
-                    <span class="profile-label">Balance:</span>
-                    <span class="profile-value" id="profileBalance">–</span>
-                </div>
-                <div class="profile-item">
-                    <span class="profile-label">Created:</span>
-                    <span class="profile-value" id="profileCreated">–</span>
-                </div>
-                <div class="profile-item">
-                    <span class="profile-label">Referral Code:</span>
-                    <span class="profile-value referral-code" id="profileReferralCode">–</span>
-                    <button class="copy-code-btn" onclick="copyReferralCode()" title="Copy code">📋</button>
-                </div>
-                <div class="profile-item">
-                    <span class="profile-label">Referrals:</span>
-                    <span class="profile-value" id="profileReferralCount">0</span>
-                </div>
-                <div id="freeBetBanner" class="free-bet-notice hidden">
-                    🎁 Deposit to unlock your <strong>KES 20 free bet!</strong>
-                </div>
-            </div>
-            <div id="adminArea"></div>
-            <div class="profile-actions">
-                <button class="action-btn deposit-btn" id="openDepositBtn">💰 Deposit</button>
-                <button class="action-btn withdraw-btn" id="openWithdrawBtn">💸 Withdraw</button>
-            </div>
-        </div>
-    </div>
 
-    <!-- Deposit Modal -->
-    <div id="depositModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>💰 Deposit via M-Pesa</h2>
-                <button class="close-btn" id="closeDepositBtn">×</button>
-            </div>
-            <div class="mpesa-logo-row">
-                <span class="mpesa-badge">M-PESA</span>
-                <span class="mpesa-sub">STK Push — instant to your phone</span>
-            </div>
-            <div class="form-group">
-                <label>Phone (M-Pesa):</label>
-                <input type="tel" id="depositPhone" placeholder="07XXXXXXXX" maxlength="10">
-            </div>
-            <div class="form-group">
-                <label>Amount (KES):</label>
-                <div class="quick-amounts">
-                    <button class="qa-btn" onclick="setDepositAmt(100)">100</button>
-                    <button class="qa-btn" onclick="setDepositAmt(200)">200</button>
-                    <button class="qa-btn" onclick="setDepositAmt(500)">500</button>
-                    <button class="qa-btn" onclick="setDepositAmt(1000)">1,000</button>
+            <!-- Game Viewport -->
+            <div class="game-viewport" id="gameBoard">
+                <div class="game-state-overlay">
+                    <div class="multiplier-display" id="multiplier">1.00x</div>
+                    <div class="game-status-text" id="status">WAITING...</div>
                 </div>
-                <input type="number" id="depositAmount" placeholder="Min 100 KES" min="100">
-            </div>
-            <p class="mpesa-note" id="depositNote">An STK push will be sent to your phone. Enter your M-Pesa PIN to
-                complete.</p>
-            <div class="modal-actions">
-                <button class="action-btn deposit-btn" id="confirmDepositBtn" onclick="processDeposit()">📲 Send STK
-                    Push</button>
-                <button class="action-btn cancel-btn" id="cancelDepositBtn"
-                    onclick="closeDepositModal()">Cancel</button>
-            </div>
-        </div>
-    </div>
 
-    <!-- Withdraw Modal -->
-    <div id="withdrawModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>💸 Withdraw to M-Pesa</h2>
-                <button class="close-btn" id="closeWithdrawBtn">×</button>
-            </div>
-            <div class="mpesa-logo-row">
-                <span class="mpesa-badge">M-PESA</span>
-                <span class="mpesa-sub">Balance: KES <strong id="withdrawBalanceDisplay">0</strong></span>
-            </div>
-            <div class="form-group">
-                <label>Phone (M-Pesa):</label>
-                <input type="tel" id="withdrawPhone" placeholder="07XXXXXXXX" maxlength="10">
-            </div>
-            <div class="form-group">
-                <label>Amount (KES):</label>
-                <div class="quick-amounts">
-                    <button class="qa-btn" onclick="setWithdrawAmt(100)">100</button>
-                    <button class="qa-btn" onclick="setWithdrawAmt(200)">200</button>
-                    <button class="qa-btn" onclick="setWithdrawAmt(500)">500</button>
-                    <button class="qa-btn" onclick="setWithdrawAmt(1000)">1,000</button>
+                <div class="crashed-overlay hidden" id="crashedOverlay">
+                    <div id="crashedText">FLEW AWAY</div>
                 </div>
-                <input type="number" id="withdrawAmount" placeholder="Min 100 KES" min="100">
-            </div>
-            <p class="mpesa-note">Withdrawals are processed within 24 hours by admin.</p>
-            <div class="modal-actions">
-                <button class="action-btn withdraw-btn" id="confirmWithdrawBtn" onclick="processWithdraw()">✅ Request
-                    Withdrawal</button>
-                <button class="action-btn cancel-btn" id="cancelWithdrawBtn"
-                    onclick="closeWithdrawModal()">Cancel</button>
-            </div>
-        </div>
-    </div>
 
-    <!-- 👑 ADMIN DASHBOARD MODAL -->
-    <div class="modal" id="adminModal">
-        <div class="modal-content admin-content">
-            <div class="modal-header">
-                <h2>👑 System Management</h2>
-                <button class="close-btn" id="closeAdminBtn">&times;</button>
+                <!-- Custom Plane SVG -->
+                <svg id="plane" class="plane-svg" style="display: none;" viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20,40 Q105,10 180,40 T20,70" fill="var(--bg-accent)" />
+                    <circle cx="180" cy="40" r="4" fill="#fff" />
+                </svg>
             </div>
-            <div class="admin-stats">
-                <div class="a-stat"><span>Total Players</span><strong id="adminTotalUsers">0</strong></div>
-                <div class="a-stat"><span>System Liab.</span><strong id="adminTotalBalance">KES 0</strong></div>
-                <div class="a-stat"><span>Pending W/D</span><strong id="adminPendingWD">0</strong></div>
-            </div>
-            <!-- Admin Tabs -->
-            <div class="admin-tabs-row">
-                <button class="admin-tab active" id="adminTabPlayers" onclick="switchAdminTab('players')">👥
-                    Players</button>
-                <button class="admin-tab" id="adminTabWithdrawals" onclick="switchAdminTab('withdrawals')">💸
-                    Withdrawals</button>
-            </div>
-            <!-- Players Panel -->
-            <div id="adminPlayersPanel">
-                <div class="admin-search-row">
-                    <input type="text" id="adminSearchInput" placeholder="Search phone...">
-                    <button class="action-btn gold-btn" id="refreshAdminBtn">🔄 Refresh</button>
-                </div>
-                <div class="admin-user-table">
-                    <div class="table-head">
-                        <span>Phone</span>
-                        <span>Balance</span>
-                        <span>Mod</span>
+
+            <!-- Controls -->
+            <div class="control-cards">
+                <!-- Card 1 -->
+                <div class="bet-card">
+                    <div class="card-header">
+                        <button class="mini-tab active">BET</button>
+                        <button class="mini-tab">AUTO</button>
                     </div>
-                    <div id="adminUserList" class="table-body"></div>
-                </div>
-            </div>
-            <!-- Withdrawals Panel -->
-            <div id="adminWithdrawalsPanel" style="display:none">
-                <div id="adminWithdrawalList" class="table-body" style="max-height:340px;overflow-y:auto"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ════════════════════════════════════════
-          FOOTER - Payment & Info
-     ════════════════════════════════════════ -->
-    <footer class="game-footer">
-        <div class="footer-content">
-            <div class="footer-top">
-                <div class="footer-logo">✈️ Aerowin</div>
-                <div class="payment-methods">
-                    <div class="pay-item"><strong>M-PESA</strong></div>
-                    <div class="pay-item"><strong>Airtel</strong></div>
-                    <!-- Mastercard inline SVG -->
-                    <svg class="pay-logo-svg" viewBox="0 0 152 108" xmlns="http://www.w3.org/2000/svg" aria-label="Mastercard" role="img" width="38" height="28">
-                        <rect width="152" height="108" rx="8" fill="#1a1a2e" opacity="0" />
-                        <circle cx="58" cy="54" r="38" fill="#EB001B" />
-                        <circle cx="94" cy="54" r="38" fill="#F79E1B" />
-                        <path d="M76 21.9a38 38 0 0 1 0 64.2A38 38 0 0 1 76 21.9z" fill="#FF5F00" />
-                    </svg>
-                    <!-- Visa inline SVG -->
-                    <svg class="pay-logo-svg" viewBox="0 0 216 68" xmlns="http://www.w3.org/2000/svg" aria-label="Visa" role="img" width="48" height="28">
-                        <rect width="216" height="68" rx="6" fill="#1a1f71" />
-                        <text x="108" y="50" font-family="Arial,sans-serif" font-size="46" font-weight="bold" fill="#fff" text-anchor="middle" letter-spacing="-2">VISA</text>
-                    </svg>
-                </div>
-            </div>
-
-            <hr class="footer-sep">
-
-            <div class="footer-mid">
-                <div class="footer-links">
-                    <a href="#">About Us</a>
-                    <a href="#">Terms & Conditions</a>
-                    <a href="#">Privacy Policy</a>
-                    <a href="#">Betting Rules</a>
-                    <a href="#">Responsible Gaming</a>
-                    <a href="#">Contact Support</a>
-                </div>
-                <p class="footer-disclaimer">
-                    Aerowin is licensed and regulated by the Betting Control and Licensing Board of Kenya under license
-                    number 0000XXX.
-                    Gaming can be addictive. Please gamble responsibly. 🔞 18+ Only.
-                </p>
-            </div>
-
-            <div class="footer-bottom">
-                &copy; 2026 Aerowin Gaming Group. All rights reserved.
-            </div>
-        </div>
-    </footer>
-
-    <!-- PREMIUM CUSTOMER SUPPORT CHAT -->
-    <div class="chat-widget" id="chatWidget">
-        <!-- Floating Trigger -->
-        <button class="chat-trigger" id="chatTrigger">
-            <svg viewBox="0 0 24 24" class="chat-icon">
-                <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
-            </svg>
-        </button>
-
-        <!-- Chat Window -->
-        <div class="chat-window" id="chatWindow">
-            <div class="chat-header">
-                <div class="header-info">
-                    <span class="header-title">Customer support chat</span>
-                </div>
-                <div class="header-actions">
-                    <button class="action-btn">🔊</button>
-                    <button class="action-btn" id="chatCloseBtn">✕</button>
-                </div>
-            </div>
-
-            <div class="chat-body" id="chatBody">
-                <div class="chat-date">02 May</div>
-                <div class="unread-banner">Unread messages</div>
-
-                <div class="message assistant">
-                    <div class="avatar">🤖</div>
-                    <div class="msg-content">
-                        <div class="sender-name">Assistant</div>
-                        <p>👋 Hi there! Welcome to Support.
-
-                            We'd love to help! Leave us a message below and we'll get back to you shortly.
-
-                            Just describe your issue and we'll take it from there. 😊</p>
-                        <span class="msg-time">10:29</span>
+                    
+                    <div class="amount-input-group">
+                        <button class="adj-btn" onclick="adjustBet(1, -50)">−</button>
+                        <input type="number" class="amount-input" id="betAmount1" value="100">
+                        <button class="adj-btn" onclick="adjustBet(1, 50)">+</button>
                     </div>
+
+                    <div class="quick-amounts">
+                        <button class="quick-btn" onclick="setBet(1, 100)">100</button>
+                        <button class="quick-btn" onclick="setBet(1, 200)">200</button>
+                        <button class="quick-btn" onclick="setBet(1, 500)">500</button>
+                        <button class="quick-btn" onclick="setBet(1, 1000)">1000</button>
+                    </div>
+
+                    <button class="big-bet-btn" id="placeBet1Btn" onclick="placeBet(1)">
+                        <span>BET</span>
+                        <span class="sub-text">PLACE YOUR BET</span>
+                    </button>
+                    
+                    <button class="big-cash-btn hidden" id="cashBtn1" onclick="cashOutBet(1)">
+                        <span>CASH OUT</span>
+                        <span class="sub-text" id="cashLabel1">KES 0.00</span>
+                    </button>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="bet-card">
+                    <div class="card-header">
+                        <button class="mini-tab active">BET</button>
+                        <button class="mini-tab">AUTO</button>
+                    </div>
+                    
+                    <div class="amount-input-group">
+                        <button class="adj-btn" onclick="adjustBet(2, -50)">−</button>
+                        <input type="number" class="amount-input" id="betAmount2" value="100">
+                        <button class="adj-btn" onclick="adjustBet(2, 50)">+</button>
+                    </div>
+
+                    <div class="quick-amounts">
+                        <button class="quick-btn" onclick="setBet(2, 100)">100</button>
+                        <button class="quick-btn" onclick="setBet(2, 200)">200</button>
+                        <button class="quick-btn" onclick="setBet(2, 500)">500</button>
+                        <button class="quick-btn" onclick="setBet(2, 1000)">1000</button>
+                    </div>
+
+                    <button class="big-bet-btn" id="placeBet2Btn" onclick="placeBet(2)">
+                        <span>BET</span>
+                        <span class="sub-text">PLACE YOUR BET</span>
+                    </button>
+                    
+                    <button class="big-cash-btn hidden" id="cashBtn2" onclick="cashOutBet(2)">
+                        <span>CASH OUT</span>
+                        <span class="sub-text" id="cashLabel2">KES 0.00</span>
+                    </button>
                 </div>
             </div>
+            
+            <footer style="margin-top: auto; padding: 20px 0; text-align: center; font-size: 0.7rem; color: var(--text-muted); opacity: 0.5;">
+                🔒 256-BIT ENCRYPTION • PROVABLY FAIR SYSTEM • NEXUS HUB V2.0
+            </footer>
+        </main>
+    </div>
 
-            <div class="chat-footer">
-                <input type="text" id="chatInput" placeholder="Write a message...">
-                <button class="send-btn" id="chatSendBtn">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-                    </svg>
-                </button>
-            </div>
+    <!-- MODALS -->
+    <div id="modalBackdrop" class="modal-backdrop">
+        <div class="modal-window" id="modalWindow">
+            <!-- Modal Content Injected Here -->
         </div>
     </div>
 
-    <script src="/src/chat.js"></script>
+    <script>
+        // Lucide replacement
+        lucide.createIcons();
+    </script>
+    <!-- Use Vite Entry Point -->
+    <script type="module" src="/src/main.js"></script>
 </body>
-
 </html>
