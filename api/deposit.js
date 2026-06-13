@@ -55,8 +55,8 @@ export default async function handler(req, res) {
         PartyB:            SHORTCODE,
         PhoneNumber:       normalizedPhone,
         CallBackURL:       CALLBACK_URL,
-        AccountReference:  `AEROWIN-${(userId || 'user').slice(0, 8)}`,
-        TransactionDesc:   `Aerowin Deposit KES ${amount}`
+        AccountReference:  `METRICWIN-${(userId || 'user').slice(0, 8)}`,
+        TransactionDesc:   `Metricwin Deposit KES ${amount}`
     };
 
     // ── 3. Send STK Push ──────────────────────────────────────

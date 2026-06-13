@@ -53,7 +53,7 @@ window.handleLogin = async function (e) {
     e.preventDefault();
     const phone = normalisePhone(document.getElementById('loginPhone').value.trim());
     const password = document.getElementById('loginPassword').value;
-    const email = phone + '@aerowin.app'; // Supabase requires email format
+    const email = phone + '@metricwin.app'; // Supabase requires email format
 
     showMessage('Logging in…', 'info');
 
@@ -82,7 +82,7 @@ window.handleSignup = async function (e) {
     if (password.length < 6) { showMessage('Password must be at least 6 characters.', 'error'); return; }
     if (password !== confirm) { showMessage('Passwords do not match.', 'error'); return; }
 
-    const email = phone + '@aerowin.app';
+    const email = phone + '@metricwin.app';
     showMessage('Creating account…', 'info');
 
     const { data, error } = await supabase.auth.signUp({
@@ -116,7 +116,7 @@ window.handleSignup = async function (e) {
 window.handleResetPassword = async function (e) {
     e.preventDefault();
     const phone = normalisePhone(document.getElementById('resetPhone').value.trim());
-    const email = phone + '@aerowin.app';
+    const email = phone + '@metricwin.app';
 
     showMessage('Sending reset link…', 'info');
 
