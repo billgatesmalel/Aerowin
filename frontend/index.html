@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexus Hub | Aviator Elite</title>
+    <meta name="description" content="The world's most advanced Aviator game platform. High-stakes, provably fair, and ultra-secure.">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Lucide Icons for premium feel -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+    <div id="app">
+        <!-- TOPBAR -->
+        <header class="topbar">
+            <div class="topbar-brand">
+                <span class="brand-icon">✈️</span>
+                <span class="brand-name">NEXUS HUB</span>
+            </div>
+
+            <div class="topbar-actions">
+                <div class="balance-card">
+                    <span class="balance-label">Balance</span>
+                    <span class="balance-value" id="headerBalance">KES 0.00</span>
+                </div>
+                
+                <button class="user-btn" id="profileBtn" aria-label="Profile">
+                    <i data-lucide="user"></i>
+                </button>
+                
+                <button class="user-btn" id="muteBtn" aria-label="Toggle Audio">
+                    <i data-lucide="volume-2"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- SIDEBAR (All Bets) -->
+        <aside class="sidebar">
+            <div class="sidebar-tabs">
+                <button class="tab-btn active" id="tabAll">ALL BETS</button>
+                <button class="tab-btn" id="tabPrevious">MY BETS</button>
+                <button class="tab-btn" id="tabTop">TOP</button>
+            </div>
+
+            <div class="stats-bar">
+                <span>Active Players</span>
+                <span class="count-badge" id="livePlayerCount">0</span>
+            </div>
+
+            <div class="bets-list">
+                <header class="bet-row" style="background: rgba(0,0,0,0.2); font-weight: 700; color: var(--text-muted);">
+                    <span>PLAYER</span>
+                    <span>BET</span>
+                    <span>X</span>
+                    <span>WIN</span>
+                </header>
+                <div id="allBetsList">
+                    <!-- Dynamic Rows -->
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN GAME AREA -->
+        <main class="main-content">
+            <!-- Global History -->
+            <div class="history-strip" id="historyTicker">
+                <!-- Dynamic Pills -->
+            </div>
+
+            <!-- Game Viewport -->
+            <div class="game-viewport" id="gameBoard">
+                <div class="game-state-overlay">
+                    <div class="multiplier-display" id="multiplier">1.00x</div>
+                    <div class="game-status-text" id="status">WAITING...</div>
+                </div>
+
+                <div class="crashed-overlay hidden" id="crashedOverlay">
+                    <div id="crashedText">FLEW AWAY</div>
+                </div>
+
+                <!-- Custom Plane SVG -->
+                <svg id="plane" class="plane-svg" style="display: none;" viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20,40 Q105,10 180,40 T20,70" fill="var(--bg-accent)" />
+                    <circle cx="180" cy="40" r="4" fill="#fff" />
+                </svg>
+            </div>
+
+            <!-- Controls -->
+            <div class="control-cards">
+                <!-- Card 1 -->
+                <div class="bet-card">
+                    <div class="card-header">
+                        <button class="mini-tab active">BET</button>
+                        <button class="mini-tab">AUTO</button>
+                    </div>
+                    
+                    <div class="amount-input-group">
+                        <button class="adj-btn" onclick="adjustBet(1, -50)">−</button>
+                        <input type="number" class="amount-input" id="betAmount1" value="100">
+                        <button class="adj-btn" onclick="adjustBet(1, 50)">+</button>
+                    </div>
+
+                    <div class="quick-amounts">
+                        <button class="quick-btn" onclick="setBet(1, 100)">100</button>
+                        <button class="quick-btn" onclick="setBet(1, 200)">200</button>
+                        <button class="quick-btn" onclick="setBet(1, 500)">500</button>
+                        <button class="quick-btn" onclick="setBet(1, 1000)">1000</button>
+                    </div>
+
+                    <button class="big-bet-btn" id="placeBet1Btn" onclick="placeBet(1)">
+                        <span>BET</span>
+                        <span class="sub-text">PLACE YOUR BET</span>
+                    </button>
+                    
+                    <button class="big-cash-btn hidden" id="cashBtn1" onclick="cashOutBet(1)">
+                        <span>CASH OUT</span>
+                        <span class="sub-text" id="cashLabel1">KES 0.00</span>
+                    </button>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="bet-card">
+                    <div class="card-header">
+                        <button class="mini-tab active">BET</button>
+                        <button class="mini-tab">AUTO</button>
+                    </div>
+                    
+                    <div class="amount-input-group">
+                        <button class="adj-btn" onclick="adjustBet(2, -50)">−</button>
+                        <input type="number" class="amount-input" id="betAmount2" value="100">
+                        <button class="adj-btn" onclick="adjustBet(2, 50)">+</button>
+                    </div>
+
+                    <div class="quick-amounts">
+                        <button class="quick-btn" onclick="setBet(2, 100)">100</button>
+                        <button class="quick-btn" onclick="setBet(2, 200)">200</button>
+                        <button class="quick-btn" onclick="setBet(2, 500)">500</button>
+                        <button class="quick-btn" onclick="setBet(2, 1000)">1000</button>
+                    </div>
+
+                    <button class="big-bet-btn" id="placeBet2Btn" onclick="placeBet(2)">
+                        <span>BET</span>
+                        <span class="sub-text">PLACE YOUR BET</span>
+                    </button>
+                    
+                    <button class="big-cash-btn hidden" id="cashBtn2" onclick="cashOutBet(2)">
+                        <span>CASH OUT</span>
+                        <span class="sub-text" id="cashLabel2">KES 0.00</span>
+                    </button>
+                </div>
+            </div>
+            
+            <footer style="margin-top: auto; padding: 20px 0; text-align: center; font-size: 0.7rem; color: var(--text-muted); opacity: 0.5;">
+                🔒 256-BIT ENCRYPTION • PROVABLY FAIR SYSTEM • NEXUS HUB V2.0
+            </footer>
+        </main>
+    </div>
+
+    <!-- MODALS -->
+    <div id="modalBackdrop" class="modal-backdrop">
+        <div class="modal-window" id="modalWindow">
+            <!-- Modal Content Injected Here -->
+        </div>
+    </div>
+
+    <script>
+        // Lucide replacement
+        lucide.createIcons();
+    </script>
+    <!-- Use Vite Entry Point -->
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>

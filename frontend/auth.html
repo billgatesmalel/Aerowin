@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Login | Nexus Hub</title>
+    <link rel="stylesheet" href="auth.css">
+</head>
+<body>
+
+    <div class="auth-container">
+        
+        <div class="auth-brand">
+            <span class="brand-icon">✈️</span>
+            <div class="brand-name">NEXUS HUB</div>
+        </div>
+
+        <div class="auth-card">
+            
+            <div id="messageBox" class="message-box"></div>
+
+            <!-- LOGIN FORM -->
+            <div id="loginForm" class="active">
+                <div class="auth-header">
+                    <h1>Welcome Back</h1>
+                    <p>Enter your phone and password to continue</p>
+                </div>
+
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="loginPhone" placeholder="07xxxxxxxx" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Password</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="loginPassword" placeholder="••••••••" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="auth-btn">LOGIN TO PLATFORM</button>
+                </form>
+
+                <div class="auth-footer">
+                    Don't have an account? <a href="#" onclick="toggleForms()">Create account</a>
+                </div>
+            </div>
+
+            <!-- SIGNUP FORM -->
+            <div id="signupForm">
+                <div class="auth-header">
+                    <h1>Join Nexus Hub</h1>
+                    <p>Start your high-stakes flight today</p>
+                </div>
+
+                <form onsubmit="handleSignup(event)">
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="signupPhone" placeholder="07xxxxxxxx" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Password</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="signupPassword" placeholder="Minimum 6 characters" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Confirm Password</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="signupConfirm" placeholder="Repeat password" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Referral Code (Optional)</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="signupReferral" placeholder="CODE">
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 20px; font-size: 0.8rem; color: var(--text-secondary); display: flex; gap: 8px; align-items: flex-start;">
+                        <input type="checkbox" id="termsCheckbox" required style="margin-top: 3px;">
+                        <span>I agree to the Terms & Conditions and understand the risks of gambling.</span>
+                    </div>
+
+                    <button type="submit" class="auth-btn">CREATE SECURE ACCOUNT</button>
+                </form>
+
+                <div class="auth-footer">
+                    Already have an account? <a href="#" onclick="toggleForms()">Login here</a>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Use Vite Entry Point -->
+    <script type="module" src="src/auth.js"></script>
+</body>
+</html>
