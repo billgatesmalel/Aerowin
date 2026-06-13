@@ -128,5 +128,47 @@ window.handleResetPassword = async function (e) {
         showMessage(error.message || 'Reset failed. Try again.', 'error');
     } else {
         showMessage('Reset link sent! Check your registered email/SMS.', 'success');
+    }// ── OTP FLOW ──────────────────────────────────────────────────────────────
+
+window.verifyOTP = async () => {
+    const code = document.getElementById('otpCode').value;
+    const phone = sessionStorage.getItem('pendingPhone');
+    
+    try {
+        const res = await fetch('/api/otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'verify', phone, code })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            showMessage("Registration complete! You can now log in.", "success");
+            document.getElementById('otpView').style.display = 'none';
+            document.getElementById('loginForm').classList.add('active');
+        } else {
+            showMessage(data.error || "Verification failed", "error");
+        }
+    } catch (e) {
+        showMessage("Verification failed", "error");
     }
+};
+
+window.resendOTP = async () => {
+    const phone = sessionStorage.getItem('pendingPhone');
+    await fetch('/api/otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'send', phone })
+    });
+    showMessage("success", "New code sent!");
+};
+
+function showOTPView(phone) {
+    sessionStorage.setItem('pendingPhone', phone);
+    document.getElementById('signupForm').style.display = 'none';
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('otpView').style.display = 'block';
+    document.getElementById('otpPrompt').textContent = `Enter the 6-digit code sent to ${phone}`;
+}
 };

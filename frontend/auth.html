@@ -98,6 +98,27 @@
                 </div>
             </div>
 
+            <!-- OTP VERIFICATION VIEW -->
+            <div id="otpView">
+                <div class="auth-header">
+                    <h1>Verify Account</h1>
+                    <p id="otpPrompt">We sent a code to your phone</p>
+                </div>
+
+                <div class="form-group">
+                    <label>6-Digit Code</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="otpCode" placeholder="000000" maxlength="6" style="text-align: center; font-size: 1.5rem; letter-spacing: 8px;">
+                    </div>
+                </div>
+
+                <button onclick="verifyOTP()" class="auth-btn">VERIFY & ENTER</button>
+                
+                <div class="auth-footer">
+                    Didn't get the code? <a href="#" onclick="resendOTP()">Resend</a>
+                </div>
+            </div>
+
         </div>
 
     </div>

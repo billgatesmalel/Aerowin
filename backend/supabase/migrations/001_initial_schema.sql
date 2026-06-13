@@ -190,3 +190,16 @@ BEGIN
     RETURN json_build_object('success', true, 'winnings', v_winnings);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ═ OTP Store ════════════════════════════════════
+CREATE TABLE IF NOT EXISTS public.otps (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    phone TEXT NOT NULL,
+    code TEXT NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    verified BOOLEAN DEFAULT FALSE
+);
+
+ALTER TABLE public.otps ENABLE ROW LEVEL SECURITY;
+-- service_role only. No public policies needed as Edge Functions use service_role.
