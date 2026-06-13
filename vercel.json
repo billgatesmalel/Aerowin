@@ -4,23 +4,23 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "backend/api/$1"
+      "destination": "/backend/api/$1"
     },
     {
-      "source": "/(auth.html|admin.html|styles.css|auth.css)",
-      "destination": "frontend/$1"
+      "source": "/(auth.html|admin.html|super-admin.html|styles.css|auth.css)",
+      "destination": "/frontend/$1"
     },
     {
       "source": "/src/(.*)",
-      "destination": "frontend/src/$1"
+      "destination": "/frontend/src/$1"
     },
     {
       "source": "/",
-      "destination": "frontend/index.html"
+      "destination": "/frontend/index.html"
     },
     {
       "source": "/(.*)",
-      "destination": "frontend/$1"
+      "destination": "/frontend/$1"
     }
   ]
 }
