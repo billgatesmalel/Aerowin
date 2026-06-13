@@ -7,8 +7,24 @@
       "destination": "/backend/api/$1"
     },
     {
-      "source": "/(auth.html|admin.html|super-admin.html|styles.css|auth.css)",
-      "destination": "/frontend/$1"
+      "source": "/auth",
+      "destination": "/frontend/auth.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/frontend/admin.html"
+    },
+    {
+      "source": "/super-admin",
+      "destination": "/frontend/super-admin.html"
+    },
+    {
+      "source": "/(auth|admin|super-admin|index).html",
+      "destination": "/frontend/$1.html"
+    },
+    {
+      "source": "/(styles|auth).css",
+      "destination": "/frontend/$1.css"
     },
     {
       "source": "/src/(.*)",
