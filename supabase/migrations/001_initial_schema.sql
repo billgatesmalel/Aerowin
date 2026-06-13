@@ -38,7 +38,18 @@ VALUES (1, 1, NOW(), 2.50, 'waiting')
 ON CONFLICT DO NOTHING;
 
 -- Enable Realtime
-ALTER PUBLICATION supabase_realtime ADD TABLE public.active_game_state;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' 
+        AND schemaname = 'public' 
+        AND tablename = 'active_game_state'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.active_game_state;
+    END IF;
+END $$;
+
 ALTER TABLE public.active_game_state REPLICA IDENTITY FULL;
 CREATE TABLE IF NOT EXISTS public.bets (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
