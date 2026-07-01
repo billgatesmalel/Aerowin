@@ -312,3 +312,41 @@ window.handleForgotPassword = async function (e) {
         'success'
     );
 };
+
+// ─── Terms & Conditions Modal ─────────────────────────────────────────────────
+
+window.openTermsModal = function () {
+    const modal = document.getElementById('termsModal');
+    if (!modal) return;
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    // Scroll content to top every time it opens
+    const body = modal.querySelector('.tc-body');
+    if (body) body.scrollTop = 0;
+};
+
+window.closeTermsModal = function () {
+    const modal = document.getElementById('termsModal');
+    if (!modal) return;
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+};
+
+/** Clicking the backdrop (not the modal itself) closes it */
+window.handleOverlayClick = function (e) {
+    if (e.target === document.getElementById('termsModal')) {
+        closeTermsModal();
+    }
+};
+
+/** "I Accept" → tick the checkbox automatically and close */
+window.acceptTerms = function () {
+    const cb = document.getElementById('termsCheckbox');
+    if (cb) cb.checked = true;
+    closeTermsModal();
+};
+
+// Close with Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeTermsModal();
+});

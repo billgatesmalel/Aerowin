@@ -152,7 +152,7 @@
 
                     <div class="terms-row">
                         <input type="checkbox" id="termsCheckbox" required>
-                        <label for="termsCheckbox">I agree to the <a href="#" class="terms-link">Terms &amp; Conditions</a> and understand the risks of gambling.</label>
+                        <label for="termsCheckbox">I agree to the <a href="#" class="terms-link" onclick="openTermsModal(); return false;">Terms &amp; Conditions</a> and understand the risks of gambling.</label>
                     </div>
 
                     <button type="submit" class="auth-btn" id="signupBtn">
@@ -210,6 +210,97 @@
             🔒 256-BIT ENCRYPTION &bull; PROVABLY FAIR &bull; NEXUS HUB V2.0
         </div>
 
+    </div>
+
+    <!-- ── TERMS & CONDITIONS MODAL ─────────────────────────────────────── -->
+    <div id="termsModal" class="tc-overlay" role="dialog" aria-modal="true" aria-labelledby="tcTitle" onclick="handleOverlayClick(event)">
+        <div class="tc-modal">
+
+            <div class="tc-header">
+                <h2 id="tcTitle">📋 Terms &amp; Conditions</h2>
+                <button class="tc-close" onclick="closeTermsModal()" aria-label="Close Terms">✕</button>
+            </div>
+
+            <div class="tc-body">
+                <p class="tc-effective">Effective Date: 1 July 2025 &nbsp;|&nbsp; Last Updated: 1 July 2025</p>
+
+                <h3>1. Acceptance of Terms</h3>
+                <p>By creating an account or using any service offered by Nexus Hub (&quot;the Platform&quot;, &quot;we&quot;, &quot;us&quot;), you confirm that you have read, understood, and agree to be bound by these Terms &amp; Conditions. If you do not agree, you must immediately stop using the Platform and delete your account.</p>
+
+                <h3>2. Eligibility</h3>
+                <p>You must meet <strong>all</strong> of the following criteria to use the Platform:</p>
+                <ul>
+                    <li>You are at least <strong>18 years of age</strong>.</li>
+                    <li>You are a resident of the Republic of Kenya or a jurisdiction where online gambling is lawful.</li>
+                    <li>You are not an employee, director, or close relative of Nexus Hub or any of its licensees.</li>
+                    <li>You are not self-excluded or banned from the Platform.</li>
+                    <li>You are acting on your own behalf and not as an agent for any third party.</li>
+                </ul>
+                <p>We reserve the right to request identity verification documents at any time. Accounts found to be in violation of eligibility requirements will be suspended immediately and any winnings may be forfeited.</p>
+
+                <h3>3. Account Registration &amp; Security</h3>
+                <p>You may hold only <strong>one account</strong> per person. Duplicate accounts will be permanently banned. You are responsible for maintaining the confidentiality of your password. Any activity that occurs under your account is your sole responsibility. Notify us immediately at <strong>support@nexushub.co.ke</strong> if you suspect unauthorised access.</p>
+                <p>We use industry-standard bcrypt password hashing and TLS encryption. We will never ask for your password via email, SMS, or phone.</p>
+
+                <h3>4. Deposits</h3>
+                <p>All deposits are processed in Kenyan Shillings (KES) via M-Pesa. Minimum deposit is <strong>KES 100</strong>. Deposits are credited to your account balance immediately upon confirmation from Safaricom. Nexus Hub is not liable for delays caused by the M-Pesa network or Safaricom. All deposits are non-refundable once wagered.</p>
+
+                <h3>5. Withdrawals</h3>
+                <p>Minimum withdrawal is <strong>KES 100</strong>. Maximum single withdrawal is <strong>KES 100,000</strong>. Withdrawals are reviewed and processed within 24 hours during business days. We reserve the right to request identity verification before releasing funds. Withdrawals are made to the M-Pesa number registered to your account.</p>
+
+                <h3>6. Gameplay &amp; Fairness</h3>
+                <p>The Aviator game uses a <strong>provably fair</strong> algorithm. Crash multipliers are determined server-side before each round and cannot be influenced by any player action. Minimum bet is <strong>KES 50</strong> per slot. Two simultaneous bets are permitted per account. Winnings are credited immediately upon cash-out.</p>
+                <p>Any attempt to exploit bugs, use automated bots, collude with other players, or manipulate the game in any way will result in immediate account termination and forfeiture of all balances.</p>
+
+                <h3>7. Bonuses &amp; Referrals</h3>
+                <p>New accounts receive a <strong>KES 1,000 demo balance</strong> for familiarisation. This balance cannot be withdrawn until real deposits are made and wagering requirements are met. Referral bonuses are credited only when the referred user makes their first qualifying deposit. Bonus abuse will result in account suspension.</p>
+
+                <h3>8. Responsible Gambling</h3>
+                <p>Gambling is entertainment, not a source of income. We strongly encourage responsible play:</p>
+                <ul>
+                    <li>Set personal deposit and loss limits.</li>
+                    <li>Take regular breaks.</li>
+                    <li>Never gamble with money you cannot afford to lose.</li>
+                    <li>If gambling becomes a problem, contact the <strong>Kenya National Responsible Gambling Programme</strong> or email <strong>support@nexushub.co.ke</strong> to request a self-exclusion.</li>
+                </ul>
+                <p>Persons showing signs of problem gambling may have their access restricted at our discretion.</p>
+
+                <h3>9. Prohibited Activities</h3>
+                <ul>
+                    <li>Money laundering or funding illegal activities.</li>
+                    <li>Using stolen payment methods.</li>
+                    <li>Creating accounts on behalf of others.</li>
+                    <li>Using VPNs or proxies to circumvent geographic restrictions.</li>
+                    <li>Any form of cheating, collusion, or exploit abuse.</li>
+                </ul>
+
+                <h3>10. Privacy &amp; Data</h3>
+                <p>We collect and process your phone number and gameplay data solely to operate the Platform. We do not sell your data to third parties. Payment data is processed by Safaricom (M-Pesa) and is subject to their privacy policy. By registering, you consent to receive Platform notifications via your registered phone number.</p>
+
+                <h3>11. Platform Availability</h3>
+                <p>We strive for 99.9% uptime, but do not guarantee uninterrupted access. We reserve the right to suspend the Platform for maintenance at any time. We are not liable for losses incurred due to service interruptions or technical failures beyond our control.</p>
+
+                <h3>12. Limitation of Liability</h3>
+                <p>To the maximum extent permitted by Kenyan law, Nexus Hub shall not be liable for any indirect, incidental, or consequential damages arising from your use of the Platform. Our total liability shall not exceed the amount deposited by you in the 30 days preceding the claim.</p>
+
+                <h3>13. Amendments</h3>
+                <p>We may update these Terms at any time. Material changes will be communicated via the Platform or your registered contact. Continued use of the Platform after changes constitutes acceptance of the updated Terms.</p>
+
+                <h3>14. Governing Law</h3>
+                <p>These Terms are governed by the laws of the <strong>Republic of Kenya</strong>. Any disputes shall be subject to the exclusive jurisdiction of the courts of Nairobi, Kenya.</p>
+
+                <h3>15. Contact</h3>
+                <p>For support, complaints, or responsible gambling assistance, contact us at:<br>
+                <strong>Email:</strong> support@nexushub.co.ke<br>
+                <strong>Platform:</strong> https://metricwin.vercel.app</p>
+            </div>
+
+            <div class="tc-footer">
+                <button class="auth-btn tc-accept-btn" onclick="acceptTerms()">✓ I ACCEPT THESE TERMS</button>
+                <button class="tc-decline-btn" onclick="closeTermsModal()">Decline</button>
+            </div>
+
+        </div>
     </div>
 
     <!-- Use Vite Entry Point -->
