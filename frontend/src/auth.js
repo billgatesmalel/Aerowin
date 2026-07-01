@@ -113,12 +113,12 @@ window.updateStrength = function (pw) {
     if (/[^A-Za-z0-9]/.test(pw))                score++;
 
     const levels = [
-        { pct: '0%',   color: 'transparent',         text: '' },
-        { pct: '25%',  color: '#e21d48',              text: '⚠ Weak' },
-        { pct: '50%',  color: '#f59e0b',              text: '◑ Fair' },
-        { pct: '75%',  color: '#3b82f6',              text: '◕ Good' },
-        { pct: '90%',  color: '#10b981',              text: '✓ Strong' },
-        { pct: '100%', color: '#10b981',              text: '✓✓ Very Strong' },
+        { pct: '0%',   color: 'transparent', text: '' },
+        { pct: '25%',  color: '#EF4444',     text: '⚠ Weak' },
+        { pct: '50%',  color: '#F59E0B',     text: '◑ Fair' },
+        { pct: '75%',  color: '#38BDF8',     text: '◕ Good' },
+        { pct: '90%',  color: '#22C55E',     text: '✓ Strong' },
+        { pct: '100%', color: '#22C55E',     text: '✓✓ Very Strong' },
     ];
 
     const lvl = levels[Math.min(score, 5)];
@@ -251,8 +251,8 @@ async function checkUsernameAvailability(username) {
     container.style.display = 'block';
 
     if (!validateUsername(username)) {
-        container.className = 'availability-indicator unavailable';
-        container.textContent = '❌ Invalid format (3-20 chars: alphanumeric, _, or .).';
+        container.className = 'availability-indicator invalid-format';
+        container.textContent = '⚠ Invalid format — 3–20 chars: letters, numbers, _ or . only';
         return;
     }
 
