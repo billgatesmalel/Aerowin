@@ -1,6 +1,6 @@
 /* ══════════════════════════════════════════════════════════════════════════════
    AUTH ELITE — PREMIUM AUTHENTICATION STYLING
-   Nexus Hub v2.0 — No OTP. Pure password + phone.
+   Metricwin v2.0 — No OTP. Pure password + phone.
    ══════════════════════════════════════════════════════════════════════════════ */
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&display=swap');
@@ -130,15 +130,34 @@ body::before {
 /* ── Form Panels ───────────────────────────────────────────────────────────── */
 #loginForm,
 #signupForm,
-#forgotForm {
+#forgotForm,
+#newPasswordForm {
     display: none;
 }
 
 #loginForm.active,
 #signupForm.active,
-#forgotForm.active {
+#forgotForm.active,
+#newPasswordForm.active {
     display: block;
     animation: slideIn 0.35s ease;
+}
+
+/* Username Availability indicator styling */
+.availability-indicator {
+    font-size: 0.78rem;
+    margin-top: 5px;
+    font-weight: 600;
+    transition: color 0.15s ease;
+}
+.availability-indicator.checking {
+    color: var(--text-secondary);
+}
+.availability-indicator.available {
+    color: var(--green);
+}
+.availability-indicator.unavailable {
+    color: var(--bg-accent);
 }
 
 @keyframes slideIn {

@@ -22,7 +22,7 @@ export default async function handler(req, res) {
                 'content-type': 'application/json'
             },
             body: JSON.stringify({
-                sender: { name: "Nexus Hub Support", email: "support@nexushub.co.ke" },
+                sender: { name: "Metricwin Support", email: "support@metricwin.app" },
                 to: [{ email: to }],
                 subject: subject,
                 htmlContent: htmlContent

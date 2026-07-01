@@ -59,7 +59,7 @@ async function loadAuditTrail() {
         list.innerHTML = logs.map(log => `
             <tr>
                 <td style="color: #444;">${new Date(log.created_at).toLocaleTimeString()}</td>
-                <td style="font-weight: 700; color: var(--admin-red);">${log.profiles?.phone || 'SYSTEM'}</td>
+                <td style="font-weight: 700; color: var(--admin-red);">${log.profiles ? (log.profiles.username ? `@${log.profiles.username}` : log.profiles.phone) : 'SYSTEM'}</td>
                 <td class="action-tag">${log.action}</td>
                 <td style="color: #666;">ID: ${log.target_id || '--'}</td>
                 <td style="font-size: 0.6rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${JSON.stringify(log.details)}</td>

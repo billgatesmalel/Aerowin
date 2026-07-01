@@ -157,54 +157,141 @@ window.handleLogin = async function (e) {
     e.preventDefault();
     if (!checkRateLimit()) return;
 
-    const rawPhone = sanitize(document.getElementById('loginPhone').value);
+    const input = sanitize(document.getElementById('loginPhoneOrUsername').value);
     const password = document.getElementById('loginPassword').value;
-    const phone    = normalisePhone(rawPhone);
 
-    if (!validatePhone(phone)) {
-        showMessage('Enter a valid Kenyan phone number (e.g. 0712345678).', 'error');
+    if (!input || !password) {
+        showMessage('Please enter your phone/username and password.', 'error');
         return;
     }
-    if (!password) {
-        showMessage('Please enter your password.', 'error');
-        return;
-    }
-
-    // Use a synthetic email (Supabase requires email format)
-    const email = phone + '@metricwin.app';
 
     setLoading('loginBtn', true);
     showMessage('Authenticating…', 'info');
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    let email = '';
+    // Detect if input is phone number or username
+    const isPhoneNumber = /^\+?\d+$/.test(input.replace(/[\s\-]/g, ''));
 
-    setLoading('loginBtn', false);
+    try {
+        if (isPhoneNumber) {
+            const phone = normalisePhone(input);
+            // Look up email registered on this phone number
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('email')
+                .eq('phone', phone)
+                .limit(1)
+                .maybeSingle();
 
-    if (error) {
-        recordAttempt(false);
-        // Generic message — never reveal if phone exists
-        showMessage('Invalid phone number or password. Please try again.', 'error');
-        return;
+            if (profile && profile.email) {
+                email = profile.email;
+            } else {
+                email = phone + '@metricwin.app'; // legacy default fallback
+            }
+        } else {
+            // Assume Username
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('email')
+                .ilike('username', input)
+                .limit(1)
+                .maybeSingle();
+
+            if (profile && profile.email) {
+                email = profile.email;
+            } else {
+                email = input.toLowerCase() + '@metricwin.app'; // legacy default fallback
+            }
+        }
+
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+        setLoading('loginBtn', false);
+
+        if (error) {
+            recordAttempt(false);
+            showMessage('Invalid username/phone number or password. Please try again.', 'error');
+            return;
+        }
+
+        recordAttempt(true);
+
+        if (!document.getElementById('rememberMe')?.checked) {
+            window.addEventListener('pagehide', () => supabase.auth.signOut(), { once: true });
+        }
+
+        showMessage('Login successful! Redirecting…', 'success');
+        setTimeout(() => window.location.replace('/'), 700);
+    } catch (err) {
+        setLoading('loginBtn', false);
+        showMessage('An unexpected error occurred. Please try again.', 'error');
     }
-
-    recordAttempt(true);
-
-    // Handle "Remember Me"
-    if (!document.getElementById('rememberMe')?.checked) {
-        // Session will expire when browser closes (Supabase default is persistent;
-        // we sign out on pagehide if remember-me is unchecked)
-        window.addEventListener('pagehide', () => supabase.auth.signOut(), { once: true });
-    }
-
-    showMessage('Login successful! Redirecting…', 'success');
-    setTimeout(() => window.location.replace('/'), 700);
 };
 
 // ─── Sign Up ──────────────────────────────────────────────────────────────────
 
+// Client-side username syntax check
+function validateUsername(username) {
+    // 3–20 characters long.
+    // Only letters (A–Z), numbers (0–9), underscores (_), and periods (.) are allowed. No spaces.
+    return /^[a-zA-Z0-9_\.]{3,20}$/.test(username);
+}
+
+// Debounced Username availability checker function
+async function checkUsernameAvailability(username) {
+    const container = document.getElementById('usernameAvailability');
+    if (!container) return;
+
+    if (!username) {
+        container.style.display = 'none';
+        container.textContent = '';
+        return;
+    }
+
+    container.style.display = 'block';
+
+    if (!validateUsername(username)) {
+        container.className = 'availability-indicator unavailable';
+        container.textContent = '❌ Invalid format (3-20 chars: alphanumeric, _, or .).';
+        return;
+    }
+
+    container.className = 'availability-indicator checking';
+    container.textContent = '⏳ Checking availability...';
+
+    try {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('id')
+            .ilike('username', username)
+            .limit(1);
+
+        if (error) {
+            container.className = 'availability-indicator checking';
+            container.textContent = '⚠️ Service error checking availability.';
+            return;
+        }
+
+        if (data && data.length > 0) {
+            container.className = 'availability-indicator unavailable';
+            container.textContent = `❌ "${username}" is already taken.`;
+            return false;
+        } else {
+            container.className = 'availability-indicator available';
+            container.textContent = `✅ "${username}" is available!`;
+            return true;
+        }
+    } catch (err) {
+        container.className = 'availability-indicator checking';
+        container.textContent = '⚠️ Service error checks.';
+        return false;
+    }
+}
+
 window.handleSignup = async function (e) {
     e.preventDefault();
 
+    const username = sanitize(document.getElementById('signupUsername').value);
     const rawPhone = sanitize(document.getElementById('signupPhone').value);
     const password = document.getElementById('signupPassword').value;
     const confirm  = document.getElementById('signupConfirm').value;
@@ -213,6 +300,16 @@ window.handleSignup = async function (e) {
     const phone    = normalisePhone(rawPhone);
 
     // ── Validation ──
+    if (!username) {
+        showMessage('Username is required.', 'error');
+        return;
+    }
+
+    if (!validateUsername(username)) {
+        showMessage('Username must be 3-20 characters: alphanumeric, underscores or periods only.', 'error');
+        return;
+    }
+
     if (!validatePhone(phone)) {
         showMessage('Enter a valid Kenyan phone number (e.g. 0712345678).', 'error');
         return;
@@ -230,88 +327,250 @@ window.handleSignup = async function (e) {
         return;
     }
 
-    const email = phone + '@metricwin.app';
-
     setLoading('signupBtn', true);
-    showMessage('Creating your account…', 'info');
+    showMessage('Checking username availability…', 'info');
 
-    // Supabase hashes the password with bcrypt internally
-    const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-            data: { phone, referral_code: referral || null },
-        },
-    });
+    // Double check availability one final time before calling auth
+    try {
+        const { data: existingUser, error: checkErr } = await supabase
+            .from('profiles')
+            .select('id')
+            .ilike('username', username)
+            .limit(1);
 
-    if (error) {
-        setLoading('signupBtn', false);
-        // Don't reveal "already registered" — use generic message
-        showMessage('Registration failed. This phone may already be registered.', 'error');
-        return;
-    }
+        if (checkErr) throw checkErr;
 
-    // Create profile row immediately
-    if (data?.user) {
-        await supabase.from('profiles').upsert({
-            id:          data.user.id,
-            phone,
-            referred_by: referral || null,
-            balance:     1000,
-        });
-    }
-
-    // Auto-sign in (signUp returns a session if email confirmation is disabled in Supabase)
-    if (data?.session) {
-        setLoading('signupBtn', false);
-        showMessage('Account created! Welcome to Nexus Hub ✈️', 'success');
-        setTimeout(() => window.location.replace('/'), 900);
-    } else {
-        // Supabase has email confirmation enabled — sign in manually
-        const { error: loginErr } = await supabase.auth.signInWithPassword({ email, password });
-        setLoading('signupBtn', false);
-        if (loginErr) {
-            showMessage('Account created! Please log in to continue.', 'success');
-            setTimeout(() => {
-                window.toggleForms();
-            }, 1500);
-        } else {
-            showMessage('Account created! Welcome to Nexus Hub ✈️', 'success');
-            setTimeout(() => window.location.replace('/'), 900);
+        if (existingUser && existingUser.length > 0) {
+            setLoading('signupBtn', false);
+            showMessage('Username is already taken. Please try another one.', 'error');
+            return;
         }
+
+        // Also check if phone belongs to another profile
+        const { data: existingPhone } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('phone', phone)
+            .limit(1);
+
+        if (existingPhone && existingPhone.length > 0) {
+            setLoading('signupBtn', false);
+            showMessage('This phone number is already registered under another account.', 'error');
+            return;
+        }
+
+        // Generate synthetic unique email using unique username
+        const email = username.toLowerCase() + '@metricwin.app';
+
+        showMessage('Creating your secure account…', 'info');
+
+        // Create auth user account
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: { phone, username, referral_code: referral || null },
+            },
+        });
+
+        if (error) {
+            setLoading('signupBtn', false);
+            showMessage('Registration error: ' + error.message, 'error');
+            return;
+        }
+
+        // Create profile row immediately
+        if (data?.user) {
+            const { error: profileErr } = await supabase.from('profiles').upsert({
+                id:          data.user.id,
+                username:    username,
+                phone:       phone,
+                email:       email,
+                referred_by: referral || null,
+                balance:     1000,
+                role:        'User'
+            });
+
+            if (profileErr) {
+                console.error("Profile creation error", profileErr);
+            }
+        }
+
+        // Auto-sign in (sign up returns a session if email confirmation is disabled in Supabase)
+        if (data?.session) {
+            setLoading('signupBtn', false);
+            showMessage('Account created! Welcome to Metricwin ✈️', 'success');
+            setTimeout(() => window.location.replace('/'), 900);
+        } else {
+            // Confirmation is enabled or session was not returned — sign in manually
+            const { error: loginErr } = await supabase.auth.signInWithPassword({ email, password });
+            setLoading('signupBtn', false);
+            if (loginErr) {
+                showMessage('Account created! Please log in to continue.', 'success');
+                setTimeout(() => {
+                    window.toggleForms();
+                }, 1500);
+            } else {
+                showMessage('Account created! Welcome to Metricwin ✈️', 'success');
+                setTimeout(() => window.location.replace('/'), 900);
+            }
+        }
+
+    } catch (err) {
+        setLoading('signupBtn', false);
+        showMessage('Error during signup: ' + err.message, 'error');
     }
 };
 
-// ─── Forgot Password ──────────────────────────────────────────────────────────
+// ─── Forgot Password (Username-First Verification) ──────────────────────────
 
 window.handleForgotPassword = async function (e) {
     e.preventDefault();
 
-    const rawPhone = sanitize(document.getElementById('forgotPhone').value);
-    const phone    = normalisePhone(rawPhone);
-
-    if (!validatePhone(phone)) {
-        showMessage('Enter a valid Kenyan phone number.', 'error');
+    const username = sanitize(document.getElementById('forgotUsername').value);
+    if (!username) {
+        showMessage('Please enter your username.', 'error');
         return;
     }
 
-    const email = phone + '@metricwin.app';
-
     setLoading('forgotBtn', true);
-    showMessage('Processing request…', 'info');
+    showMessage('Verifying username…', 'info');
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + '/auth',
+    try {
+        // Look up registered user using username
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('email, id')
+            .ilike('username', username)
+            .limit(1)
+            .maybeSingle();
+
+        if (error || !profile) {
+            setLoading('forgotBtn', false);
+            showMessage('Username not found.', 'error');
+            return;
+        }
+
+        // Trigger secure reset email
+        const { error: resetErr } = await supabase.auth.resetPasswordForEmail(profile.email, {
+            redirectTo: window.location.origin + '/auth?type=recovery',
+        });
+
+        setLoading('forgotBtn', false);
+
+        if (resetErr) {
+            showMessage('Failed to send reset link. Please try again.', 'error');
+            return;
+        }
+
+        showMessage(
+            'A secure password reset link has been sent to the email address associated with your account.',
+            'success'
+        );
+    } catch (err) {
+        setLoading('forgotBtn', false);
+        showMessage('An error occurred. Please try again.', 'error');
+    }
+};
+
+// ─── Set New Password ─────────────────────────────────────────────────────────
+
+window.updateNewPasswordStrength = function (pw) {
+    window.updateStrength(pw); // Reuse register strength logic for styling
+    const fill = document.getElementById('newStrengthFill');
+    const label = document.getElementById('newStrengthLabel');
+    const registerFill = document.getElementById('strengthFill');
+    const registerLabel = document.getElementById('strengthLabel');
+    if (fill && registerFill) {
+        fill.style.width = registerFill.style.width;
+        fill.style.backgroundColor = registerFill.style.backgroundColor;
+    }
+    if (label && registerLabel) {
+        label.textContent = registerLabel.textContent;
+        label.style.color = registerLabel.style.color;
+    }
+};
+
+window.handleSetNewPassword = async function (e) {
+    e.preventDefault();
+
+    const newPassword = document.getElementById('newPassword').value;
+    const confirm     = document.getElementById('newPasswordConfirm').value;
+
+    if (newPassword.length < 8) {
+        showMessage('Password must be at least 8 characters.', 'error');
+        return;
+    }
+    if (newPassword !== confirm) {
+        showMessage('Passwords do not match.', 'error');
+        return;
+    }
+
+    setLoading('newPasswordBtn', true);
+    showMessage('Updating your password…', 'info');
+
+    try {
+        const { error } = await supabase.auth.updateUser({ password: newPassword });
+
+        if (error) {
+            setLoading('newPasswordBtn', false);
+            showMessage('Failed to update password: ' + error.message, 'error');
+            return;
+        }
+
+        // Invalidate all active sessions by signing out
+        await supabase.auth.signOut();
+
+        setLoading('newPasswordBtn', false);
+        showMessage('Your password has been reset successfully. Please sign in with your new password.', 'success');
+
+        setTimeout(() => {
+            document.getElementById('newPasswordForm').classList.remove('active');
+            document.getElementById('loginForm').classList.add('active');
+        }, 4000);
+
+    } catch (err) {
+        setLoading('newPasswordBtn', false);
+        showMessage('An error occurred resetting password.', 'error');
+    }
+};
+
+function showNewPasswordForm() {
+    document.getElementById('loginForm').classList.remove('active');
+    document.getElementById('signupForm').classList.remove('active');
+    document.getElementById('forgotForm').classList.remove('active');
+    document.getElementById('newPasswordForm').classList.add('active');
+    showMessage('Recovery link verified. Please enter a new password.', 'info');
+}
+
+// ─── Event Listeners Hook ───────────────────────────────────────────────────
+
+window.addEventListener('load', () => {
+    // Check if loading recovery type
+    if (window.location.hash.includes('type=recovery') || window.location.search.includes('type=recovery')) {
+        showNewPasswordForm();
+    }
+
+    // Subscribe to password recovery state change
+    supabase.auth.onAuthStateChange(async (event, session) => {
+        if (event === "PASSWORD_RECOVERY") {
+            showNewPasswordForm();
+        }
     });
 
-    setLoading('forgotBtn', false);
-
-    // Always show success — never reveal whether the phone exists
-    showMessage(
-        'If that phone number is registered, a reset link has been sent to the associated email. Contact support if you need help.',
-        'success'
-    );
-};
+    // Username input listener for real-time av check
+    const usernameInput = document.getElementById('signupUsername');
+    if (usernameInput) {
+        let timer;
+        usernameInput.addEventListener('input', () => {
+            clearTimeout(timer);
+            const username = usernameInput.value.trim();
+            timer = setTimeout(() => {
+                checkUsernameAvailability(username);
+            }, 350);
+        });
+    }
+});
 
 // ─── Terms & Conditions Modal ─────────────────────────────────────────────────
 

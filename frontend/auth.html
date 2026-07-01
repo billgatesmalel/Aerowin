@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Login | Nexus Hub</title>
-    <meta name="description" content="Sign in or create your Nexus Hub account to start playing Aviator Elite.">
+    <title>Login | Metricwin</title>
+    <meta name="description" content="Sign in or create your Metricwin account to start playing Aviator Elite.">
     <link rel="stylesheet" href="auth.css">
 </head>
 <body>
@@ -14,7 +14,7 @@
         <!-- BRAND -->
         <div class="auth-brand">
             <span class="brand-icon">✈️</span>
-            <div class="brand-name">NEXUS HUB</div>
+            <div class="brand-name">METRICWIN</div>
         </div>
 
         <div class="auth-card">
@@ -30,15 +30,14 @@
 
                 <form id="loginFormEl" onsubmit="handleLogin(event)" novalidate>
                     <div class="form-group">
-                        <label for="loginPhone">Phone Number</label>
+                        <label for="loginPhoneOrUsername">Phone Number or Username</label>
                         <div class="input-wrapper">
                             <span class="input-icon">📱</span>
                             <input
-                                type="tel"
-                                id="loginPhone"
-                                placeholder="07xxxxxxxx"
-                                autocomplete="tel"
-                                inputmode="tel"
+                                type="text"
+                                id="loginPhoneOrUsername"
+                                placeholder="07xxxxxxxx or username"
+                                autocomplete="username"
                                 required
                             >
                         </div>
@@ -82,11 +81,26 @@
             <!-- ── SIGNUP FORM ─────────────────────────────── -->
             <div id="signupForm">
                 <div class="auth-header">
-                    <h1>Join Nexus Hub</h1>
+                    <h1>Join Metricwin</h1>
                     <p>Start your high-stakes flight today</p>
                 </div>
 
                 <form id="signupFormEl" onsubmit="handleSignup(event)" novalidate>
+                    <div class="form-group">
+                        <label for="signupUsername">Username</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">👤</span>
+                            <input
+                                type="text"
+                                id="signupUsername"
+                                placeholder="3-20 characters: alphanumeric, _, or ."
+                                autocomplete="username"
+                                required
+                            >
+                        </div>
+                        <div class="availability-indicator" id="usernameAvailability"></div>
+                    </div>
+
                     <div class="form-group">
                         <label for="signupPhone">Phone Number</label>
                         <div class="input-wrapper">
@@ -170,27 +184,26 @@
             <div id="forgotForm">
                 <div class="auth-header">
                     <h1>Reset Password</h1>
-                    <p>Enter your phone number to receive a reset link</p>
+                    <p>Enter your username to recover your account</p>
                 </div>
 
                 <form id="forgotFormEl" onsubmit="handleForgotPassword(event)" novalidate>
                     <div class="form-group">
-                        <label for="forgotPhone">Phone Number</label>
+                        <label for="forgotUsername">Username</label>
                         <div class="input-wrapper">
-                            <span class="input-icon">📱</span>
+                            <span class="input-icon">👤</span>
                             <input
-                                type="tel"
-                                id="forgotPhone"
-                                placeholder="07xxxxxxxx"
-                                autocomplete="tel"
-                                inputmode="tel"
+                                type="text"
+                                id="forgotUsername"
+                                placeholder="Enter your username"
+                                autocomplete="username"
                                 required
                             >
                         </div>
                     </div>
 
                     <div class="info-box">
-                        🔐 A secure password reset link will be sent to your registered email address. Contact support if you need further assistance.
+                        🔐 A secure password reset link will be sent to the email registered with your username.
                     </div>
 
                     <button type="submit" class="auth-btn" id="forgotBtn">
@@ -204,10 +217,64 @@
                 </div>
             </div>
 
+            <!-- ── SET NEW PASSWORD FORM ────────────────────── -->
+            <div id="newPasswordForm">
+                <div class="auth-header">
+                    <h1>Set New Password</h1>
+                    <p>Create a new secure password below</p>
+                </div>
+
+                <form id="newPasswordFormEl" onsubmit="handleSetNewPassword(event)" novalidate>
+                    <div class="form-group">
+                        <label for="newPassword">New Password</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">🔒</span>
+                            <input
+                                type="password"
+                                id="newPassword"
+                                placeholder="Minimum 8 characters"
+                                autocomplete="new-password"
+                                required
+                                oninput="updateNewPasswordStrength(this.value)"
+                            >
+                            <button type="button" class="toggle-pw" onclick="togglePassword('newPassword', this)" aria-label="Toggle password visibility">
+                                <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                        </div>
+                        <div class="strength-bar" id="newStrengthBar">
+                            <div class="strength-fill" id="newStrengthFill"></div>
+                        </div>
+                        <div class="strength-label" id="newStrengthLabel"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newPasswordConfirm">Confirm New Password</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">🔒</span>
+                            <input
+                                type="password"
+                                id="newPasswordConfirm"
+                                placeholder="Repeat new password"
+                                autocomplete="new-password"
+                                required
+                            >
+                            <button type="button" class="toggle-pw" onclick="togglePassword('newPasswordConfirm', this)" aria-label="Toggle password visibility">
+                                <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="auth-btn" id="newPasswordBtn">
+                        <span class="btn-text">RESET MY PASSWORD</span>
+                        <span class="btn-spinner hidden">⟳</span>
+                    </button>
+                </form>
+            </div>
+
         </div>
 
         <div class="auth-footer-global">
-            🔒 256-BIT ENCRYPTION &bull; PROVABLY FAIR &bull; NEXUS HUB V2.0
+            🔒 256-BIT ENCRYPTION &bull; PROVABLY FAIR &bull; METRICWIN V2.0
         </div>
 
     </div>
@@ -225,25 +292,25 @@
                 <p class="tc-effective">Effective Date: 1 July 2025 &nbsp;|&nbsp; Last Updated: 1 July 2025</p>
 
                 <h3>1. Acceptance of Terms</h3>
-                <p>By creating an account or using any service offered by Nexus Hub (&quot;the Platform&quot;, &quot;we&quot;, &quot;us&quot;), you confirm that you have read, understood, and agree to be bound by these Terms &amp; Conditions. If you do not agree, you must immediately stop using the Platform and delete your account.</p>
+                <p>By creating an account or using any service offered by Metricwin (&quot;the Platform&quot;, &quot;we&quot;, &quot;us&quot;), you confirm that you have read, understood, and agree to be bound by these Terms &amp; Conditions. If you do not agree, you must immediately stop using the Platform and delete your account.</p>
 
                 <h3>2. Eligibility</h3>
                 <p>You must meet <strong>all</strong> of the following criteria to use the Platform:</p>
                 <ul>
                     <li>You are at least <strong>18 years of age</strong>.</li>
                     <li>You are a resident of the Republic of Kenya or a jurisdiction where online gambling is lawful.</li>
-                    <li>You are not an employee, director, or close relative of Nexus Hub or any of its licensees.</li>
+                    <li>You are not an employee, director, or close relative of Metricwin or any of its licensees.</li>
                     <li>You are not self-excluded or banned from the Platform.</li>
                     <li>You are acting on your own behalf and not as an agent for any third party.</li>
                 </ul>
                 <p>We reserve the right to request identity verification documents at any time. Accounts found to be in violation of eligibility requirements will be suspended immediately and any winnings may be forfeited.</p>
 
                 <h3>3. Account Registration &amp; Security</h3>
-                <p>You may hold only <strong>one account</strong> per person. Duplicate accounts will be permanently banned. You are responsible for maintaining the confidentiality of your password. Any activity that occurs under your account is your sole responsibility. Notify us immediately at <strong>support@nexushub.co.ke</strong> if you suspect unauthorised access.</p>
+                <p>You may hold only <strong>one account</strong> per person. Duplicate accounts will be permanently banned. You are responsible for maintaining the confidentiality of your password. Any activity that occurs under your account is your sole responsibility. Notify us immediately at <strong>support@metricwin.app</strong> if you suspect unauthorised access.</p>
                 <p>We use industry-standard bcrypt password hashing and TLS encryption. We will never ask for your password via email, SMS, or phone.</p>
 
                 <h3>4. Deposits</h3>
-                <p>All deposits are processed in Kenyan Shillings (KES) via M-Pesa. Minimum deposit is <strong>KES 100</strong>. Deposits are credited to your account balance immediately upon confirmation from Safaricom. Nexus Hub is not liable for delays caused by the M-Pesa network or Safaricom. All deposits are non-refundable once wagered.</p>
+                <p>All deposits are processed in Kenyan Shillings (KES) via M-Pesa. Minimum deposit is <strong>KES 100</strong>. Deposits are credited to your account balance immediately upon confirmation from Safaricom. Metricwin is not liable for delays caused by the M-Pesa network or Safaricom. All deposits are non-refundable once wagered.</p>
 
                 <h3>5. Withdrawals</h3>
                 <p>Minimum withdrawal is <strong>KES 100</strong>. Maximum single withdrawal is <strong>KES 100,000</strong>. Withdrawals are reviewed and processed within 24 hours during business days. We reserve the right to request identity verification before releasing funds. Withdrawals are made to the M-Pesa number registered to your account.</p>
@@ -261,7 +328,7 @@
                     <li>Set personal deposit and loss limits.</li>
                     <li>Take regular breaks.</li>
                     <li>Never gamble with money you cannot afford to lose.</li>
-                    <li>If gambling becomes a problem, contact the <strong>Kenya National Responsible Gambling Programme</strong> or email <strong>support@nexushub.co.ke</strong> to request a self-exclusion.</li>
+                    <li>If gambling becomes a problem, contact the <strong>Kenya National Responsible Gambling Programme</strong> or email <strong>support@metricwin.app</strong> to request a self-exclusion.</li>
                 </ul>
                 <p>Persons showing signs of problem gambling may have their access restricted at our discretion.</p>
 
@@ -281,7 +348,7 @@
                 <p>We strive for 99.9% uptime, but do not guarantee uninterrupted access. We reserve the right to suspend the Platform for maintenance at any time. We are not liable for losses incurred due to service interruptions or technical failures beyond our control.</p>
 
                 <h3>12. Limitation of Liability</h3>
-                <p>To the maximum extent permitted by Kenyan law, Nexus Hub shall not be liable for any indirect, incidental, or consequential damages arising from your use of the Platform. Our total liability shall not exceed the amount deposited by you in the 30 days preceding the claim.</p>
+                <p>To the maximum extent permitted by Kenyan law, Metricwin shall not be liable for any indirect, incidental, or consequential damages arising from your use of the Platform. Our total liability shall not exceed the amount deposited by you in the 30 days preceding the claim.</p>
 
                 <h3>13. Amendments</h3>
                 <p>We may update these Terms at any time. Material changes will be communicated via the Platform or your registered contact. Continued use of the Platform after changes constitutes acceptance of the updated Terms.</p>
@@ -291,7 +358,7 @@
 
                 <h3>15. Contact</h3>
                 <p>For support, complaints, or responsible gambling assistance, contact us at:<br>
-                <strong>Email:</strong> support@nexushub.co.ke<br>
+                <strong>Email:</strong> support@metricwin.app<br>
                 <strong>Platform:</strong> https://metricwin.vercel.app</p>
             </div>
 

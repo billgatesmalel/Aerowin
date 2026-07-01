@@ -34,7 +34,7 @@ export default async function handler(req, res) {
             case 'audit_logs': {
                 const { data, error } = await supabase
                     .from('audit_logs')
-                    .select('*, profiles(phone)')
+                    .select('*, profiles(username, phone)')
                     .order('created_at', { ascending: false })
                     .limit(50);
                 

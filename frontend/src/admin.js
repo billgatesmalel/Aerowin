@@ -50,7 +50,7 @@ async function fetchDashboardStats() {
 async function fetchPendingWithdrawals() {
     const { data, error } = await supabase
         .from('withdrawals')
-        .select('*, profiles(phone)')
+        .select('*, profiles(username, phone)')
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
@@ -63,7 +63,7 @@ async function fetchPendingWithdrawals() {
     listEl.innerHTML = data.map(w => `
         <tr>
             <td>${new Date(w.created_at).toLocaleDateString()}</td>
-            <td>${w.profiles?.phone || 'Unknown'}</td>
+            <td>${w.profiles ? (w.profiles.username ? `@${w.profiles.username}` : w.profiles.phone) : 'Unknown'}</td>
             <td>KES ${parseFloat(w.amount).toLocaleString()}</td>
             <td><span class="status-pill status-pending">PENDING</span></td>
             <td>
