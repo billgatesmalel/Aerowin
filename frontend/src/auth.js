@@ -92,6 +92,19 @@ window.updateStrength = function (pw) {
     const label = document.getElementById('strengthLabel');
     if (!fill || !label) return;
 
+    const bar = fill.parentElement;
+
+    if (pw.length === 0) {
+        fill.style.width = '0%';
+        label.textContent = '';
+        label.style.display = 'none';
+        if (bar) bar.style.backgroundColor = 'transparent';
+        return;
+    }
+
+    label.style.display = 'block';
+    if (bar) bar.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+
     let score = 0;
     if (pw.length >= 8)                          score++;
     if (pw.length >= 12)                         score++;
@@ -109,9 +122,9 @@ window.updateStrength = function (pw) {
     ];
 
     const lvl = levels[Math.min(score, 5)];
-    fill.style.width           = pw.length === 0 ? '0%' : lvl.pct;
+    fill.style.width           = lvl.pct;
     fill.style.backgroundColor = lvl.color;
-    label.textContent          = pw.length === 0 ? '' : lvl.text;
+    label.textContent          = lvl.text;
     label.style.color          = lvl.color;
 };
 
@@ -471,10 +484,15 @@ window.updateNewPasswordStrength = function (pw) {
     if (fill && registerFill) {
         fill.style.width = registerFill.style.width;
         fill.style.backgroundColor = registerFill.style.backgroundColor;
+        const bar = fill.parentElement;
+        if (bar && registerFill.parentElement) {
+            bar.style.backgroundColor = registerFill.parentElement.style.backgroundColor;
+        }
     }
     if (label && registerLabel) {
         label.textContent = registerLabel.textContent;
         label.style.color = registerLabel.style.color;
+        label.style.display = registerLabel.style.display;
     }
 };
 
