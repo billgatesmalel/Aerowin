@@ -45,7 +45,7 @@ window.addEventListener('load', async () => {
 async function bootSequence() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-        window.location.replace('auth.html');
+        window.location.replace('/auth');
         return;
     }
 
@@ -561,7 +561,7 @@ async function processDeposit() {
 
 window.logout = async () => {
     await supabase.auth.signOut();
-    window.location.replace('auth.html');
+    window.location.replace('/auth');
 };
 
 window.openWithdraw = () => {

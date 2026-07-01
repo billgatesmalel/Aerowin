@@ -4,9 +4,6 @@
  * All auth logic lives here as a proper ES module.
  * Functions are explicitly attached to `window` so the event listeners
  * wired up in auth.html's inline <script> can call them.
- *
- * Fix #4: No inline onsubmit/onclick attributes needed — everything is
- * wired via addEventListener in the HTML's DOMContentLoaded block.
  */
 
 import { supabase } from './lib/supabase.js';
@@ -43,8 +40,8 @@ window.toggleForms = function () {
 window.toggleResetForm = function (show) {
     const login = document.getElementById('loginForm');
     const reset = document.getElementById('resetForm');
-    login.classList.toggle('active', !show);
-    reset.classList.toggle('active', show);
+    if (login) login.classList.toggle('active', !show);
+    if (reset) reset.classList.toggle('active', show);
 };
 
 // ─── Login ────────────────────────────────────────────────────────────────
@@ -63,7 +60,7 @@ window.handleLogin = async function (e) {
         showMessage(error.message || 'Login failed. Check your credentials.', 'error');
     } else {
         showMessage('Login successful! Redirecting…', 'success');
-        setTimeout(() => window.location.replace('index.html'), 800);
+        setTimeout(() => window.location.replace('/'), 800);
     }
 };
 
@@ -108,7 +105,7 @@ window.handleSignup = async function (e) {
     }
 
     showMessage('Account created! Redirecting…', 'success');
-    setTimeout(() => window.location.replace('index.html'), 800);
+    setTimeout(() => window.location.replace('/'), 800);
 };
 
 // ─── Password Reset ───────────────────────────────────────────────────────
@@ -121,19 +118,22 @@ window.handleResetPassword = async function (e) {
     showMessage('Sending reset link…', 'info');
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + '/auth.html',
+        redirectTo: window.location.origin + '/auth',
     });
 
     if (error) {
         showMessage(error.message || 'Reset failed. Try again.', 'error');
     } else {
         showMessage('Reset link sent! Check your registered email/SMS.', 'success');
-    }// ── OTP FLOW ──────────────────────────────────────────────────────────────
+    }
+};
+
+// ── OTP FLOW ──────────────────────────────────────────────────────────────
 
 window.verifyOTP = async () => {
     const code = document.getElementById('otpCode').value;
     const phone = sessionStorage.getItem('pendingPhone');
-    
+
     try {
         const res = await fetch('/api/otp', {
             method: 'POST',
@@ -141,7 +141,7 @@ window.verifyOTP = async () => {
             body: JSON.stringify({ action: 'verify', phone, code })
         });
         const data = await res.json();
-        
+
         if (data.success) {
             showMessage("Registration complete! You can now log in.", "success");
             document.getElementById('otpView').style.display = 'none';
@@ -161,7 +161,7 @@ window.resendOTP = async () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'send', phone })
     });
-    showMessage("success", "New code sent!");
+    showMessage("New code sent!", "success");
 };
 
 function showOTPView(phone) {
@@ -171,4 +171,3 @@ function showOTPView(phone) {
     document.getElementById('otpView').style.display = 'block';
     document.getElementById('otpPrompt').textContent = `Enter the 6-digit code sent to ${phone}`;
 }
-};

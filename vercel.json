@@ -1,6 +1,9 @@
 {
   "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "cleanUrls": true,
+  "trailingSlash": false,
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -8,19 +11,19 @@
     },
     {
       "source": "/auth",
-      "destination": "/frontend/auth.html"
+      "destination": "/auth.html"
     },
     {
       "source": "/admin",
-      "destination": "/frontend/admin.html"
+      "destination": "/admin.html"
     },
     {
       "source": "/super-admin",
-      "destination": "/frontend/super-admin.html"
+      "destination": "/super-admin.html"
     },
     {
       "source": "/",
-      "destination": "/frontend/index.html"
+      "destination": "/index.html"
     }
   ]
 }

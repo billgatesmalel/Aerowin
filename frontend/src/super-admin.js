@@ -11,7 +11,7 @@ let currentUser = null;
 window.addEventListener('load', async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-        window.location.replace('auth.html');
+        window.location.replace('/auth');
         return;
     }
 
@@ -23,7 +23,7 @@ window.addEventListener('load', async () => {
 
     if (error || !hasAccess) {
         alert("CRITICAL: ACCESS DENIED. AUTHORIZATION FAILURE.");
-        window.location.replace('index.html');
+        window.location.replace('/');
         return;
     }
 
