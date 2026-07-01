@@ -303,8 +303,11 @@ async function checkUsernameAvailability(username) {
             .limit(1);
 
         if (error) {
-            container.className = 'availability-indicator checking';
-            container.textContent = '⚠️ Service error checking availability.';
+            // DB query failed — log for debugging but don't block the user.
+            // Server-side uniqueness will still be enforced on sign-up.
+            console.warn('[username-check] Supabase error:', error.message, error);
+            container.style.display = 'none';
+            container.textContent = '';
             return;
         }
 
@@ -318,8 +321,10 @@ async function checkUsernameAvailability(username) {
             return true;
         }
     } catch (err) {
-        container.className = 'availability-indicator checking';
-        container.textContent = '⚠️ Service error checks.';
+        // Network or unexpected error — silently hide the indicator.
+        console.warn('[username-check] Unexpected error:', err);
+        container.style.display = 'none';
+        container.textContent = '';
         return false;
     }
 }
