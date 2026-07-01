@@ -67,12 +67,34 @@ function setLoading(btnId, loading) {
     if (spinner) spinner.classList.toggle('hidden', !loading);
 }
 
-/** Normalise Kenyan phone → +2547XXXXXXXX */
+/**
+ * Normalise any Kenyan phone format to E.164 (+254XXXXXXXXX)
+ * Accepted inputs:
+ *   07xxxxxxxx  | 01xxxxxxxx
+ *   +2547xxxxxxx | +2541xxxxxxx
+ *   2547xxxxxxxx | 2541xxxxxxxx
+ *   7xxxxxxxx   | 1xxxxxxxx
+ */
 function normalisePhone(raw) {
+    // Strip everything except digits
     const digits = raw.replace(/\D/g, '');
-    if (digits.startsWith('254')) return '+' + digits;
-    if (digits.startsWith('0'))   return '+254' + digits.slice(1);
-    if (digits.startsWith('7') || digits.startsWith('1')) return '+254' + digits;
+
+    // Already in full international format (254...)
+    if (digits.startsWith('254') && digits.length === 12) {
+        return '+' + digits;
+    }
+
+    // Local format: 07xxxxxxxx or 01xxxxxxxx (10 digits starting with 0)
+    if (digits.startsWith('0') && digits.length === 10) {
+        return '+254' + digits.slice(1);
+    }
+
+    // Short format: 7xxxxxxxx or 1xxxxxxxx (9 digits)
+    if ((digits.startsWith('7') || digits.startsWith('1')) && digits.length === 9) {
+        return '+254' + digits;
+    }
+
+    // Fallback: prefix with + and hope for the best
     return '+' + digits;
 }
 
@@ -81,8 +103,14 @@ function sanitize(str) {
     return String(str).replace(/[<>"'`]/g, '').trim();
 }
 
+/**
+ * Validate a normalised Kenyan phone number (+254XXXXXXXXX).
+ * Accepts: +2547xxxxxxxx (Safaricom/Airtel/Telkom 07xx)
+ *          +2541xxxxxxxx (Airtel 010/011, Telkom 0100-0109)
+ */
 function validatePhone(phone) {
-    return /^\+254[17]\d{8}$/.test(phone);
+    // Must be +254 followed by 7 or 1, then exactly 8 more digits = 12 total after +
+    return /^\+254[71]\d{8}$/.test(phone);
 }
 
 // ─── Password Strength ────────────────────────────────────────────────────────
@@ -180,7 +208,7 @@ window.handleLogin = async function (e) {
 
     const phone = normalisePhone(rawPhone);
     if (!validatePhone(phone)) {
-        showMessage('Enter a valid Kenyan phone number (e.g. 0712345678).', 'error');
+        showMessage('Enter a valid phone number. Accepted formats: 07xx, 01xx, +2547xx, 2541xx…', 'error');
         return;
     }
 
@@ -190,18 +218,26 @@ window.handleLogin = async function (e) {
     let email = '';
 
     try {
-        // Look up email registered on this phone number
+        // Build all plausible stored formats for this number so we can find
+        // records even if they were saved in a non-E.164 form.
+        const digits9 = phone.replace('+254', '');        // e.g. 712345678
+        const local10  = '0' + digits9;                   // e.g. 0712345678
+        const e164     = phone;                            // e.g. +254712345678
+        const bare254  = '254' + digits9;                 // e.g. 254712345678
+
+        // Try E.164 first (primary stored format), then local fallbacks
         const { data: profile } = await supabase
             .from('profiles')
             .select('email')
-            .eq('phone', phone)
+            .or(`phone.eq.${e164},phone.eq.${local10},phone.eq.${bare254}`)
             .limit(1)
             .maybeSingle();
 
         if (profile && profile.email) {
             email = profile.email;
         } else {
-            email = phone + '@metricwin.app'; // legacy default fallback
+            // Legacy synthetic email fallback (phone-based accounts with no profile row)
+            email = e164 + '@metricwin.app';
         }
 
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -311,7 +347,7 @@ window.handleSignup = async function (e) {
     }
 
     if (!validatePhone(phone)) {
-        showMessage('Enter a valid Kenyan phone number (e.g. 0712345678).', 'error');
+        showMessage('Enter a valid phone number. Accepted formats: 07xx, 01xx, +2547xx, 2541xx…', 'error');
         return;
     }
     if (!terms) {
@@ -346,11 +382,15 @@ window.handleSignup = async function (e) {
             return;
         }
 
-        // Also check if phone belongs to another profile
+        // Check if phone belongs to another profile — try all stored formats
+        const digits9s  = phone.replace('+254', '');
+        const local10s  = '0' + digits9s;
+        const bare254s  = '254' + digits9s;
+
         const { data: existingPhone } = await supabase
             .from('profiles')
             .select('id')
-            .eq('phone', phone)
+            .or(`phone.eq.${phone},phone.eq.${local10s},phone.eq.${bare254s}`)
             .limit(1);
 
         if (existingPhone && existingPhone.length > 0) {
