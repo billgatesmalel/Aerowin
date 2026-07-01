@@ -4,121 +4,210 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Login | Nexus Hub</title>
+    <meta name="description" content="Sign in or create your Nexus Hub account to start playing Aviator Elite.">
     <link rel="stylesheet" href="auth.css">
 </head>
 <body>
 
     <div class="auth-container">
-        
+
+        <!-- BRAND -->
         <div class="auth-brand">
             <span class="brand-icon">✈️</span>
             <div class="brand-name">NEXUS HUB</div>
         </div>
 
         <div class="auth-card">
-            
+
             <div id="messageBox" class="message-box"></div>
 
-            <!-- LOGIN FORM -->
+            <!-- ── LOGIN FORM ──────────────────────────────── -->
             <div id="loginForm" class="active">
                 <div class="auth-header">
                     <h1>Welcome Back</h1>
                     <p>Enter your phone and password to continue</p>
                 </div>
 
-                <form onsubmit="handleLogin(event)">
+                <form id="loginFormEl" onsubmit="handleLogin(event)" novalidate>
                     <div class="form-group">
-                        <label>Phone Number</label>
+                        <label for="loginPhone">Phone Number</label>
                         <div class="input-wrapper">
-                            <input type="text" id="loginPhone" placeholder="07xxxxxxxx" required>
+                            <span class="input-icon">📱</span>
+                            <input
+                                type="tel"
+                                id="loginPhone"
+                                placeholder="07xxxxxxxx"
+                                autocomplete="tel"
+                                inputmode="tel"
+                                required
+                            >
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label>Password</label>
+                        <label for="loginPassword">Password</label>
                         <div class="input-wrapper">
-                            <input type="password" id="loginPassword" placeholder="••••••••" required>
+                            <span class="input-icon">🔒</span>
+                            <input
+                                type="password"
+                                id="loginPassword"
+                                placeholder="••••••••"
+                                autocomplete="current-password"
+                                required
+                            >
+                            <button type="button" class="toggle-pw" onclick="togglePassword('loginPassword', this)" aria-label="Toggle password visibility">
+                                <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
                         </div>
                     </div>
 
-                    <button type="submit" class="auth-btn">LOGIN TO PLATFORM</button>
+                    <div class="form-row">
+                        <label class="remember-label">
+                            <input type="checkbox" id="rememberMe"> Remember me
+                        </label>
+                        <a href="#" class="forgot-link" onclick="showForgotForm(); return false;">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="auth-btn" id="loginBtn">
+                        <span class="btn-text">LOGIN TO PLATFORM</span>
+                        <span class="btn-spinner hidden">⟳</span>
+                    </button>
                 </form>
 
                 <div class="auth-footer">
-                    Don't have an account? <a href="#" onclick="toggleForms()">Create account</a>
+                    Don't have an account? <a href="#" onclick="toggleForms(); return false;">Create account</a>
                 </div>
             </div>
 
-            <!-- SIGNUP FORM -->
+            <!-- ── SIGNUP FORM ─────────────────────────────── -->
             <div id="signupForm">
                 <div class="auth-header">
                     <h1>Join Nexus Hub</h1>
                     <p>Start your high-stakes flight today</p>
                 </div>
 
-                <form onsubmit="handleSignup(event)">
+                <form id="signupFormEl" onsubmit="handleSignup(event)" novalidate>
                     <div class="form-group">
-                        <label>Phone Number</label>
+                        <label for="signupPhone">Phone Number</label>
                         <div class="input-wrapper">
-                            <input type="text" id="signupPhone" placeholder="07xxxxxxxx" required>
+                            <span class="input-icon">📱</span>
+                            <input
+                                type="tel"
+                                id="signupPhone"
+                                placeholder="07xxxxxxxx"
+                                autocomplete="tel"
+                                inputmode="tel"
+                                required
+                            >
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label>Password</label>
+                        <label for="signupPassword">Password</label>
                         <div class="input-wrapper">
-                            <input type="password" id="signupPassword" placeholder="Minimum 6 characters" required>
+                            <span class="input-icon">🔒</span>
+                            <input
+                                type="password"
+                                id="signupPassword"
+                                placeholder="Minimum 8 characters"
+                                autocomplete="new-password"
+                                required
+                                oninput="updateStrength(this.value)"
+                            >
+                            <button type="button" class="toggle-pw" onclick="togglePassword('signupPassword', this)" aria-label="Toggle password visibility">
+                                <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                        </div>
+                        <!-- Password strength meter -->
+                        <div class="strength-bar" id="strengthBar">
+                            <div class="strength-fill" id="strengthFill"></div>
+                        </div>
+                        <div class="strength-label" id="strengthLabel"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signupConfirm">Confirm Password</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">🔒</span>
+                            <input
+                                type="password"
+                                id="signupConfirm"
+                                placeholder="Repeat password"
+                                autocomplete="new-password"
+                                required
+                            >
+                            <button type="button" class="toggle-pw" onclick="togglePassword('signupConfirm', this)" aria-label="Toggle password visibility">
+                                <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label>Confirm Password</label>
+                        <label for="signupReferral">Referral Code <span class="optional">(Optional)</span></label>
                         <div class="input-wrapper">
-                            <input type="password" id="signupConfirm" placeholder="Repeat password" required>
+                            <span class="input-icon">🎫</span>
+                            <input type="text" id="signupReferral" placeholder="CODE" autocomplete="off">
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label>Referral Code (Optional)</label>
-                        <div class="input-wrapper">
-                            <input type="text" id="signupReferral" placeholder="CODE">
-                        </div>
+                    <div class="terms-row">
+                        <input type="checkbox" id="termsCheckbox" required>
+                        <label for="termsCheckbox">I agree to the <a href="#" class="terms-link">Terms &amp; Conditions</a> and understand the risks of gambling.</label>
                     </div>
 
-                    <div style="margin-bottom: 20px; font-size: 0.8rem; color: var(--text-secondary); display: flex; gap: 8px; align-items: flex-start;">
-                        <input type="checkbox" id="termsCheckbox" required style="margin-top: 3px;">
-                        <span>I agree to the Terms & Conditions and understand the risks of gambling.</span>
-                    </div>
-
-                    <button type="submit" class="auth-btn">CREATE SECURE ACCOUNT</button>
+                    <button type="submit" class="auth-btn" id="signupBtn">
+                        <span class="btn-text">CREATE SECURE ACCOUNT</span>
+                        <span class="btn-spinner hidden">⟳</span>
+                    </button>
                 </form>
 
                 <div class="auth-footer">
-                    Already have an account? <a href="#" onclick="toggleForms()">Login here</a>
+                    Already have an account? <a href="#" onclick="toggleForms(); return false;">Login here</a>
                 </div>
             </div>
 
-            <!-- OTP VERIFICATION VIEW -->
-            <div id="otpView">
+            <!-- ── FORGOT PASSWORD FORM ────────────────────── -->
+            <div id="forgotForm">
                 <div class="auth-header">
-                    <h1>Verify Account</h1>
-                    <p id="otpPrompt">We sent a code to your phone</p>
+                    <h1>Reset Password</h1>
+                    <p>Enter your phone number to receive a reset link</p>
                 </div>
 
-                <div class="form-group">
-                    <label>6-Digit Code</label>
-                    <div class="input-wrapper">
-                        <input type="text" id="otpCode" placeholder="000000" maxlength="6" style="text-align: center; font-size: 1.5rem; letter-spacing: 8px;">
+                <form id="forgotFormEl" onsubmit="handleForgotPassword(event)" novalidate>
+                    <div class="form-group">
+                        <label for="forgotPhone">Phone Number</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">📱</span>
+                            <input
+                                type="tel"
+                                id="forgotPhone"
+                                placeholder="07xxxxxxxx"
+                                autocomplete="tel"
+                                inputmode="tel"
+                                required
+                            >
+                        </div>
                     </div>
-                </div>
 
-                <button onclick="verifyOTP()" class="auth-btn">VERIFY & ENTER</button>
-                
+                    <div class="info-box">
+                        🔐 A secure password reset link will be sent to your registered email address. Contact support if you need further assistance.
+                    </div>
+
+                    <button type="submit" class="auth-btn" id="forgotBtn">
+                        <span class="btn-text">SEND RESET LINK</span>
+                        <span class="btn-spinner hidden">⟳</span>
+                    </button>
+                </form>
+
                 <div class="auth-footer">
-                    Didn't get the code? <a href="#" onclick="resendOTP()">Resend</a>
+                    <a href="#" onclick="showLoginForm(); return false;">← Back to Login</a>
                 </div>
             </div>
 
+        </div>
+
+        <div class="auth-footer-global">
+            🔒 256-BIT ENCRYPTION &bull; PROVABLY FAIR &bull; NEXUS HUB V2.0
         </div>
 
     </div>
