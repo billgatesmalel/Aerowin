@@ -496,23 +496,18 @@ window.openProfile = async () => {
     
     backdrop.classList.add('show');
     
-    // Choose avatar letter/symbol or image
-    const initial = (currentUser.username ? currentUser.username.charAt(0).toUpperCase() : 'U');
+    // Default silhouette icon fallback for privacy
     const avatarHtml = currentUser.avatar_url 
         ? `<img src="${currentUser.avatar_url}" alt="Avatar" class="player-avatar" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin: 0 auto 20px; border: 2px solid var(--bg-accent);">`
-        : `<div class="player-avatar" style="width: 80px; height: 80px; font-size: 2rem; margin: 0 auto 20px; background: linear-gradient(135deg, var(--bg-accent), #8b5cf6); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff;">${initial}</div>`;
+        : `<div class="player-avatar" style="width: 80px; height: 80px; font-size: 2rem; margin: 0 auto 20px; background: linear-gradient(135deg, var(--bg-accent), #8b5cf6); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff;">👤</div>`;
         
     windowEl.innerHTML = `
         <div style="text-align: center;">
             ${avatarHtml}
-            <h2 style="margin-bottom: 4px;">@${currentUser.username || 'user'}</h2>
-            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 16px;">${currentUser.phone}</p>
+            <h2 style="margin-bottom: 4px;">${currentUser.phone}</h2>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 16px;">Player Account</p>
             
             <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 16px; text-align: left; margin-bottom: 24px; font-size: 0.9rem;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span style="color: var(--text-secondary);">Email:</span>
-                    <span style="color: var(--text-primary); font-weight: 600;">${currentUser.email || 'None'}</span>
-                </div>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                     <span style="color: var(--text-secondary);">Role:</span>
                     <span style="color: var(--bg-accent); font-weight: 700; text-transform: uppercase;">${currentUser.role || 'User'}</span>

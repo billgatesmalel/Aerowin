@@ -157,11 +157,17 @@ window.handleLogin = async function (e) {
     e.preventDefault();
     if (!checkRateLimit()) return;
 
-    const input = sanitize(document.getElementById('loginPhoneOrUsername').value);
+    const rawPhone = sanitize(document.getElementById('loginPhone').value);
     const password = document.getElementById('loginPassword').value;
 
-    if (!input || !password) {
-        showMessage('Please enter your phone/username and password.', 'error');
+    if (!rawPhone || !password) {
+        showMessage('Please enter your phone number and password.', 'error');
+        return;
+    }
+
+    const phone = normalisePhone(rawPhone);
+    if (!validatePhone(phone)) {
+        showMessage('Enter a valid Kenyan phone number (e.g. 0712345678).', 'error');
         return;
     }
 
@@ -169,39 +175,20 @@ window.handleLogin = async function (e) {
     showMessage('Authenticating…', 'info');
 
     let email = '';
-    // Detect if input is phone number or username
-    const isPhoneNumber = /^\+?\d+$/.test(input.replace(/[\s\-]/g, ''));
 
     try {
-        if (isPhoneNumber) {
-            const phone = normalisePhone(input);
-            // Look up email registered on this phone number
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('email')
-                .eq('phone', phone)
-                .limit(1)
-                .maybeSingle();
+        // Look up email registered on this phone number
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('phone', phone)
+            .limit(1)
+            .maybeSingle();
 
-            if (profile && profile.email) {
-                email = profile.email;
-            } else {
-                email = phone + '@metricwin.app'; // legacy default fallback
-            }
+        if (profile && profile.email) {
+            email = profile.email;
         } else {
-            // Assume Username
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('email')
-                .ilike('username', input)
-                .limit(1)
-                .maybeSingle();
-
-            if (profile && profile.email) {
-                email = profile.email;
-            } else {
-                email = input.toLowerCase() + '@metricwin.app'; // legacy default fallback
-            }
+            email = phone + '@metricwin.app'; // legacy default fallback
         }
 
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -210,7 +197,7 @@ window.handleLogin = async function (e) {
 
         if (error) {
             recordAttempt(false);
-            showMessage('Invalid username/phone number or password. Please try again.', 'error');
+            showMessage('Invalid phone number or password. Please try again.', 'error');
             return;
         }
 
